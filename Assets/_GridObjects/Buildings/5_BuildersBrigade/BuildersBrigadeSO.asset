@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 745bc43e3b6831142a6dcb0c2241a63b, type: 3}
+  m_Name: BuildersBrigadeSO
+  m_EditorClassIdentifier: 
+  nameString: BuildersBrigade
+  parentNameString: BuildingsGameObjects
+  startPrefab: {fileID: 2536457076993716198, guid: 26c8cd369de639d46906e30731e32471,
+    type: 3}
+  upgradePrefab: {fileID: 2536457076993716198, guid: 26c8cd369de639d46906e30731e32471,
+    type: 3}
+  finalPrefab: {fileID: 2536457076993716198, guid: 26c8cd369de639d46906e30731e32471,
+    type: 3}
+  width: 4
+  length: 2
+  isWalkable: 1
+  isBuildable: 0
+  buildingCost: {x: 10, y: 0, z: 0}
+  visibleName: Builders Brigade
+  pathOneUpgradeNames:
+  - WallStrength
+  - RoughenedConcrete
+  - AbundantResources
+  - SpikedWalls
+  pathTwoUpgradeNames:
+  - PathworkPoly
+  - MoonDust
+  - SelfRegeneration
+  - TirelessWorkers
+  pathOneUpgradeDescriptions:
+  - 'Increased Wall health '
+  - Wall damage
+  - Decreased healing costs
+  - Much increased wall damage
+  pathTwoUpgradeDescriptions:
+  - Your brilliant buoyant builders brigade will automatically fill in cracks in
+    walls repairing them if they haven't had damage in the last 5 seconds
+  - 'Walls have a special material that allows them to regenerate faster '
+  - Walls that are destroyed will be replaced after 10 seconds
+  - A pay rise and the threat of death have spurred your workers to quicker replace
+    destroyed walls
+  pathOneUpgradeCosts:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  pathTwoUpgradeCosts:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}

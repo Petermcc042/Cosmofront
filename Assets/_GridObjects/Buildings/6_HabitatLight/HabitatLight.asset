@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 745bc43e3b6831142a6dcb0c2241a63b, type: 3}
+  m_Name: HabitatLight
+  m_EditorClassIdentifier: 
+  nameString: Habitat Light
+  parentNameString: BuildingsGameObjects
+  startPrefab: {fileID: 6724721921755643563, guid: bd6d0c73e63ae0740839242a6e5b4998,
+    type: 3}
+  upgradePrefab: {fileID: 6724721921755643563, guid: bd6d0c73e63ae0740839242a6e5b4998,
+    type: 3}
+  finalPrefab: {fileID: 6724721921755643563, guid: bd6d0c73e63ae0740839242a6e5b4998,
+    type: 3}
+  width: 1
+  length: 1
+  isWalkable: 1
+  isBuildable: 0
+  buildingCost: {x: 0, y: 0, z: 0}
+  visibleName: Habitat Light
+  pathOneUpgradeNames: []
+  pathTwoUpgradeNames: []
+  pathOneUpgradeDescriptions: []
+  pathTwoUpgradeDescriptions: []
+  pathOneUpgradeCosts: []
+  pathTwoUpgradeCosts: []

@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 745bc43e3b6831142a6dcb0c2241a63b, type: 3}
+  m_Name: MinersGuildSO
+  m_EditorClassIdentifier: 
+  nameString: MinersGuild
+  parentNameString: BuildingsGameObjects
+  startPrefab: {fileID: 2536457076993716198, guid: 26c8cd369de639d46906e30731e32471,
+    type: 3}
+  upgradePrefab: {fileID: 2536457076993716198, guid: 26c8cd369de639d46906e30731e32471,
+    type: 3}
+  finalPrefab: {fileID: 2536457076993716198, guid: 26c8cd369de639d46906e30731e32471,
+    type: 3}
+  width: 4
+  length: 2
+  isWalkable: 1
+  isBuildable: 0
+  buildingCost: 0
+  visibleName: MinersGuild
+  pathOneUpgradeNames:
+  - BetterTools
+  - RoughenedConcrete
+  - CarbonReinforcement
+  - SelfRegeneration
+  pathTwoUpgradeNames: []
+  pathOneUpgradeDescriptions:
+  - Attanium ore production increased
+  - Wall damage
+  - 'Super Wall Health '
+  - 'Wall Healing '
+  pathTwoUpgradeDescriptions: []
+  pathOneUpgradeCosts:
+  - {x: 40, y: 40, z: 40}
+  - {x: 40, y: 40, z: 40}
+  - {x: 40, y: 404, z: 40}
+  pathTwoUpgradeCosts: []

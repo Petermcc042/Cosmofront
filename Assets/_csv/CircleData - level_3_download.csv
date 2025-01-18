@@ -1,0 +1,23 @@
+Label,Phase 1,Phase 2,Phase 3,Phase 4,Phase 5,Phase 6
+ghost_1_weight,1,1,1,1,2,1
+ghost_2_weight,0,1,1,1,2,1
+spider_1_weight,0,0,1,0,0,0
+spider_2_weight,0,0,1,3,3,0
+spider_3_weight,0,0,0,3,1,0
+ghost_1_type,1,1,1,1,1,1
+ghost_2_type,1,1,1,1,1,1
+spider_1_type,1,1,1,1,1,1
+spider_2_type,1,1,1,1,1,1
+spider_3_type,1,1,1,1,1,1
+ghost_1_health,10,10,10,10,10,10
+ghost_2_health,10,10,10,10,10,10
+spider_1_health,5,5,5,5,5,5
+spider_2_health,20,20,20,20,20,20
+spider_3_health,40,40,40,40,40,40
+ghost_1_xp,1,1,1,1,1,1
+ghost_2_xp,1,1,1,1,1,1
+spider_1_xp,1,1,1,1,1,1
+spider_2_xp,1,1,1,1,1,1
+spider_3_xp,1,1,1,1,1,1
+total_spawn_time,60,50,40,30,20,10
+total_spawn_rate,1,0.8,0.6,0.4,0.2,0.1

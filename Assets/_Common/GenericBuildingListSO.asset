@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0635d8217bb970458a8716a695a9649, type: 3}
+  m_Name: GenericBuildingListSO
+  m_EditorClassIdentifier: 
+  habitatLightSO: {fileID: 11400000, guid: d24e3ad4059dfcb4b817728f8da48557, type: 2}
+  WallSO: {fileID: 11400000, guid: baa9608a3f805224c92a66d284507dbf, type: 2}
+  TurretSO: {fileID: 11400000, guid: 1ab78cfcbab942a4d8508142ef2d2c88, type: 2}
+  MG_SO: {fileID: 11400000, guid: 1ab78cfcbab942a4d8508142ef2d2c88, type: 2}
+  Canon_SO: {fileID: 11400000, guid: 1ab78cfcbab942a4d8508142ef2d2c88, type: 2}
+  marcumSO: {fileID: 11400000, guid: 2c71b8622b446154fabbe75cc4799a47, type: 2}
+  attaniumSO: {fileID: 11400000, guid: a82073560f12768468e3220425180152, type: 2}
+  imearSO: {fileID: 11400000, guid: 452eb011f5c003d4588d340c70c7ed49, type: 2}
+  ScannerSO: {fileID: 11400000, guid: 21b8696a4a351494bb9796ba1066b40f, type: 2}
+  LabSO: {fileID: 11400000, guid: 5744d85f4063c6341bc5ea560b885ba9, type: 2}
+  builderBrigadeSO: {fileID: 11400000, guid: 8dffdfcf4adf1834a9264b0dc85249c3, type: 2}
+  minersGuildSO: {fileID: 11400000, guid: 8dffdfcf4adf1834a9264b0dc85249c3, type: 2}
+  generatorSO: {fileID: 11400000, guid: 6c0f66be0b33c804fac72d6e57b87ea6, type: 2}
+  rockSO: {fileID: 11400000, guid: 2b13cf77a5f85a9419d6526c0d2a0f2d, type: 2}
+  smallRockSO: {fileID: 11400000, guid: b08edaeaea11f174ebc91ee0e1fe47f4, type: 2}
