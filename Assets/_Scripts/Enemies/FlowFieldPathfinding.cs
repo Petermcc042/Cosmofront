@@ -1,0 +1,123 @@
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Mathematics;
+
+
+public struct FlowGridNode
+{
+    public int index;
+    public int x;
+    public int z;
+    public int cost;             // Movement cost (terrain difficulty)
+    public int integrationCost;  // Cumulative cost to reach the target
+    //public Vector2 flowDirection; // Normalized vector for movement direction
+    public bool isWalkable;
+    public int cameFromIndex; // Index of the parent node for path reconstruction
+}
+
+[BurstCompile]
+public struct UpdateNodesMovementCost : IJobParallelFor
+{
+    public NativeArray<FlowGridNode> GridArray;
+    [ReadOnly] public int endX, endZ;
+
+    public void Execute(int index)
+    {
+        FlowGridNode tempNode = GridArray[index];
+        tempNode.integrationCost = int.MaxValue; // Starting node has no gCost
+        tempNode.cost = CalculateDistanceCost(tempNode.x, tempNode.z, endX, endZ);
+        tempNode.cameFromIndex = -1; // Reset cameFromIndex
+        GridArray[index] = tempNode;
+    }
+
+    private int CalculateDistanceCost(int x1, int z1, int x2, int z2)
+    {
+        int dx = math.abs(x1 - x2);
+        int dz = math.abs(z1 - z2);
+        int remaining = math.abs(dx - dz);
+        return (14 * math.min(dx, dz)) + (10 * remaining); // Diagonal and straight costs
+    }
+}
+
+
+[BurstCompile]
+public struct UpdateNodesIntegration : IJob
+{
+    public NativeArray<FlowGridNode> GridArray;
+    [ReadOnly] public int endX, endZ;
+    [ReadOnly] public int gridWidth;
+
+    public void Execute()
+    {
+        // Start from the target
+        int targetIndex = GetIndex(endX, endZ);
+        FlowGridNode targetCell = GridArray[targetIndex];
+        targetCell.integrationCost = 0;
+        GridArray[targetIndex] = targetCell;
+
+
+        // Breadth-first search (BFS) to calculate integration cost
+        NativeQueue<FlowGridNode> queue = new NativeQueue<FlowGridNode>();
+        queue.Enqueue(targetCell);
+
+        while (queue.Count > 0)
+        {
+            FlowGridNode currentCell = queue.Dequeue();
+
+            NativeList<int> neighbourIndices = GetNeighbourIndices(currentCell.x, currentCell.z);
+
+            for (int i = 0; i < neighbourIndices.Length; i++)
+            {
+                FlowGridNode neighbour = GridArray[i];
+                if (neighbour.cost == int.MaxValue) continue; // Skip impassable cells
+                if (!neighbour.isWalkable) continue; // Skip impassable cells
+
+                // if zero + the direct movement cost < max int value se the integration cost to this new value
+                int newCost = currentCell.integrationCost + neighbour.cost;
+                if (newCost < neighbour.integrationCost)
+                {
+                    neighbour.integrationCost = newCost;
+                    queue.Enqueue(neighbour);
+                }
+            }
+
+            neighbourIndices.Dispose();
+        }
+
+        queue.Dispose();
+    }
+
+    private NativeList<int> GetNeighbourIndices(int x, int z)
+    {
+        NativeList<int> neighbors = new NativeList<int>(Allocator.TempJob);
+
+        for (int offsetX = -1; offsetX <= 1; offsetX++)
+        {
+            for (int offsetZ = -1; offsetZ <= 1; offsetZ++)
+            {
+                if (offsetX == 0 && offsetZ == 0) continue; // Skip the current node
+
+                int neighborX = x + offsetX;
+                int neighborZ = z + offsetZ;
+
+                // Bounds check
+                if (neighborX >= 0 && neighborX < gridWidth && neighborZ >= 0 && neighborZ < gridWidth)
+                {
+                    neighbors.Add(GetIndex(neighborX, neighborZ));
+                }
+            }
+        }
+
+        return neighbors;
+    }
+
+    private int GetIndex(int x, int z)
+    {
+        return z + x * gridWidth;
+    }
+}
+
+
+
+
