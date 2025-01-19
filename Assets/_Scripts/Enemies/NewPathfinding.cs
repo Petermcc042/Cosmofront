@@ -1,11 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
-
 
 
 public class NewPathfinding : MonoBehaviour
@@ -18,17 +19,20 @@ public class NewPathfinding : MonoBehaviour
     private int gridLength;
 
     NativeArray<GridNode> gridNodes;
+    NativeArray<FlowGridNode> flowNodes;
 
 
     private void Awake()
     {
         gridLength = 200;
         gridNodes = new NativeArray<GridNode>(gridLength * gridLength, Allocator.Persistent);
+        flowNodes = new NativeArray<FlowGridNode>(gridLength * gridLength, Allocator.Persistent);
     }
 
     private void OnDestroy()
     {
         gridNodes.Dispose();
+        flowNodes.Dispose();
     }
 
     public List<Vector3> FindPath(Vector3 startWorldPosition, Vector3 endWorldPosition)
@@ -52,6 +56,17 @@ public class NewPathfinding : MonoBehaviour
                     cameFromIndex = 0
                 };
 
+                flowNodes[count] = new FlowGridNode()
+                {
+                    index = count,
+                    x = tempObject.x,
+                    z = tempObject.z,
+                    cost = 0,
+                    integrationCost = 0,
+                    isWalkable = tempObject.isWalkable,
+                    cameFromIndex = 0
+                };
+
                 count++;
             }
         }
@@ -61,6 +76,7 @@ public class NewPathfinding : MonoBehaviour
 
 
         List<Vector3> path = FindPathUsingJobs(startX, startZ, endX, endZ);
+        //RunFlowField(endX, endZ);
 
         if (path == null)
         {
@@ -69,6 +85,115 @@ public class NewPathfinding : MonoBehaviour
         else
         {
             return path;
+        }
+    }
+
+    public void StartFlowField(Vector3 endWorldPosition, bool _runFullFlow)
+    {
+        int count = 0;
+        for (int x = 0; x < gridLength; x++)
+        {
+            for (int z = 0; z < gridLength; z++)
+            {
+                GridObject tempObject = gridManager.mapGrid.GetGridObject(x, z);
+
+                flowNodes[count] = new FlowGridNode()
+                {
+                    index = count,
+                    x = tempObject.x,
+                    z = tempObject.z,
+                    cost = 0,
+                    integrationCost = 0,
+                    isWalkable = tempObject.isWalkable,
+                    isOutsideBase = !tempObject.isBaseArea,
+                    cameFromIndex = 0
+                };
+
+                count++;
+            }
+        }
+
+        RunFlowField(endWorldPosition, _runFullFlow);
+    }
+
+    public void StartPartialFlowField(Vector3 endWorldPosition, bool _runFullFlow)
+    {
+        int count = 0;
+        for (int x = 0; x < gridLength; x++)
+        {
+            for (int z = 0; z < gridLength; z++)
+            {
+                GridObject tempObject = gridManager.mapGrid.GetGridObject(x, z);
+
+                FlowGridNode tempNode = flowNodes[count]; 
+
+                tempNode.isWalkable = tempObject.isWalkable;
+                tempNode.isOutsideBase = !tempObject.isBaseArea;
+
+                flowNodes[count] = tempNode;
+
+                count++;
+            }
+        }
+
+        RunFlowField(endWorldPosition, _runFullFlow);
+    }
+
+
+    private void RunFlowField(Vector3 endWorldPosition, bool _runFullFlow)
+    {
+        gridManager.mapGrid.GetXZ(endWorldPosition, out int endX, out int endZ);
+
+        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
+
+        UpdateNodesMovementCost flowJob1 = new UpdateNodesMovementCost
+        {
+            GridArray = flowNodes,
+            endX = endX, endZ = endZ,
+            runFullGrid = _runFullFlow
+        };
+
+        JobHandle flowHandle1 = flowJob1.Schedule(flowNodes.Length, 64);
+        flowHandle1.Complete();
+
+
+        NativeQueue<FlowGridNode> nodeQueue = new NativeQueue<FlowGridNode>(Allocator.Persistent);
+
+        UpdateNodesIntegration flowJob2 = new UpdateNodesIntegration
+        {
+            GridArray = flowNodes,
+            NodeQueue = nodeQueue,
+            endX = endX,
+            endZ = endZ,
+            gridWidth = gridLength,
+            runFullGrid = _runFullFlow
+        };
+
+        JobHandle flowHandle2 = flowJob2.Schedule();
+        flowHandle2.Complete();
+
+        nodeQueue.Dispose();
+
+        stopwatch.Stop();
+        Debug.Log($"Time taken: {stopwatch.ElapsedMilliseconds} ms");
+
+        WriteDataToCSV("output.csv");
+    }
+
+    public void WriteDataToCSV(string filePath)
+    {
+        using (StreamWriter writer = new StreamWriter(filePath))
+        {
+            // Write the header
+            writer.WriteLine("x,integrationCost,z");
+
+            // Write each flowNode's data
+            for (int i = 0; i < flowNodes.Length; i++)
+            {
+                string line = $"{flowNodes[i].x},{flowNodes[i].integrationCost},{flowNodes[i].z}";
+                writer.WriteLine(line);
+            }
         }
     }
 

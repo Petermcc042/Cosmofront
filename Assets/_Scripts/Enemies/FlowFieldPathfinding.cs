@@ -13,6 +13,8 @@ public struct FlowGridNode
     public int integrationCost;  // Cumulative cost to reach the target
     //public Vector2 flowDirection; // Normalized vector for movement direction
     public bool isWalkable;
+    public bool isOutsideBase;
+    public bool isBuilding;
     public int cameFromIndex; // Index of the parent node for path reconstruction
 }
 
@@ -21,11 +23,13 @@ public struct UpdateNodesMovementCost : IJobParallelFor
 {
     public NativeArray<FlowGridNode> GridArray;
     [ReadOnly] public int endX, endZ;
+    [ReadOnly] public bool runFullGrid;
 
     public void Execute(int index)
     {
         FlowGridNode tempNode = GridArray[index];
-        tempNode.integrationCost = int.MaxValue; // Starting node has no gCost
+        if (!runFullGrid && tempNode.isOutsideBase) { return; }
+        tempNode.integrationCost = int.MaxValue; // node max distance can be no further than 500
         tempNode.cost = CalculateDistanceCost(tempNode.x, tempNode.z, endX, endZ);
         tempNode.cameFromIndex = -1; // Reset cameFromIndex
         GridArray[index] = tempNode;
@@ -45,8 +49,10 @@ public struct UpdateNodesMovementCost : IJobParallelFor
 public struct UpdateNodesIntegration : IJob
 {
     public NativeArray<FlowGridNode> GridArray;
+    public NativeQueue<FlowGridNode> NodeQueue;
     [ReadOnly] public int endX, endZ;
     [ReadOnly] public int gridWidth;
+    [ReadOnly] public bool runFullGrid;
 
     public void Execute()
     {
@@ -58,58 +64,41 @@ public struct UpdateNodesIntegration : IJob
 
 
         // Breadth-first search (BFS) to calculate integration cost
-        NativeQueue<FlowGridNode> queue = new NativeQueue<FlowGridNode>();
-        queue.Enqueue(targetCell);
+        NodeQueue.Enqueue(targetCell);
 
-        while (queue.Count > 0)
+        while (NodeQueue.Count > 0)
         {
-            FlowGridNode currentCell = queue.Dequeue();
+            FlowGridNode currentCell = NodeQueue.Dequeue();
 
-            NativeList<int> neighbourIndices = GetNeighbourIndices(currentCell.x, currentCell.z);
 
-            for (int i = 0; i < neighbourIndices.Length; i++)
+            for (int offsetX = -1; offsetX <= 1; offsetX++)
             {
-                FlowGridNode neighbour = GridArray[i];
-                if (neighbour.cost == int.MaxValue) continue; // Skip impassable cells
-                if (!neighbour.isWalkable) continue; // Skip impassable cells
-
-                // if zero + the direct movement cost < max int value se the integration cost to this new value
-                int newCost = currentCell.integrationCost + neighbour.cost;
-                if (newCost < neighbour.integrationCost)
+                for (int offsetZ = -1; offsetZ <= 1; offsetZ++)
                 {
-                    neighbour.integrationCost = newCost;
-                    queue.Enqueue(neighbour);
-                }
-            }
+                    if (offsetX == 0 && offsetZ == 0) continue; // Skip the current node
 
-            neighbourIndices.Dispose();
-        }
+                    int neighborX = currentCell.x + offsetX;
+                    int neighborZ = currentCell.z + offsetZ;
 
-        queue.Dispose();
-    }
+                    // Bounds check
+                    if (neighborX >= 0 && neighborX < gridWidth && neighborZ >= 0 && neighborZ < gridWidth)
+                    {
+                        FlowGridNode neighbour = GridArray[GetIndex(neighborX, neighborZ)];
+                        if (!neighbour.isWalkable) continue; // Skip impassable cells
+                        if (!runFullGrid && neighbour.isOutsideBase) { continue; } // Skip impassable cells
 
-    private NativeList<int> GetNeighbourIndices(int x, int z)
-    {
-        NativeList<int> neighbors = new NativeList<int>(Allocator.TempJob);
-
-        for (int offsetX = -1; offsetX <= 1; offsetX++)
-        {
-            for (int offsetZ = -1; offsetZ <= 1; offsetZ++)
-            {
-                if (offsetX == 0 && offsetZ == 0) continue; // Skip the current node
-
-                int neighborX = x + offsetX;
-                int neighborZ = z + offsetZ;
-
-                // Bounds check
-                if (neighborX >= 0 && neighborX < gridWidth && neighborZ >= 0 && neighborZ < gridWidth)
-                {
-                    neighbors.Add(GetIndex(neighborX, neighborZ));
+                        // if zero + the direct movement cost < max int value se the integration cost to this new value
+                        int newCost = currentCell.integrationCost + neighbour.cost;
+                        if (newCost < neighbour.integrationCost)
+                        {
+                            neighbour.integrationCost = newCost;
+                            GridArray[neighbour.index] = neighbour;
+                            NodeQueue.Enqueue(neighbour);
+                        }
+                    }
                 }
             }
         }
-
-        return neighbors;
     }
 
     private int GetIndex(int x, int z)

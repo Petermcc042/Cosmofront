@@ -128,26 +128,26 @@ public class EnemyManager : MonoBehaviour
 
     public void InitEnemyManager(GameSettingsSO _gameSettings)
     {
+        // use game settings file in inspector to dictate most game attributes
         gameSettingsSO = _gameSettings;
 
         numberOfSpawns = _gameSettings.numberOfSpawns;
         gridWidth = _gameSettings.gridWidth;
         gridLength = _gameSettings.gridLength;
-
         enemyWeightList = _gameSettings.enemyWeightList;
         enemyWeightSum = enemyWeightList.Sum();
 
-        spawnInterval = spawnCountdown;
 
-        centre = generator.transform;
+        centre = generator.transform; // set the target position for all the enemy pathfinding
 
-        SetSpawnPositions(numberOfSpawns);
-
-        keepSpawning = false;
+        SetSpawnPositions(numberOfSpawns); // set the bases and set up pathfinding
 
         gen.CheckShieldSquares(false);
 
-        keepSpawning = true;
+
+        // increase timer to allow spawn loop to begin, then begin spawning
+        spawnInterval = spawnCountdown;
+        keepSpawning = true; 
     }
 
 
@@ -208,14 +208,7 @@ public class EnemyManager : MonoBehaviour
         {
             Vector3 spawnPos = GetSpawnPosition(i, numSpawnPositions);
 
-            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-            stopwatch.Start();
-
             List<Vector3> tempList = SetTargetPosition(spawnPos, centre.position);
-
-            stopwatch.Stop();
-            Debug.Log($"Time taken: {stopwatch.ElapsedMilliseconds} ms");
-            totalTime += stopwatch.ElapsedMilliseconds;
 
             if (tempList == null)
             {
@@ -230,9 +223,7 @@ public class EnemyManager : MonoBehaviour
             spawnOriginVectorList.Add(spawnPos);
         }
 
-
-        Debug.Log($"Time taken: {totalTime} ms");
-
+        pathfinding.StartFlowField(centre.position, true);
         collisionManager.CombinedPaths(pathLists);
     }
 
@@ -275,6 +266,7 @@ public class EnemyManager : MonoBehaviour
         List<Vector3> pathList = Pathfinding.Instance.FindPath(_spawnPos, _targetPosition);
         //List<Vector3> pathList = pathfinding.FindPath(_targetPosition, _spawnPos);
 
+
         if (showDebugLines)
         {
             if (pathList != null)
@@ -289,32 +281,9 @@ public class EnemyManager : MonoBehaviour
         return pathList;
     }
 
-    public void RecalcPaths() {
-        long totalTime = 0;
-
-        for (int i = 0; i < numberOfSpawns; i++)
-        {
-            Vector3 spawnPos = GetSpawnPosition(i, numberOfSpawns);
-
-            //System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-            //stopwatch.Start();
-
-            List<Vector3> tempList = SetTargetPosition(spawnPos, centre.position);
-
-            //stopwatch.Stop();
-            //Debug.Log($"Time taken: {stopwatch.ElapsedMilliseconds} ms");
-            //totalTime += stopwatch.ElapsedMilliseconds;
-
-            if (tempList == null)
-            {
-                i--;
-                continue;
-            }
-
-            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            //cube.GetComponent<MeshRenderer>().
-            cube.transform.position = spawnPos;
-        }
+    public void RecalcPaths() 
+    {
+        pathfinding.StartPartialFlowField(centre.position, false);
     }
 
     private void SpawnIndividualObjects()

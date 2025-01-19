@@ -214,7 +214,7 @@ public class MapGridManager : MonoBehaviour
 
         if (!tempGridObject.isBaseArea) { return; }
 
-        if (!tempGridObject.CanBuild()) { return; }
+        if (tempGridObject.isBuilding) { return; }
 
         PlaceBuilding(_x, _z, buildingsListSO.habitatLightSO, true);
 
@@ -288,8 +288,7 @@ public class MapGridManager : MonoBehaviour
         // if there is can build = false and break
         foreach (Vector2Int pos in gridPosList)
         {
-            //Debug.Log(mapGrid.GetGridObject(pos.x, pos.y).CanBuild());
-            if (!mapGrid.GetGridObject(pos.x, pos.y).CanBuild())
+            if (mapGrid.GetGridObject(pos.x, pos.y).isBuilding)
             {
                 canBuild = false; break;
             }
@@ -300,8 +299,6 @@ public class MapGridManager : MonoBehaviour
         {
             foreach (Vector2Int pos in gridPosList)
             {
-                DestroyBuilding(pos.x, pos.y);
-
                 if (_location)
                 {
                     BuildingAddedEvent?.Invoke(this, new BuildingAddedEventArgs { coord = new Vector3(pos.x, 0, pos.y), remove = false});
@@ -319,8 +316,10 @@ public class MapGridManager : MonoBehaviour
             // update our grid on these coordinates so that we can't build there anymore
             foreach (Vector2Int pos in gridPosList)
             {
-                mapGrid.GetGridObject(pos.x, pos.y).SetPlacedObject(placedObject);
-                mapGrid.GetGridObject(pos.x, pos.y).dCost += 20;
+                GridObject tempObject = mapGrid.GetGridObject(pos.x, pos.y);
+                tempObject.isBuilding = true;
+                tempObject.SetPlacedObject(placedObject);
+                tempObject.dCost += 20;
             }
 
         }
@@ -349,7 +348,9 @@ public class MapGridManager : MonoBehaviour
 
             foreach (Vector2Int pos in gridPosList)
             {
-                mapGrid.GetGridObject(pos.x, pos.y).ClearPlacedObject();
+                GridObject tempObject = mapGrid.GetGridObject(pos.x, pos.y);
+                tempObject.isBuilding = true;
+                tempObject.ClearPlacedObject();
 
                 BuildingAddedEvent?.Invoke(this, new BuildingAddedEventArgs { coord = new Vector3(pos.x, 0, pos.y), remove = true });
             }
@@ -366,7 +367,9 @@ public class MapGridManager : MonoBehaviour
 
             foreach (Vector2Int pos in gridPosList)
             {
-                mapGrid.GetGridObject(pos.x, pos.y).ClearPlacedObject();
+                GridObject tempObject = mapGrid.GetGridObject(pos.x, pos.y);
+                tempObject.isBuilding = true;
+                tempObject.ClearPlacedObject();
 
                 BuildingAddedEvent?.Invoke(this, new BuildingAddedEventArgs { coord = new Vector3(pos.x, 0, pos.y), remove = true });
             }
@@ -432,7 +435,7 @@ public class MapGridManager : MonoBehaviour
         // if there is can build = false and break
         foreach (Vector2Int pos in gridPosList)
         {
-            if (!mapGrid.GetGridObject(pos.x, pos.y).CanBuild())
+            if (mapGrid.GetGridObject(pos.x, pos.y).isBuilding)
             {
                 canBuild = false; break;
             }
@@ -474,8 +477,10 @@ public class MapGridManager : MonoBehaviour
             // update our grid on these coordinates so that we can't build there anymore
             foreach (Vector2Int pos in gridPosList)
             {
-                mapGrid.GetGridObject(pos.x, pos.y).SetPlacedObject(genPO);
-                mapGrid.GetGridObject(pos.x, pos.y).dCost += 20;
+                GridObject tempObject = mapGrid.GetGridObject(pos.x, pos.y);
+                tempObject.isBuilding = true;
+                tempObject.SetPlacedObject(genPO);
+                tempObject.dCost += 20;
             }
         }
         else

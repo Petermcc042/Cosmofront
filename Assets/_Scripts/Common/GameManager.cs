@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private PhaseManager phaseManager;
     [SerializeField] private ResourceManager resourceManager;
     [SerializeField] private CollisionManager collisionManager;
+    [SerializeField] private NewPathfinding pathfinder;
 
 
     [Header("Building Aid")]
@@ -138,6 +139,8 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Q)) { skillMenuUI.SetActive(!skillMenuUI.activeSelf); }
 
         if (Input.GetKeyDown(KeyCode.E)) { skillManager.IsSkillUnlocked(SkillManager.SkillType.TurretFireRate); }
+
+        if (Input.GetKeyDown(KeyCode.J)) { enemyManager.RecalcPaths(); }
     }
 
     private void UpdateBuildingUI()

@@ -15,6 +15,7 @@ public class GridObject
     public GridObject cameFromNode;
     public bool isWalkable;
     public bool isBaseArea;
+    public bool isBuilding;
 
     public GridObject(GridXZ<GridObject> grid, int x, int z)
     {
@@ -42,24 +43,6 @@ public class GridObject
     public void ClearPlacedObject()
     {
         placedObject = null;
-    }
-
-    public bool CanBuildBase()
-    {
-        // Return true if there is no placed object or if the placed object is buildable and the area is designated for base
-        return (placedObject == null || placedObject.placedObjectSO.isBuildable) && isBaseArea;
-    }
-
-    public bool CanBuild()
-    {
-        return placedObject == null || placedObject.placedObjectSO.isBuildable;
-    }
-
-
-    public bool IsWalkable()
-    {
-        // Return true if placedObject is null or if it is walkable
-        return placedObject == null || placedObject.placedObjectSO.isWalkable;
     }
 
     public override string ToString()
