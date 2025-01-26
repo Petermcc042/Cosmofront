@@ -246,6 +246,22 @@ public class SpreadRoundsUpgrade : IUpgradeOption
     }
 }
 
+public class PiercingRoundsUpgrade : IUpgradeOption
+{
+    public void Apply(Turret turret, int position)
+    {
+        turret.highlightBox.SetActive(false);
+        turret.passThrough = 5;
+    }
+
+    public int GetTextSize() { return 17; }
+
+    public string GetDescription()
+    {
+        return $"Hardened bullets can pass through 5 enemies";
+    }
+}
+
 public class RicochetRoundsUpgrade : IUpgradeOption
 {
     public void Apply(Turret turret, int position)

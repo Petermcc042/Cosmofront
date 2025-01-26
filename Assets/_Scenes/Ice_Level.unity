@@ -30809,6 +30809,7 @@ MonoBehaviour:
   phaseManager: {fileID: 465865786}
   resourceManager: {fileID: 1467083220}
   collisionManager: {fileID: 1829282140}
+  pathfinder: {fileID: 0}
   buildingUI: {fileID: 1390875255}
   extendedArea: {fileID: 228057979}
   buildableArea: {fileID: 1512581167}
@@ -31943,6 +31944,7 @@ MonoBehaviour:
   gen: {fileID: 982423168}
   terrainGen: {fileID: 1198590197}
   particlePool: {fileID: 377535641}
+  pathfinding: {fileID: 734098101}
   genHealth: {fileID: 896661396}
   explosionRadius: 4
   explosionPrefab: {fileID: 1631921842}

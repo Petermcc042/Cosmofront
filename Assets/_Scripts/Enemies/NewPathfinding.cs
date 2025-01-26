@@ -19,7 +19,7 @@ public class NewPathfinding : MonoBehaviour
     private int gridLength;
 
     NativeArray<GridNode> gridNodes;
-    NativeArray<FlowGridNode> flowNodes;
+    public NativeArray<FlowGridNode> flowNodes;
 
 
     private void Awake()
@@ -64,7 +64,7 @@ public class NewPathfinding : MonoBehaviour
                     cost = 0,
                     integrationCost = 0,
                     isWalkable = tempObject.isWalkable,
-                    cameFromIndex = 0
+                    goToIndex = 0
                 };
 
                 count++;
@@ -106,7 +106,7 @@ public class NewPathfinding : MonoBehaviour
                     integrationCost = 0,
                     isWalkable = tempObject.isWalkable,
                     isOutsideBase = !tempObject.isBaseArea,
-                    cameFromIndex = 0
+                    goToIndex = 0
                 };
 
                 count++;
@@ -144,8 +144,7 @@ public class NewPathfinding : MonoBehaviour
     {
         gridManager.mapGrid.GetXZ(endWorldPosition, out int endX, out int endZ);
 
-        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        stopwatch.Start();
+        
 
         UpdateNodesMovementCost flowJob1 = new UpdateNodesMovementCost
         {
@@ -175,9 +174,6 @@ public class NewPathfinding : MonoBehaviour
 
         nodeQueue.Dispose();
 
-        stopwatch.Stop();
-        Debug.Log($"Time taken: {stopwatch.ElapsedMilliseconds} ms");
-
         WriteDataToCSV("output.csv");
     }
 
@@ -186,13 +182,21 @@ public class NewPathfinding : MonoBehaviour
         using (StreamWriter writer = new StreamWriter(filePath))
         {
             // Write the header
-            writer.WriteLine("x,integrationCost,z");
+            writer.WriteLine("integrationCost,GoFrom,GoTo");
 
             // Write each flowNode's data
             for (int i = 0; i < flowNodes.Length; i++)
             {
-                string line = $"{flowNodes[i].x},{flowNodes[i].integrationCost},{flowNodes[i].z}";
-                writer.WriteLine(line);
+                if (flowNodes[i].goToIndex<0)
+                {
+                    string line = $"{flowNodes[i].integrationCost},{flowNodes[i].x}:{flowNodes[i].z},0";
+                    writer.WriteLine(line);
+                } else
+                {
+                    string line = $"{flowNodes[i].integrationCost},{flowNodes[i].x}:{flowNodes[i].z},{flowNodes[flowNodes[i].goToIndex].x}:{flowNodes[flowNodes[i].goToIndex].z}";
+                    writer.WriteLine(line);
+                }
+                
             }
         }
     }

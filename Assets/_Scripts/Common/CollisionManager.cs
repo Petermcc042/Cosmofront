@@ -11,6 +11,7 @@ using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class CollisionManager : MonoBehaviour
 {
@@ -24,6 +25,7 @@ public class CollisionManager : MonoBehaviour
     [SerializeField] public Generator gen;
     [SerializeField] public TerrainGen terrainGen;
     [SerializeField] public ParticlePool particlePool;
+    [SerializeField] public NewPathfinding pathfinding;
 
     [SerializeField] private Slider genHealth;
     [SerializeField] private int explosionRadius;
@@ -107,17 +109,50 @@ public class CollisionManager : MonoBehaviour
 
     private void UpdatePositions(float _deltaTime)
     {
+/*        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
+
         var job = new UpdateEnemyTargetPos
         {
             EnemyData = enemyDataList.AsArray(),
             PathIndexArray = pathIndexArray,
             PathArray = pathArray,
-            LoopCount = enemyDataList.Length,
             ObstructedPositions = obstructPathList.AsArray(),
         };
 
-        JobHandle handle = job.Schedule();
+        JobHandle handle = job.Schedule(enemyDataList.Length, 64);
         handle.Complete();
+
+        stopwatch.Stop();
+        Debug.Log($"Original taken: {stopwatch.ElapsedMilliseconds} ms");*/
+
+/*        System.Diagnostics.Stopwatch stopwatch2 = new System.Diagnostics.Stopwatch();
+        stopwatch2.Start();
+
+        var flowTargetJob = new UpdateEnemyFlowPos
+        {
+            EnemyData = enemyDataList.AsArray(),
+            GridArray = pathfinding.flowNodes
+        };
+
+        JobHandle flowTargetHandle = flowTargetJob.Schedule(enemyDataList.Length, 64);
+        flowTargetHandle.Complete();
+
+        stopwatch2.Stop();
+        Debug.Log($"New taken: {stopwatch2.ElapsedMilliseconds} ms");*/
+
+        for (int i = 0;i < enemyDataList.Length;i++)
+        {
+            EnemyData enemy = enemyDataList[i];
+            Debug.Log(Mathf.FloorToInt(enemy.Position.x) + ":" + Mathf.FloorToInt(enemy.Position.z));
+            int currentIndexPostition = Mathf.FloorToInt(enemy.Position.x) * Mathf.FloorToInt(enemy.Position.z) * 200;
+            Debug.Log(currentIndexPostition);
+            int targetIndexPosition = pathfinding.flowNodes[currentIndexPostition].goToIndex;
+            Debug.Log(targetIndexPosition);
+            enemy.TargetPos = new Vector3(pathfinding.flowNodes[targetIndexPosition].x, 0, pathfinding.flowNodes[targetIndexPosition].z);
+        }
+
+        
 
         var moveEnemyJob = new UpdateEnemyPosition
         {
@@ -461,29 +496,49 @@ public class CollisionManager : MonoBehaviour
 
 
 [BurstCompile]
-public struct UpdateEnemyTargetPos : IJob
+public struct UpdateEnemyTargetPos : IJobParallelFor
 {
     public NativeArray<EnemyData> EnemyData;
     [ReadOnly] public NativeArray<Vector3> PathArray;
     [ReadOnly] public NativeArray<int> PathIndexArray;
     [ReadOnly] public NativeArray<Vector3> ObstructedPositions;
-    [ReadOnly] public int LoopCount;
 
-    public void Execute()
+    public void Execute(int index)
     {
-        for (int i = 0; i < LoopCount; i++)
-        {
-            EnemyData enemy = EnemyData[i];
+        EnemyData enemy = EnemyData[index];
 
-            if (enemy.TargetNeeded)
-            {
-                // Find the next target position
-                int largeIndex = enemy.PathIndex + enemy.PathPositionIndex;
-                int tempInt = Mathf.Min(enemy.MaxPathIndex - 1, largeIndex);
-                enemy.TargetPos = PathArray[tempInt];
-                EnemyData[i] = enemy;
-            }
+        if (enemy.TargetNeeded)
+        {
+            // Find the next target position
+            int largeIndex = enemy.PathIndex + enemy.PathPositionIndex;
+            int tempInt = Mathf.Min(enemy.MaxPathIndex - 1, largeIndex);
+            enemy.TargetPos = PathArray[tempInt];
+
+            EnemyData[index] = enemy;
         }
+    }
+}
+
+[BurstCompile]
+public struct UpdateEnemyFlowPos : IJobParallelFor
+{
+    public NativeArray<EnemyData> EnemyData;
+    [ReadOnly] public NativeArray<FlowGridNode> GridArray;
+
+    public void Execute(int index)
+    {
+        EnemyData enemy = EnemyData[index];
+
+        int currentIndexPostition = Mathf.FloorToInt(enemy.Position.x) *  Mathf.FloorToInt(enemy.Position.z) * 200;
+        int targetIndexPosition = GridArray[currentIndexPostition].goToIndex;
+        enemy.TargetPos = new Vector3(GridArray[targetIndexPosition].x, 0, GridArray[targetIndexPosition].z);
+
+        EnemyData[index] = enemy;
+    }
+
+    private int GetIndex(int x, int z)
+    {
+        return z + x * 200;
     }
 }
 

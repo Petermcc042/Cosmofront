@@ -53,6 +53,8 @@ public class SkillManager: MonoBehaviour
             mediumUpgrades.Add(new LightningRoundsUpgrade());
             mediumUpgrades.Add(new SlowRoundsUpgrade());
             mediumUpgrades.Add(new ExplosiveRoundsUpgrade());
+            mediumUpgrades.Add(new SpreadRoundsUpgrade());
+            mediumUpgrades.Add(new PiercingRoundsUpgrade());
         }
 
         for (int i = 0; i < 4; i++)
@@ -181,6 +183,7 @@ public class SkillManager: MonoBehaviour
         return unlockedSkillTypeList.Contains(skillType);
     }
 
+    // is used by Unity UI with multiple different dev controls
     public void UnlockSkillType(string roundType)
     {
         Debug.Log("unlocking round: " + roundType);
@@ -199,7 +202,7 @@ public class SkillManager: MonoBehaviour
     public enum SkillType
     {
         None,
-        ExplosiveRound, LightningRound, SlowRound, SpreadRound, RicochetRound, OverchargeRound, // medium turret upgrades
+        ExplosiveRound, LightningRound, SlowRound, SpreadRound, RicochetRound, OverchargeRound, PiercingRound, // medium turret upgrades
         OrbitalStrike, MeteorShower, Overclocked, Firestorm, TimewarpPayload, Timewarp,// large turret upgrades
         // not actually used
         BiggerDrill, // attanium building / imear / marcum

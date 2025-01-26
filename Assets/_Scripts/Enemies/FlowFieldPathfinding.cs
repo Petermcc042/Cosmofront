@@ -15,7 +15,7 @@ public struct FlowGridNode
     public bool isWalkable;
     public bool isOutsideBase;
     public bool isBuilding;
-    public int cameFromIndex; // Index of the parent node for path reconstruction
+    public int goToIndex; // Index of the parent node for path reconstruction
 }
 
 [BurstCompile]
@@ -31,7 +31,7 @@ public struct UpdateNodesMovementCost : IJobParallelFor
         if (!runFullGrid && tempNode.isOutsideBase) { return; }
         tempNode.integrationCost = int.MaxValue; // node max distance can be no further than 500
         tempNode.cost = CalculateDistanceCost(tempNode.x, tempNode.z, endX, endZ);
-        tempNode.cameFromIndex = -1; // Reset cameFromIndex
+        tempNode.goToIndex = -1; // Reset cameFromIndex
         GridArray[index] = tempNode;
     }
 
@@ -92,6 +92,7 @@ public struct UpdateNodesIntegration : IJob
                         if (newCost < neighbour.integrationCost)
                         {
                             neighbour.integrationCost = newCost;
+                            neighbour.goToIndex = currentCell.index;
                             GridArray[neighbour.index] = neighbour;
                             NodeQueue.Enqueue(neighbour);
                         }
