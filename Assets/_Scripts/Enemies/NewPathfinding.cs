@@ -105,7 +105,7 @@ public class NewPathfinding : MonoBehaviour
                     cost = 0,
                     integrationCost = 0,
                     isWalkable = tempObject.isWalkable,
-                    isOutsideBase = !tempObject.isBaseArea,
+                    isPathfindingArea = tempObject.isPathfindingArea,
                     goToIndex = 0
                 };
 
@@ -128,7 +128,7 @@ public class NewPathfinding : MonoBehaviour
                 FlowGridNode tempNode = flowNodes[count]; 
 
                 tempNode.isWalkable = tempObject.isWalkable;
-                tempNode.isOutsideBase = !tempObject.isBaseArea;
+                tempNode.isPathfindingArea = !tempObject.isBaseArea;
 
                 flowNodes[count] = tempNode;
 
@@ -143,7 +143,7 @@ public class NewPathfinding : MonoBehaviour
     private void RunFlowField(Vector3 endWorldPosition, bool _runFullFlow)
     {
         gridManager.mapGrid.GetXZ(endWorldPosition, out int endX, out int endZ);
-
+        // we are passing the correct end position
         
 
         UpdateNodesMovementCost flowJob1 = new UpdateNodesMovementCost
@@ -174,6 +174,20 @@ public class NewPathfinding : MonoBehaviour
 
         nodeQueue.Dispose();
 
+
+        UpdateGoToIndex flowJob3 = new UpdateGoToIndex
+        {
+            GridArray = flowNodes,
+            endX = endX,
+            endZ = endZ,
+            runFullGrid = _runFullFlow,
+            gridWidth = gridLength
+        };
+
+        JobHandle flowHandle3 = flowJob3.Schedule();
+        flowHandle3.Complete();
+
+
         WriteDataToCSV("output.csv");
     }
 
@@ -182,18 +196,18 @@ public class NewPathfinding : MonoBehaviour
         using (StreamWriter writer = new StreamWriter(filePath))
         {
             // Write the header
-            writer.WriteLine("integrationCost,GoFrom,GoTo");
+            writer.WriteLine("index,GoToIndex,integrationCost,GoFrom,GoTo");
 
             // Write each flowNode's data
             for (int i = 0; i < flowNodes.Length; i++)
             {
                 if (flowNodes[i].goToIndex<0)
                 {
-                    string line = $"{flowNodes[i].integrationCost},{flowNodes[i].x}:{flowNodes[i].z},0";
+                    string line = $"{flowNodes[i].index},{flowNodes[i].goToIndex},{flowNodes[i].integrationCost},{flowNodes[i].x}:{flowNodes[i].z},0";
                     writer.WriteLine(line);
                 } else
                 {
-                    string line = $"{flowNodes[i].integrationCost},{flowNodes[i].x}:{flowNodes[i].z},{flowNodes[flowNodes[i].goToIndex].x}:{flowNodes[flowNodes[i].goToIndex].z}";
+                    string line = $"{flowNodes[i].index},{flowNodes[i].goToIndex},{flowNodes[i].integrationCost},{flowNodes[i].x}:{flowNodes[i].z},{flowNodes[flowNodes[i].goToIndex].x}:{flowNodes[flowNodes[i].goToIndex].z}";
                     writer.WriteLine(line);
                 }
                 

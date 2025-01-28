@@ -98,7 +98,7 @@ public class EnemyManager : MonoBehaviour
 
     [SerializeField] private int speed;
 
-    private Transform centre;
+    public Transform centre;
 
     void Awake()
     {

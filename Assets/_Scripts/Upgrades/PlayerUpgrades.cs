@@ -35,8 +35,8 @@ public class PlayerUpgrades : MonoBehaviour
         {
             SaveData saveData = new SaveData
             {
-                playerLevel = 5,
-                generatorHealthIncrease = 100.0f,
+                playerLevel = 0,
+                generatorHealthIncrease = 0f,
                 playerPosition = new Vector3(1, 2, 3),
                 inventoryItems = new List<string> { "Sword", "Shield" }
             };

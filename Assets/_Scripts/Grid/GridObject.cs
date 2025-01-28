@@ -15,6 +15,7 @@ public class GridObject
     public GridObject cameFromNode;
     public bool isWalkable;
     public bool isBaseArea;
+    public bool isPathfindingArea;
     public bool isBuilding;
 
     public GridObject(GridXZ<GridObject> grid, int x, int z)

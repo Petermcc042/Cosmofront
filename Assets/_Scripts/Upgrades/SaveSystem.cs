@@ -5,14 +5,9 @@ public class SaveSystem : MonoBehaviour
 {
     private string saveFilePath;
 
-    private void Awake()
-    {
-        saveFilePath = Application.persistentDataPath + "/savefile.json";
-        Debug.Log(saveFilePath);
-    }
-
     public void SaveGame(SaveData saveData)
     {
+        saveFilePath = Application.persistentDataPath + "/savefile.json";
         string json = JsonUtility.ToJson(saveData, true);
         File.WriteAllText(saveFilePath, json);
         Debug.Log("Game saved to " + saveFilePath);
@@ -20,6 +15,7 @@ public class SaveSystem : MonoBehaviour
 
     public SaveData LoadGame()
     {
+        saveFilePath = Application.persistentDataPath + "/savefile.json";
         if (File.Exists(saveFilePath))
         {
             string json = File.ReadAllText(saveFilePath);

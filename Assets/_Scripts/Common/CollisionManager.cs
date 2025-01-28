@@ -144,15 +144,25 @@ public class CollisionManager : MonoBehaviour
         for (int i = 0;i < enemyDataList.Length;i++)
         {
             EnemyData enemy = enemyDataList[i];
-            Debug.Log(Mathf.FloorToInt(enemy.Position.x) + ":" + Mathf.FloorToInt(enemy.Position.z));
-            int currentIndexPostition = Mathf.FloorToInt(enemy.Position.x) * Mathf.FloorToInt(enemy.Position.z) * 200;
-            Debug.Log(currentIndexPostition);
+            int currentIndexPostition = Mathf.FloorToInt(enemy.Position.x) + Mathf.FloorToInt(enemy.Position.z) * 200;
             int targetIndexPosition = pathfinding.flowNodes[currentIndexPostition].goToIndex;
-            Debug.Log(targetIndexPosition);
-            enemy.TargetPos = new Vector3(pathfinding.flowNodes[targetIndexPosition].x, 0, pathfinding.flowNodes[targetIndexPosition].z);
+
+            if (targetIndexPosition < 0)
+            {
+                enemy.TargetPos = new Vector3(95,0,95);
+            }
+            else
+            {
+                Debug.Log("currentIndex = " + currentIndexPostition + " target is : " + targetIndexPosition);
+                // problem is here the target is being set as 1:1
+                enemy.TargetPos = new Vector3(pathfinding.flowNodes[targetIndexPosition].x, 0, pathfinding.flowNodes[targetIndexPosition].z);
+                //Debug.Log("we are going from: " + Mathf.FloorToInt(enemy.Position.x) + ":" + Mathf.FloorToInt(enemy.Position.z) + " to " + pathfinding.flowNodes[targetIndexPosition].x + ":" + pathfinding.flowNodes[targetIndexPosition].z);
+
+            }
+            enemyDataList[i] = enemy;
+            Debug.Log(enemyDataList[i].TargetPos);
         }
 
-        
 
         var moveEnemyJob = new UpdateEnemyPosition
         {

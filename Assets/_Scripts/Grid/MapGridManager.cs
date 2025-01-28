@@ -28,11 +28,11 @@ public class MapGridManager : MonoBehaviour
     private BuildingListSO buildingsListSO;
 
     [Header("Circle Points Data")]
-    [SerializeField] private string radiusPointsPath;
-    [SerializeField] private string innerPointsPath;
-    private List<Vector3> radiusPoints;
-    private List<Vector3> innerPoints;
-    private List<Vector3> newDiagPoints;
+    [SerializeField] private string circlePointsPath;
+    [SerializeField] private string pathfindingCirclePointsPath;
+    [SerializeField] private TextAsset circleDataCSV;
+    private List<Vector3> circlePoints;
+    private List<Vector3> pathfindingCirclePoints;
 
     [SerializeField] private bool debugLinesBool;
 
@@ -51,6 +51,7 @@ public class MapGridManager : MonoBehaviour
 
     // For Walls And Building
     private List<Vector3> buildableAreaList;
+    private List<Vector3> pathfindingAreaList;
 
 
     private void Awake()
@@ -65,9 +66,11 @@ public class MapGridManager : MonoBehaviour
         Instance = this;
 
         gridLocations = new List<Vector3>();
+        pathfindingAreaList = new List<Vector3>();
 
-        radiusPoints = ReadCSVFile(radiusPointsPath);
-        innerPoints = ReadCSVFile(innerPointsPath);
+        circlePoints = ReadCSVFile(circlePointsPath);
+        pathfindingCirclePoints = ReadCSVFile(pathfindingCirclePointsPath);
+
     }
 
 
@@ -167,6 +170,7 @@ public class MapGridManager : MonoBehaviour
     private void SetHomeBaseArea()
     {
         int radius = 8;
+        int pathfindingAreaMultiplier = 3;
         int centerX = gridWidth / 2;
         int centerZ = gridLength / 2;
 
@@ -183,6 +187,23 @@ public class MapGridManager : MonoBehaviour
 
                     buildableAreaList.Add(new Vector3(gridPosX, 0, gridPosZ));
                     mapGrid.GetGridObject(gridPosX, gridPosZ).isBaseArea = true;
+                }
+            }
+        }
+
+        // for creating flow field pathfinding
+        int pathfindingRadius = radius * pathfindingAreaMultiplier;
+        for (int i = -pathfindingRadius; i <= pathfindingRadius; i++)
+        {
+            for (int j = -pathfindingRadius; j <= pathfindingRadius; j++)
+            {
+                if (i * i + j * j <= pathfindingRadius * pathfindingRadius)
+                {
+                    int gridPosX = centerX + i;
+                    int gridPosZ = centerZ + j;
+
+                    pathfindingAreaList.Add(new Vector3(gridPosX, 0, gridPosZ));
+                    mapGrid.GetGridObject(gridPosX, gridPosZ).isPathfindingArea = true;
                 }
             }
         }
@@ -218,8 +239,8 @@ public class MapGridManager : MonoBehaviour
 
         PlaceBuilding(_x, _z, buildingsListSO.habitatLightSO, true);
 
-        // on the radius at some mark
-        foreach (var indexPos in radiusPoints)
+
+        foreach (var indexPos in circlePoints)
         {
             int gridX = _x + (int)indexPos.x;
             int gridZ = _z + (int)indexPos.z;
@@ -232,18 +253,18 @@ public class MapGridManager : MonoBehaviour
             }
         }
 
-        foreach (var indexPos in innerPoints)
+        foreach (var indexPos in pathfindingCirclePoints)
         {
             int gridX = _x + (int)indexPos.x;
             int gridZ = _z + (int)indexPos.z;
             Vector3 gridPos = new(gridX, 0, gridZ);
 
-            if (!buildableAreaList.Contains(gridPos))
+            if (!pathfindingAreaList.Contains(gridPos))
             {
                 // outside of buildable area place walls on circum
                 // add all squares to buildable area
-                mapGrid.GetGridObject(gridX, gridZ).isBaseArea = true;
-                buildableAreaList.Add(gridPos);
+                mapGrid.GetGridObject(gridX, gridZ).isPathfindingArea = true;
+                pathfindingAreaList.Add(gridPos);
             }
         }
 
@@ -414,6 +435,40 @@ public class MapGridManager : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError("Error reading CSV file: " + e.Message);
+        }
+
+        return vectorList;
+    }
+
+    public List<Vector3> ReadCSVContent(string csvContent)
+    {
+        List<Vector3> vectorList = new List<Vector3>();
+
+        try
+        {
+            // Split the content into lines
+            string[] lines = csvContent.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string line in lines)
+            {
+                // Split the line into individual coordinates
+                string[] coordinates = line.Split(',');
+
+                // Parse the coordinates to floats
+                float x = float.Parse(coordinates[0]);
+                float y = float.Parse(coordinates[1]);
+                float z = float.Parse(coordinates[2]);
+
+                // Create Vector3 and add to the list
+                Vector3 vector = new Vector3(x, y, z);
+                vectorList.Add(vector);
+            }
+
+            // Debug.Log("CSV content successfully parsed and converted to Vector3 list.");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Error parsing CSV content: " + e.Message);
         }
 
         return vectorList;
