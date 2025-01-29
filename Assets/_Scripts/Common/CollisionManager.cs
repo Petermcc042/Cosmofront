@@ -144,7 +144,7 @@ public class CollisionManager : MonoBehaviour
         for (int i = 0;i < enemyDataList.Length;i++)
         {
             EnemyData enemy = enemyDataList[i];
-            int currentIndexPostition = Mathf.FloorToInt(enemy.Position.x) + Mathf.FloorToInt(enemy.Position.z) * 200;
+            int currentIndexPostition = Mathf.FloorToInt(enemy.Position.z) + Mathf.FloorToInt(enemy.Position.x) * 200;
             int targetIndexPosition = pathfinding.flowNodes[currentIndexPostition].goToIndex;
 
             if (targetIndexPosition < 0)

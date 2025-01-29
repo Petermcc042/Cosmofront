@@ -175,6 +175,9 @@ public class EnemyManager : MonoBehaviour
             Destroy(enemyList[indexToRemove[i]]);
             enemyList.RemoveAt(indexToRemove[i]);
             enemyCount--;
+
+            Destroy(enemyTargetList[indexToRemove[i]]);
+            enemyTargetList.RemoveAt(indexToRemove[i]);
         }
 
         // finally updating the game object positions as can't in jobs
@@ -182,6 +185,7 @@ public class EnemyManager : MonoBehaviour
         {
             enemyList[i].transform.position = enemyDataList[i].Position;// + new Vector3(0.5f, 0, 0.5f);
             enemyList[i].transform.rotation = enemyDataList[i].Rotation;
+            enemyTargetList[i].transform.position = enemyDataList[i].TargetPos;
         }
     }
 
@@ -192,12 +196,6 @@ public class EnemyManager : MonoBehaviour
         spawnInterval = gameSettingsSO.spawnIntervalList[_indexPos];
         enemyWeightList = enemyWeights[_indexPos];
         enemyWeightSum = enemyWeightList.Sum();
-    }
-
-    IEnumerator PauseSpawning()
-    {
-        Debug.Log("pausing spawning");
-        yield return new WaitForSeconds(5f);
     }
 
     private void SetSpawnPositions(int numSpawnPositions)
@@ -315,8 +313,8 @@ public class EnemyManager : MonoBehaviour
 
         enemyList.Add(enemy);
 
-        //GameObject targetPos = Instantiate(targetPosGO, _spawnPoint, Quaternion.identity, enemy.transform);
-        //enemyTargetList.Add(targetPos);
+        GameObject targetPos = Instantiate(targetPosGO, _spawnPoint, Quaternion.identity, enemy.transform);
+        enemyTargetList.Add(targetPos);
 
         EnemyData eData = new()
         {
@@ -328,7 +326,7 @@ public class EnemyManager : MonoBehaviour
             PathPositionIndex = 1,
             PathIndex = collisionManager.pathIndexArray[_index],
             MaxPathIndex = tempInt, // can be past 
-            Speed = 10,
+            Speed = 1,
             Velocity = Vector3.zero,
             ToRemove = false,
             TargetPos = Vector3.zero,

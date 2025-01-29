@@ -69,7 +69,7 @@ public struct UpdateNodesIntegration : IJob
         while (NodeQueue.Count > 0)
         {
             FlowGridNode currentCell = NodeQueue.Dequeue();
-            if (currentCell.x <= 50 && currentCell.x >= 150 && currentCell.z <= 50 && currentCell.z >= 150) { continue; }
+            if (currentCell.x < 30 || currentCell.x >= 180 || currentCell.z < 30 || currentCell.z >= 180) { continue; }
 
             for (int offsetX = -1; offsetX <= 1; offsetX++)
             {
@@ -85,7 +85,7 @@ public struct UpdateNodesIntegration : IJob
                     {
                         FlowGridNode neighbour = GridArray[GetIndex(neighborX, neighborZ)];
                         if (!neighbour.isWalkable) continue; // Skip impassable cells
-                        if (!neighbour.isPathfindingArea) { continue; } // Skip impassable cells
+                        //if (!neighbour.isPathfindingArea) { continue; } // Skip impassable cells
 
                         // if zero + the direct movement cost < max int value se the integration cost to this new value
                         int newCost = currentCell.integrationCost + neighbour.cost;
