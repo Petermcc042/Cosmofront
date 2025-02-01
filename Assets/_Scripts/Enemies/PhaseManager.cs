@@ -24,7 +24,7 @@ public class PhaseManager : MonoBehaviour
 
     private void Awake()
     {
-        phaseTimer = 3f;
+        phaseTimer = 4f;
     }
 
     public void InitPhaseManager(GameSettingsSO _gameSettings)
