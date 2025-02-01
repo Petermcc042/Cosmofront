@@ -145,12 +145,35 @@ public class EnemyManager : MonoBehaviour
 
         gen.CheckShieldSquares(false);
 
+        CheckPaths();
+
 
         // increase timer to allow spawn loop to begin, then begin spawning
         spawnInterval = spawnCountdown;
-        keepSpawning = true; 
+        //keepSpawning = true; 
     }
 
+    private void CheckPaths()
+    {
+        Debug.Log("Checking paths");
+        
+        int currentIndexPostition = Mathf.FloorToInt(spawnOriginVectorList[0].z) + Mathf.FloorToInt(spawnOriginVectorList[0].x) * 200;
+        Debug.Log(spawnOriginVectorList[0] + " : " + pathfinding.flowNodes[currentIndexPostition].position);
+
+        for (int i = 0; i < 150; i++) {
+            Instantiate(targetPosGO, pathfinding.flowNodes[currentIndexPostition].position, Quaternion.identity, gameObject.transform);
+            if (pathfinding.flowNodes[currentIndexPostition].goToIndex < 0) {
+                // Move one square towards center if we hit a negative index
+                Vector3 currentPos = pathfinding.flowNodes[currentIndexPostition].position;
+                Vector3 towardsCenter = (centre.position - currentPos).normalized;
+                currentIndexPostition = Mathf.FloorToInt(currentPos.z + Mathf.Sign(towardsCenter.z)) + 
+                                      Mathf.FloorToInt(currentPos.x + Mathf.Sign(towardsCenter.x)) * 200;
+            } else {
+                currentIndexPostition = pathfinding.flowNodes[currentIndexPostition].goToIndex;
+            }
+            
+        }
+    }
 
 
     private void Update()
@@ -201,7 +224,7 @@ public class EnemyManager : MonoBehaviour
 
     public void RecalcPaths() 
     {
-        pathfinding.StartPartialFlowField(centre.position, false);
+        //pathfinding.StartPartialFlowField(centre.position, false);
     }
 
     private void SetSpawnPositions(int numSpawnPositions)
@@ -278,7 +301,7 @@ public class EnemyManager : MonoBehaviour
             PathPositionIndex = 1,
             PathIndex = 1, // not used
             MaxPathIndex = 1, // not used
-            Speed = 3,
+            Speed = 8,
             Velocity = Vector3.zero,
             ToRemove = false,
             TargetPos = Vector3.zero,

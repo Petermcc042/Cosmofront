@@ -109,60 +109,24 @@ public class CollisionManager : MonoBehaviour
 
     private void UpdatePositions(float _deltaTime)
     {
-/*        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        stopwatch.Start();
-
-        var job = new UpdateEnemyTargetPos
-        {
-            EnemyData = enemyDataList.AsArray(),
-            PathIndexArray = pathIndexArray,
-            PathArray = pathArray,
-            ObstructedPositions = obstructPathList.AsArray(),
-        };
-
-        JobHandle handle = job.Schedule(enemyDataList.Length, 64);
-        handle.Complete();
-
-        stopwatch.Stop();
-        Debug.Log($"Original taken: {stopwatch.ElapsedMilliseconds} ms");*/
-
-/*        System.Diagnostics.Stopwatch stopwatch2 = new System.Diagnostics.Stopwatch();
-        stopwatch2.Start();
-
-        var flowTargetJob = new UpdateEnemyFlowPos
-        {
-            EnemyData = enemyDataList.AsArray(),
-            GridArray = pathfinding.flowNodes
-        };
-
-        JobHandle flowTargetHandle = flowTargetJob.Schedule(enemyDataList.Length, 64);
-        flowTargetHandle.Complete();
-
-        stopwatch2.Stop();
-        Debug.Log($"New taken: {stopwatch2.ElapsedMilliseconds} ms");*/
-
-        for (int i = 0;i < enemyDataList.Length;i++)
+        for (int i = 0; i < enemyDataList.Length; i++)
         {
             EnemyData enemy = enemyDataList[i];
-            int currentIndexPostition = Mathf.FloorToInt(enemy.Position.z) + Mathf.FloorToInt(enemy.Position.x) * 200;
-            int targetIndexPosition = pathfinding.flowNodes[currentIndexPostition].goToIndex;
+            Vector3 currentPos = enemy.Position;
+            int currentIndex = GetGridIndex(currentPos);
 
-            if (targetIndexPosition < 0)
-            {
-                enemy.TargetPos = new Vector3(95,0,95);
-            }
-            else
-            {
-                Debug.Log("currentIndex = " + currentIndexPostition + " target is : " + targetIndexPosition);
-                // problem is here the target is being set as 1:1
-                enemy.TargetPos = new Vector3(pathfinding.flowNodes[targetIndexPosition].x, 0, pathfinding.flowNodes[targetIndexPosition].z);
-                //Debug.Log("we are going from: " + Mathf.FloorToInt(enemy.Position.x) + ":" + Mathf.FloorToInt(enemy.Position.z) + " to " + pathfinding.flowNodes[targetIndexPosition].x + ":" + pathfinding.flowNodes[targetIndexPosition].z);
+            int adjustedIndex = (pathfinding.flowNodes[currentIndex].goToIndex < 0)
+                ? GetGridIndex(currentPos + GetStepTowardsCenter(currentPos))
+                : pathfinding.flowNodes[currentIndex].goToIndex;
 
-            }
+            int nextIndex = pathfinding.flowNodes[adjustedIndex].goToIndex;
+
+            enemy.TargetPos = (nextIndex < 0)
+                ? currentPos + GetStepTowardsCenter(currentPos)
+                : pathfinding.flowNodes[nextIndex].position;
+
             enemyDataList[i] = enemy;
-            Debug.Log(enemyDataList[i].TargetPos);
         }
-
 
         var moveEnemyJob = new UpdateEnemyPosition
         {
@@ -470,37 +434,20 @@ public class CollisionManager : MonoBehaviour
         }
     }
 
-    public void CombinedPaths(List<List<Vector3>> _pathList)
+    // Helper method to compute the grid index from a world position.
+    private int GetGridIndex(Vector3 pos)
     {
-        int tempCount = 0;
-        int totalCount = 0;
+        // Here we assume a grid width of 200 (i.e. index = z + x * 200)
+        return Mathf.FloorToInt(pos.z) + Mathf.FloorToInt(pos.x) * 200;
+    }
 
-        // Count total number of Vector3s across all paths
-        for (int i = 0; i < _pathList.Count; i++)
-        {
-            totalCount += _pathList[i].Count;
-            //Debug.Log(_pathList[i][_pathList[i].Count - 1]);
-        }
-
-        // Initialize NativeArrays
-        pathArray = new(totalCount, Allocator.Persistent);
-        pathIndexArray = new(_pathList.Count, Allocator.Persistent);
-
-        // Fill the pathArray and pathIndexArray
-        for (int i = 0; i < _pathList.Count; i++)
-        {
-            pathIndexArray[i] = tempCount;
-
-            for (int j = 0; j < _pathList[i].Count; j++)
-            {
-                pathArray[j + tempCount] = _pathList[i][j];
-            }
-
-            // Increment tempCount by the size of the current sub-list
-            tempCount += _pathList[i].Count;
-        }
-
-        AddEnemyPaths(pathArray, pathIndexArray);
+    // Helper method to compute a one-grid-step vector toward the center.
+    private Vector3 GetStepTowardsCenter(Vector3 pos)
+    {
+        Vector3 center = new Vector3(100, 0, 100);
+        Vector3 direction = (center - pos).normalized;
+        // Move one grid cell (1 unit) in the direction of the center.
+        return new Vector3(Mathf.Sign(direction.x), 0, Mathf.Sign(direction.z));
     }
 }
 

@@ -7,6 +7,7 @@ using Unity.Mathematics;
 public struct FlowGridNode
 {
     public int index;
+    public float3 position;
     public int x;
     public int z;
     public int cost;             // Movement cost (terrain difficulty)
