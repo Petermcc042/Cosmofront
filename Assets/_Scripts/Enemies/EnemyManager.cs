@@ -98,7 +98,7 @@ public class EnemyManager : MonoBehaviour
 
     [SerializeField] private int speed;
 
-    private Transform centre;
+    public Transform centre;
 
     void Awake()
     {
@@ -140,16 +140,40 @@ public class EnemyManager : MonoBehaviour
 
         centre = generator.transform; // set the target position for all the enemy pathfinding
 
-        SetSpawnPositions(numberOfSpawns); // set the bases and set up pathfinding
+        SetSpawnPositions(numberOfSpawns); // set the spawn positions
+        pathfinding.StartFlowField(centre.position, true); // create the flow field
 
         gen.CheckShieldSquares(false);
+
+        CheckPaths();
 
 
         // increase timer to allow spawn loop to begin, then begin spawning
         spawnInterval = spawnCountdown;
-        keepSpawning = true; 
+        //keepSpawning = true; 
     }
 
+    private void CheckPaths()
+    {
+        Debug.Log("Checking paths");
+        
+        int currentIndexPostition = Mathf.FloorToInt(spawnOriginVectorList[0].z) + Mathf.FloorToInt(spawnOriginVectorList[0].x) * 200;
+        Debug.Log(spawnOriginVectorList[0] + " : " + pathfinding.flowNodes[currentIndexPostition].position);
+
+        for (int i = 0; i < 150; i++) {
+            Instantiate(targetPosGO, pathfinding.flowNodes[currentIndexPostition].position, Quaternion.identity, gameObject.transform);
+            if (pathfinding.flowNodes[currentIndexPostition].goToIndex < 0) {
+                // Move one square towards center if we hit a negative index
+                Vector3 currentPos = pathfinding.flowNodes[currentIndexPostition].position;
+                Vector3 towardsCenter = (centre.position - currentPos).normalized;
+                currentIndexPostition = Mathf.FloorToInt(currentPos.z + Mathf.Sign(towardsCenter.z)) + 
+                                      Mathf.FloorToInt(currentPos.x + Mathf.Sign(towardsCenter.x)) * 200;
+            } else {
+                currentIndexPostition = pathfinding.flowNodes[currentIndexPostition].goToIndex;
+            }
+            
+        }
+    }
 
 
     private void Update()
@@ -175,6 +199,9 @@ public class EnemyManager : MonoBehaviour
             Destroy(enemyList[indexToRemove[i]]);
             enemyList.RemoveAt(indexToRemove[i]);
             enemyCount--;
+
+            Destroy(enemyTargetList[indexToRemove[i]]);
+            enemyTargetList.RemoveAt(indexToRemove[i]);
         }
 
         // finally updating the game object positions as can't in jobs
@@ -182,6 +209,7 @@ public class EnemyManager : MonoBehaviour
         {
             enemyList[i].transform.position = enemyDataList[i].Position;// + new Vector3(0.5f, 0, 0.5f);
             enemyList[i].transform.rotation = enemyDataList[i].Rotation;
+            enemyTargetList[i].transform.position = enemyDataList[i].TargetPos;
         }
     }
 
@@ -194,10 +222,18 @@ public class EnemyManager : MonoBehaviour
         enemyWeightSum = enemyWeightList.Sum();
     }
 
-    IEnumerator PauseSpawning()
+    public void RecalcPaths() 
     {
-        Debug.Log("pausing spawning");
-        yield return new WaitForSeconds(5f);
+        // Start measuring time
+        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
+
+        // The code we want to time:
+        pathfinding.RecalcFlowField(centre.position, false); // create the flow field
+
+        // Stop measuring time
+        stopwatch.Stop();
+        Debug.Log($"Flow field recalculation took: {stopwatch.ElapsedMilliseconds} ms");
     }
 
     private void SetSpawnPositions(int numSpawnPositions)
@@ -207,24 +243,10 @@ public class EnemyManager : MonoBehaviour
         for (int i = 0; i < numSpawnPositions; i++)
         {
             Vector3 spawnPos = GetSpawnPosition(i, numSpawnPositions);
-
-            List<Vector3> tempList = SetTargetPosition(spawnPos, centre.position);
-
-            if (tempList == null)
-            {
-                i--;
-                continue;
-            }
-
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.transform.position = spawnPos;
-
-            pathLists.Add(tempList);
             spawnOriginVectorList.Add(spawnPos);
         }
-
-        pathfinding.StartFlowField(centre.position, true);
-        collisionManager.CombinedPaths(pathLists);
     }
 
     private Vector3 GetSpawnPosition(int index, int totalSpawns)
@@ -259,64 +281,24 @@ public class EnemyManager : MonoBehaviour
     }
 
 
-
-    // Get the pathfinding from base to centre
-    private List<Vector3> SetTargetPosition(Vector3 _spawnPos, Vector3 _targetPosition)
-    {
-        List<Vector3> pathList = Pathfinding.Instance.FindPath(_spawnPos, _targetPosition);
-        //List<Vector3> pathList = pathfinding.FindPath(_targetPosition, _spawnPos);
-
-
-        if (showDebugLines)
-        {
-            if (pathList != null)
-            {
-                for (int i = 0; i < pathList.Count-1; i++)
-                {
-                    Debug.DrawLine(new Vector3(pathList[i].x, 1, pathList[i].z) + Vector3.one * 0.5f, new Vector3(pathList[i + 1].x, 1, pathList[i + 1].z) + Vector3.one * 0.5f, UnityEngine.Color.black, 100f);
-                }
-            }
-        }
-
-        return pathList;
-    }
-
-    public void RecalcPaths() 
-    {
-        pathfinding.StartPartialFlowField(centre.position, false);
-    }
-
     private void SpawnIndividualObjects()
     {
-        if (pathLists.Count == 0) { return; }
+        if (spawnIndexCount >= numberOfSpawns) { spawnIndexCount = 0; } // spawn index count never exceeds the number of paths to the centre
 
-        if (spawnIndexCount >= pathLists.Count) { spawnIndexCount = 0; } // spawn index count never exceeds the number of paths to the centre
-
-        InstantiateEnemyObject(collisionManager.pathArray[collisionManager.pathIndexArray[spawnIndexCount]], spawnIndexCount);
-        enemyCount++;
-        spawnIndexCount++;
-    }
-
-    private void InstantiateEnemyObject(Vector3 _spawnPoint, int _index)
-    {
         int tempInt;
+        Vector3 spawnPoint = spawnOriginVectorList[spawnIndexCount];
 
-        if (_index == numberOfSpawns-1)
-            tempInt = collisionManager.pathArray.Length;
-        else
-            tempInt = collisionManager.pathIndexArray[_index + 1];
-
-        GameObject enemy = Instantiate(enemyParent, _spawnPoint, Quaternion.identity, gameObject.transform);
+        GameObject enemy = Instantiate(enemyParent, spawnPoint, Quaternion.identity, gameObject.transform);
 
         // select a random number to refer to a random enemy instantiate that enemy under the parent
         int randomValue = Mathf.RoundToInt(UnityEngine.Random.Range(0, enemyWeightSum + 1));
         int enemyIndex = FindIndexInCumulativeSum(enemyWeightList, randomValue);
-        Instantiate(gameSettingsSO.enemyPrefabList[enemyIndex], _spawnPoint, Quaternion.identity, enemy.transform);
+        Instantiate(gameSettingsSO.enemyPrefabList[enemyIndex], spawnPoint, Quaternion.identity, enemy.transform);
 
         enemyList.Add(enemy);
 
-        //GameObject targetPos = Instantiate(targetPosGO, _spawnPoint, Quaternion.identity, enemy.transform);
-        //enemyTargetList.Add(targetPos);
+        GameObject targetPos = Instantiate(targetPosGO, spawnPoint, Quaternion.identity, enemy.transform);
+        enemyTargetList.Add(targetPos);
 
         EnemyData eData = new()
         {
@@ -324,11 +306,11 @@ public class EnemyManager : MonoBehaviour
             Health = gameSettingsSO.enemyHealthList[enemyIndex],
             Armour = 1,
             Damage = 1,
-            Position = collisionManager.pathArray[collisionManager.pathIndexArray[_index]],// take the overall list and based on the 
+            Position = spawnPoint,// take the overall list and based on the 
             PathPositionIndex = 1,
-            PathIndex = collisionManager.pathIndexArray[_index],
-            MaxPathIndex = tempInt, // can be past 
-            Speed = 10,
+            PathIndex = 1, // not used
+            MaxPathIndex = 1, // not used
+            Speed = 8,
             Velocity = Vector3.zero,
             ToRemove = false,
             TargetPos = Vector3.zero,
@@ -337,6 +319,9 @@ public class EnemyManager : MonoBehaviour
         };
 
         collisionManager.AddEnemyData(eData);
+
+        spawnIndexCount++;
+        enemyCount++;
     }
 
 

@@ -29,6 +29,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private ResourceManager resourceManager;
     [SerializeField] private CollisionManager collisionManager;
     [SerializeField] private NewPathfinding pathfinder;
+    [SerializeField] private SaveSystem saveSystem;
 
 
     [Header("Building Aid")]
@@ -93,12 +94,34 @@ public class GameManager : MonoBehaviour
     private int lastSelectedPath;
     private Vector3 lastSelectedCost;
 
+    private SaveData playerData;
+
 
     private void Awake()
     {
         gameState = false;
         Time.timeScale = 1;
         totalTime = gameSettings.totalTime;
+
+        playerData = saveSystem.LoadGame();
+
+        if (playerData != null)
+        {
+            Debug.Log("Loaded Data");
+        }
+        else
+        {
+            SaveData saveData = new SaveData
+            {
+                playerLevel = 0,
+                generatorHealthIncrease = 0f,
+                playerPosition = new Vector3(1, 2, 3),
+                inventoryItems = new List<string> { "Sword", "Shield" }
+            };
+            saveSystem.SaveGame(saveData);
+
+            playerData = saveSystem.LoadGame();
+        }
     }
 
     void Start()

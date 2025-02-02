@@ -48,6 +48,8 @@ public class CollisionManager : MonoBehaviour
 
     public GameObject damageTextPrefab;
 
+    uint mySeed = 1;
+
 
     void Awake()
     {
@@ -109,49 +111,17 @@ public class CollisionManager : MonoBehaviour
 
     private void UpdatePositions(float _deltaTime)
     {
-/*        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        stopwatch.Start();
+        uint seed = (mySeed != 0) ? mySeed : 1;
 
-        var job = new UpdateEnemyTargetPos
+        var updateEnemyTargetJob = new UpdateEnemyTargetPos
         {
             EnemyData = enemyDataList.AsArray(),
-            PathIndexArray = pathIndexArray,
-            PathArray = pathArray,
-            ObstructedPositions = obstructPathList.AsArray(),
+            FlowGridArray = pathfinding.flowNodes,
+            seed = seed
         };
 
-        JobHandle handle = job.Schedule(enemyDataList.Length, 64);
-        handle.Complete();
-
-        stopwatch.Stop();
-        Debug.Log($"Original taken: {stopwatch.ElapsedMilliseconds} ms");*/
-
-/*        System.Diagnostics.Stopwatch stopwatch2 = new System.Diagnostics.Stopwatch();
-        stopwatch2.Start();
-
-        var flowTargetJob = new UpdateEnemyFlowPos
-        {
-            EnemyData = enemyDataList.AsArray(),
-            GridArray = pathfinding.flowNodes
-        };
-
-        JobHandle flowTargetHandle = flowTargetJob.Schedule(enemyDataList.Length, 64);
-        flowTargetHandle.Complete();
-
-        stopwatch2.Stop();
-        Debug.Log($"New taken: {stopwatch2.ElapsedMilliseconds} ms");*/
-
-        for (int i = 0;i < enemyDataList.Length;i++)
-        {
-            EnemyData enemy = enemyDataList[i];
-            Debug.Log(Mathf.FloorToInt(enemy.Position.x) + ":" + Mathf.FloorToInt(enemy.Position.z));
-            int currentIndexPostition = Mathf.FloorToInt(enemy.Position.x) * Mathf.FloorToInt(enemy.Position.z) * 200;
-            Debug.Log(currentIndexPostition);
-            int targetIndexPosition = pathfinding.flowNodes[currentIndexPostition].goToIndex;
-            Debug.Log(targetIndexPosition);
-            enemy.TargetPos = new Vector3(pathfinding.flowNodes[targetIndexPosition].x, 0, pathfinding.flowNodes[targetIndexPosition].z);
-        }
-
+        JobHandle updateEnemyTargetPosHandle = updateEnemyTargetJob.Schedule(enemyDataList.Length, 64);
+        updateEnemyTargetPosHandle.Complete();
         
 
         var moveEnemyJob = new UpdateEnemyPosition
@@ -460,37 +430,20 @@ public class CollisionManager : MonoBehaviour
         }
     }
 
-    public void CombinedPaths(List<List<Vector3>> _pathList)
+    // Helper method to compute the grid index from a world position.
+    private int GetGridIndex(Vector3 pos)
     {
-        int tempCount = 0;
-        int totalCount = 0;
+        // Here we assume a grid width of 200 (i.e. index = z + x * 200)
+        return Mathf.FloorToInt(pos.z) + Mathf.FloorToInt(pos.x) * 200;
+    }
 
-        // Count total number of Vector3s across all paths
-        for (int i = 0; i < _pathList.Count; i++)
-        {
-            totalCount += _pathList[i].Count;
-            //Debug.Log(_pathList[i][_pathList[i].Count - 1]);
-        }
-
-        // Initialize NativeArrays
-        pathArray = new(totalCount, Allocator.Persistent);
-        pathIndexArray = new(_pathList.Count, Allocator.Persistent);
-
-        // Fill the pathArray and pathIndexArray
-        for (int i = 0; i < _pathList.Count; i++)
-        {
-            pathIndexArray[i] = tempCount;
-
-            for (int j = 0; j < _pathList[i].Count; j++)
-            {
-                pathArray[j + tempCount] = _pathList[i][j];
-            }
-
-            // Increment tempCount by the size of the current sub-list
-            tempCount += _pathList[i].Count;
-        }
-
-        AddEnemyPaths(pathArray, pathIndexArray);
+    // Helper method to compute a one-grid-step vector toward the center.
+    private Vector3 GetStepTowardsCenter(Vector3 pos)
+    {
+        Vector3 center = new Vector3(100, 0, 100);
+        Vector3 direction = (center - pos).normalized;
+        // Move one grid cell (1 unit) in the direction of the center.
+        return new Vector3(Mathf.Sign(direction.x), 0, Mathf.Sign(direction.z));
     }
 }
 
@@ -499,48 +452,67 @@ public class CollisionManager : MonoBehaviour
 public struct UpdateEnemyTargetPos : IJobParallelFor
 {
     public NativeArray<EnemyData> EnemyData;
-    [ReadOnly] public NativeArray<Vector3> PathArray;
-    [ReadOnly] public NativeArray<int> PathIndexArray;
-    [ReadOnly] public NativeArray<Vector3> ObstructedPositions;
+    [ReadOnly] public NativeArray<FlowGridNode> FlowGridArray;
+    
+    // A seed that you can set from your main thread
+    public uint seed;
 
     public void Execute(int index)
     {
+        // Initialize a random number generator for this enemy.
+        // Using the index (plus a base seed) gives each enemy a unique sequence.
+        Unity.Mathematics.Random random = new Unity.Mathematics.Random(seed + (uint)index);
+        
+        // Get the current enemy data.
         EnemyData enemy = EnemyData[index];
+        Vector3 currentPos = enemy.Position;
+        int currentIndex = GetGridIndex(currentPos);
 
-        if (enemy.TargetNeeded)
-        {
-            // Find the next target position
-            int largeIndex = enemy.PathIndex + enemy.PathPositionIndex;
-            int tempInt = Mathf.Min(enemy.MaxPathIndex - 1, largeIndex);
-            enemy.TargetPos = PathArray[tempInt];
+        // Determine the next grid node via the flow field.
+        int adjustedIndex = (FlowGridArray[currentIndex].goToIndex < 0)
+            ? GetGridIndex(currentPos + GetStepTowardsCenter(currentPos))
+            : FlowGridArray[currentIndex].goToIndex;
+        int nextIndex = FlowGridArray[adjustedIndex].goToIndex;
 
-            EnemyData[index] = enemy;
-        }
-    }
-}
+        // Calculate the base target position.
+        Vector3 targetPos = (nextIndex < 0)
+            ? currentPos + GetStepTowardsCenter(currentPos)
+            : FlowGridArray[nextIndex].position;
 
-[BurstCompile]
-public struct UpdateEnemyFlowPos : IJobParallelFor
-{
-    public NativeArray<EnemyData> EnemyData;
-    [ReadOnly] public NativeArray<FlowGridNode> GridArray;
+        // --- Variability starts here ---
+        // Define how much variability you want.
+        float variance = 0.5f; // Adjust this to taste.
+        Vector3 randomOffset = new Vector3(
+            random.NextFloat(-variance, variance),
+            0,
+            random.NextFloat(-variance, variance)
+        );
 
-    public void Execute(int index)
-    {
-        EnemyData enemy = EnemyData[index];
+        // Apply the random offset to the target position.
+        enemy.TargetPos = targetPos;// + randomOffset;
+        // --- Variability ends here ---
 
-        int currentIndexPostition = Mathf.FloorToInt(enemy.Position.x) *  Mathf.FloorToInt(enemy.Position.z) * 200;
-        int targetIndexPosition = GridArray[currentIndexPostition].goToIndex;
-        enemy.TargetPos = new Vector3(GridArray[targetIndexPosition].x, 0, GridArray[targetIndexPosition].z);
-
+        // Write the modified enemy data back.
         EnemyData[index] = enemy;
     }
 
-    private int GetIndex(int x, int z)
+    // Converts a world position to a grid index.
+    private int GetGridIndex(Vector3 pos)
     {
-        return z + x * 200;
+        // Example grid indexing; adjust based on your grid layout.
+        return Mathf.FloorToInt(pos.z) + Mathf.FloorToInt(pos.x) * 200;
+    }
+
+    // Returns a simple step towards the center of the map.
+    private Vector3 GetStepTowardsCenter(Vector3 pos)
+    {
+        Vector3 center = new Vector3(100, 0, 100);
+        Vector3 direction = (center - pos).normalized;
+        // This gives an integer-like step (e.g., (-1, 0, 1)) based on the direction.
+        return new Vector3(Mathf.Sign(direction.x), 0, Mathf.Sign(direction.z));
     }
 }
+
 
 [BurstCompile]
 public struct UpdateEnemyPosition : IJobParallelFor

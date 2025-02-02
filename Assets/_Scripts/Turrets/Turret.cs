@@ -426,6 +426,12 @@ public class Turret : MonoBehaviour
 
         switch (e.skillType)
         {
+            case SkillManager.SkillType.MegaUpgrade:
+                fireRate = 20;
+                passThrough = 2;
+                targetingRate = 0.1f;
+                bulletDamage = 10;
+                break;
             case SkillManager.SkillType.ExplosiveRound:
                 bulletTypes[1] = BulletType.Explosive;
                 fireRate = 1;
