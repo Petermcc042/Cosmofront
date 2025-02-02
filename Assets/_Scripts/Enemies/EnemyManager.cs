@@ -141,7 +141,7 @@ public class EnemyManager : MonoBehaviour
         centre = generator.transform; // set the target position for all the enemy pathfinding
 
         SetSpawnPositions(numberOfSpawns); // set the spawn positions
-        pathfinding.StartFlowField(centre.position, true);
+        pathfinding.StartFlowField(centre.position, true); // create the flow field
 
         gen.CheckShieldSquares(false);
 
@@ -224,7 +224,16 @@ public class EnemyManager : MonoBehaviour
 
     public void RecalcPaths() 
     {
-        //pathfinding.StartPartialFlowField(centre.position, false);
+        // Start measuring time
+        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
+
+        // The code we want to time:
+        pathfinding.RecalcFlowField(centre.position, false); // create the flow field
+
+        // Stop measuring time
+        stopwatch.Stop();
+        Debug.Log($"Flow field recalculation took: {stopwatch.ElapsedMilliseconds} ms");
     }
 
     private void SetSpawnPositions(int numSpawnPositions)

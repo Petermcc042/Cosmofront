@@ -175,7 +175,7 @@ public class SkillManager: MonoBehaviour
     public void UnlockSkill_UI()
     {
         Enum.TryParse(updatedSkillName, out SkillType skillType);
-        OnSkillUnlocked?.Invoke(this, new OnSkillUnlockedEventArgs { skillType = skillType, buildingID = updatedBuildingID, upgradePath = updatedBuildingPath });
+        OnSkillUnlocked?.Invoke(this, new OnSkillUnlockedEventArgs { skillType = skillType, buildingID = updatedBuildingID, upgradePath = updatedBuildingPath, global = true });
     }
 
     public bool IsSkillUnlocked(SkillType skillType)
@@ -195,13 +195,13 @@ public class SkillManager: MonoBehaviour
         }
         else
         {
-            //Debug.LogError($"Invalid round type: {roundType}");
+            Debug.LogError($"Invalid round type: {roundType}");
         }
     }
 
     public enum SkillType
     {
-        None,
+        None, MegaUpgrade,
         ExplosiveRound, LightningRound, SlowRound, SpreadRound, RicochetRound, OverchargeRound, PiercingRound, // medium turret upgrades
         OrbitalStrike, MeteorShower, Overclocked, Firestorm, TimewarpPayload, Timewarp,// large turret upgrades
         // not actually used

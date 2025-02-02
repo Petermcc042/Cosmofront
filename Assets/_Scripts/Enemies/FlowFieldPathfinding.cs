@@ -86,7 +86,7 @@ public struct UpdateNodesIntegration : IJob
                     {
                         FlowGridNode neighbour = GridArray[GetIndex(neighborX, neighborZ)];
                         if (!neighbour.isWalkable) continue; // Skip impassable cells
-                        //if (!neighbour.isPathfindingArea) { continue; } // Skip impassable cells
+                        if (!runFullGrid && !neighbour.isPathfindingArea) { continue; } // Skip impassable cells
 
                         // if zero + the direct movement cost < max int value se the integration cost to this new value
                         int newCost = currentCell.integrationCost + neighbour.cost;
@@ -152,6 +152,31 @@ public struct UpdateGoToIndex : IJob
             }
 
             tempNode.goToIndex = currentLowestIndex;
+            GridArray[index] = tempNode;
+        }
+    }
+
+    private int GetIndex(int x, int z)
+    {
+        return z + x * gridWidth;
+    }
+}
+
+
+[BurstCompile]
+public struct WeightBuildingNodes : IJob
+{
+    public NativeArray<FlowGridNode> GridArray;
+    [ReadOnly] public int gridWidth;
+    [ReadOnly] public int endX, endZ;
+    [ReadOnly] public bool runFullGrid;
+
+    public void Execute()
+    {
+        for(int index = 0; index < GridArray.Length; index++)
+        {
+            FlowGridNode tempNode = GridArray[index];
+
             GridArray[index] = tempNode;
         }
     }

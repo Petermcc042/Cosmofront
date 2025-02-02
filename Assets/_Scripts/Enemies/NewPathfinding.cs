@@ -60,6 +60,28 @@ public class NewPathfinding : MonoBehaviour
         RunFlowField(endWorldPosition, _runFullFlow);
     }
 
+    public void RecalcFlowField(Vector3 endWorldPosition, bool _runFullFlow)
+    {
+        
+        int count = 0;
+        for (int x = 0; x < gridLength; x++)
+        {
+            for (int z = 0; z < gridLength; z++)
+            {
+                GridObject tempObject = gridManager.mapGrid.GetGridObject(x, z);
+
+                FlowGridNode tempNode = flowNodes[count];
+                tempNode.isWalkable = tempObject.isWalkable;
+                tempNode.isPathfindingArea = tempObject.isPathfindingArea;
+                flowNodes[count] = tempNode;
+
+                count++;
+            }
+        }
+
+        RunFlowField(endWorldPosition, _runFullFlow);
+    }
+
 
     private void RunFlowField(Vector3 endWorldPosition, bool _runFullFlow)
     {
@@ -109,7 +131,7 @@ public class NewPathfinding : MonoBehaviour
         flowHandle3.Complete();
 
 
-        WriteDataToCSV("output.csv");
+        //WriteDataToCSV("output.csv");
     }
 
     public void WriteDataToCSV(string filePath)

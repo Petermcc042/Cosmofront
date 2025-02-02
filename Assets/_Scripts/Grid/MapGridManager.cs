@@ -65,6 +65,7 @@ public class MapGridManager : MonoBehaviour
         // Set the instance to this object
         Instance = this;
 
+        buildableAreaList = new List<Vector3>();
         gridLocations = new List<Vector3>();
         pathfindingAreaList = new List<Vector3>();
 
@@ -173,8 +174,6 @@ public class MapGridManager : MonoBehaviour
         int pathfindingAreaMultiplier = 3;
         int centerX = gridWidth / 2;
         int centerZ = gridLength / 2;
-
-        buildableAreaList = new List<Vector3>();
 
         for (int i = -radius; i <= radius; i++)
         {

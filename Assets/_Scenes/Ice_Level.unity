@@ -8154,7 +8154,7 @@ GameObject:
   - component: {fileID: 428634752}
   - component: {fileID: 428634751}
   m_Layer: 0
-  m_Name: Turrets (2)
+  m_Name: lightningButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15552,7 +15552,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: AutoSniper
+  m_text: MegaUpgrade
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -28731,7 +28731,7 @@ GameObject:
   - component: {fileID: 1529908846}
   - component: {fileID: 1529908845}
   m_Layer: 0
-  m_Name: Turrets (4)
+  m_Name: MegaButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28810,7 +28810,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: AutoSniper
+          m_StringArgument: MegaUpgrade
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1529908846
@@ -31127,7 +31127,7 @@ GameObject:
   - component: {fileID: 1711642430}
   - component: {fileID: 1711642429}
   m_Layer: 0
-  m_Name: Turrets (1)
+  m_Name: slowButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32134,7 +32134,7 @@ GameObject:
   - component: {fileID: 1848957816}
   - component: {fileID: 1848957815}
   m_Layer: 0
-  m_Name: Turrets (3)
+  m_Name: ExplosiveButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
