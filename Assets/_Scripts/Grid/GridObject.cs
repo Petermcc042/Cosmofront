@@ -25,6 +25,7 @@ public class GridObject
         this.z = z;
         isWalkable = true;
         isBaseArea = false;
+        isBuilding = false;
     }
 
     public void CalculateFCost() {

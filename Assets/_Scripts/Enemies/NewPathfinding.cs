@@ -62,7 +62,7 @@ public class NewPathfinding : MonoBehaviour
 
     public void RecalcFlowField(Vector3 endWorldPosition, bool _runFullFlow)
     {
-        
+
         int count = 0;
         for (int x = 0; x < gridLength; x++)
         {
@@ -73,6 +73,7 @@ public class NewPathfinding : MonoBehaviour
                 FlowGridNode tempNode = flowNodes[count];
                 tempNode.isWalkable = tempObject.isWalkable;
                 tempNode.isPathfindingArea = tempObject.isPathfindingArea;
+                tempNode.isBuilding = tempObject.isBuilding;
                 flowNodes[count] = tempNode;
 
                 count++;
@@ -117,8 +118,7 @@ public class NewPathfinding : MonoBehaviour
 
         nodeQueue.Dispose();
 
-
-        UpdateGoToIndex flowJob3 = new UpdateGoToIndex
+        WeightBuildingNodes flowJob3 = new WeightBuildingNodes
         {
             GridArray = flowNodes,
             endX = endX,
@@ -131,7 +131,20 @@ public class NewPathfinding : MonoBehaviour
         flowHandle3.Complete();
 
 
-        //WriteDataToCSV("output.csv");
+        UpdateGoToIndex flowJob4 = new UpdateGoToIndex
+        {
+            GridArray = flowNodes,
+            endX = endX,
+            endZ = endZ,
+            runFullGrid = _runFullFlow,
+            gridWidth = gridLength
+        };
+
+        JobHandle flowHandle4 = flowJob4.Schedule();
+        flowHandle4.Complete();
+
+
+        WriteDataToCSV("output.csv");
     }
 
     public void WriteDataToCSV(string filePath)

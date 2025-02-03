@@ -111,6 +111,71 @@ public struct UpdateNodesIntegration : IJob
 
 
 
+[BurstCompile]
+public struct WeightBuildingNodes : IJob
+{
+    public NativeArray<FlowGridNode> GridArray;
+    [ReadOnly] public int gridWidth;
+    [ReadOnly] public int endX, endZ;
+    [ReadOnly] public bool runFullGrid;
+
+    public void Execute()
+    {
+        for (int index = 0; index < GridArray.Length; index++)
+        {
+            FlowGridNode tempNode = GridArray[index];
+
+            if (tempNode.isBuilding)
+            {
+                int x = tempNode.x;
+                int z = tempNode.z;
+                tempNode.integrationCost = -int.MaxValue; // Highest cost reduction for the building itself
+                GridArray[index] = tempNode;
+
+                // Expand outward in rings, updating only the perimeter
+                for (int ring = 1; ring <= 10; ring++)
+                {
+                    int costReduction = 50000 - (ring * 100);
+
+                    // Top and Bottom Rows
+                    for (int dx = -ring; dx <= ring; dx++)
+                    {
+                        ProcessNode(x + dx, z - ring, costReduction); // Top row
+                        ProcessNode(x + dx, z + ring, costReduction); // Bottom row
+                    }
+
+                    // Left and Right Columns (excluding corners already processed)
+                    for (int dz = -ring + 1; dz <= ring - 1; dz++)
+                    {
+                        ProcessNode(x - ring, z + dz, costReduction); // Left column
+                        ProcessNode(x + ring, z + dz, costReduction); // Right column
+                    }
+                }
+            }
+        }
+    }
+
+    private void ProcessNode(int newX, int newZ, int costReduction)
+    {
+        if (newX >= 0 && newX < gridWidth && newZ >= 0 && newZ < gridWidth)
+        {
+            int neighborIndex = GetIndex(newX, newZ);
+            FlowGridNode neighborNode = GridArray[neighborIndex];
+
+            if (!neighborNode.isBuilding && neighborNode.isWalkable)
+            {
+                neighborNode.integrationCost -= costReduction;
+                GridArray[neighborIndex] = neighborNode;
+            }
+        }
+    }
+
+    private int GetIndex(int x, int z)
+    {
+        return z + x * gridWidth;
+    }
+}
+
 
 [BurstCompile]
 public struct UpdateGoToIndex : IJob
@@ -152,31 +217,6 @@ public struct UpdateGoToIndex : IJob
             }
 
             tempNode.goToIndex = currentLowestIndex;
-            GridArray[index] = tempNode;
-        }
-    }
-
-    private int GetIndex(int x, int z)
-    {
-        return z + x * gridWidth;
-    }
-}
-
-
-[BurstCompile]
-public struct WeightBuildingNodes : IJob
-{
-    public NativeArray<FlowGridNode> GridArray;
-    [ReadOnly] public int gridWidth;
-    [ReadOnly] public int endX, endZ;
-    [ReadOnly] public bool runFullGrid;
-
-    public void Execute()
-    {
-        for(int index = 0; index < GridArray.Length; index++)
-        {
-            FlowGridNode tempNode = GridArray[index];
-
             GridArray[index] = tempNode;
         }
     }

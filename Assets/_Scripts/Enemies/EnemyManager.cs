@@ -145,7 +145,7 @@ public class EnemyManager : MonoBehaviour
 
         gen.CheckShieldSquares(false);
 
-        CheckPaths();
+        //CheckPaths();
 
 
         // increase timer to allow spawn loop to begin, then begin spawning

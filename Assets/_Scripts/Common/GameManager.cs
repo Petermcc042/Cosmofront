@@ -219,7 +219,9 @@ public class GameManager : MonoBehaviour
 
         if (Input.GetMouseButtonDown(1))
         {
-            MapGridManager.Instance.DestroyBuilding(GetMouseWorldPosition());
+            MapGridManager.Instance.mapGrid.GetXZ(GetMouseWorldPosition(), out int _x, out int _z);
+            MapGridManager.Instance.DestroyBuilding(_x,_z);
+
         }
     }
 
@@ -462,7 +464,7 @@ public class GameManager : MonoBehaviour
         tempBuildingOffset = Vector3.zero;
         tempObjectShowing.transform.localScale = new Vector3(currentSO.width, 1, currentSO.length);
 
-        activeBuildingText.text = currentSO.visibleName ;
+        activeBuildingText.text = currentSO.visibleName;
         attActiveCostText.text = currentSO.buildingCost.x.ToString();
         marcumActiveCostText.text = currentSO.buildingCost.y.ToString();
         imearActiveCostText.text = currentSO.buildingCost.z.ToString();

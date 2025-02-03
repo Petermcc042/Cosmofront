@@ -51,6 +51,7 @@ public class MapGridManager : MonoBehaviour
 
     // For Walls And Building
     private List<Vector3> buildableAreaList;
+    private List<Vector3> habitatLightList;
     private List<Vector3> pathfindingAreaList;
 
 
@@ -66,6 +67,7 @@ public class MapGridManager : MonoBehaviour
         Instance = this;
 
         buildableAreaList = new List<Vector3>();
+        habitatLightList = new List<Vector3>();
         gridLocations = new List<Vector3>();
         pathfindingAreaList = new List<Vector3>();
 
@@ -222,22 +224,74 @@ public class MapGridManager : MonoBehaviour
         buildableAreaMesh.InitMesh(false);
     }
 
-    public void PlaceHabitatLight(Vector3 _mouseWorldPosition, bool _bool)
+    public void PlaceBuilding(Vector3 _mouseWorldPosition, PlacedObjectSO _placedObjectSO)
     {
         mapGrid.GetXZ(_mouseWorldPosition, out int x, out int z);
-        PlaceCircleHabitatLight(x, z, _bool);
+
+        if (!mapGrid.GetGridObject(x, z).isBaseArea) { return; }
+
+        PlaceBuilding(x, z, _placedObjectSO, true);
+    }
+
+
+    private void PlaceBuilding(int _x, int _z, PlacedObjectSO _placedObjectSO, bool _location)
+    {
+        // return a list of grid coordinates that the current selected placedObjectSO will occupy
+        // we pass in the origin and  direction (dir) to know which coordinates to search through
+        List<Vector2Int> gridPosList = _placedObjectSO.GetGridPositionList(new Vector2Int(_x, _z), dir);
+
+        // check each coordinate pulled above to see if there is a grid object on this position
+        // if there is can build = false and break
+        foreach (Vector2Int pos in gridPosList)
+        {
+            GridObject tempGrid = mapGrid.GetGridObject(pos.x, pos.y);
+
+            // Can only build if:
+            // 1. The space is in the base area
+            // 2. The space is NOT already occupied by a building
+            if (!tempGrid.isBaseArea || tempGrid.isBuilding)
+            {
+                Debug.Log("Cannot build here - " + (!tempGrid.isBaseArea ? "Not in base area" : "Space already occupied"));
+                return;
+            }
+        }
+
+        foreach (Vector2Int pos in gridPosList)
+        {
+            if (_location)
+            {
+                BuildingAddedEvent?.Invoke(this, new BuildingAddedEventArgs { coord = new Vector3(pos.x, 0, pos.y), remove = false});
+            }
+        }
+
+        // when we rotate the game object there is an offset needed to keep the object at the origin
+        Vector2Int rotationOffset = _placedObjectSO.GetRotationOffset(dir);
+        Vector3 placedObjectWorldPosition = mapGrid.GetWorldPosition(_x, _z) +
+            new Vector3(rotationOffset.x, 0, rotationOffset.y) * mapGrid.GetCellSize();
+
+        // Instantiate our gameobject and store the transform
+        PlacedObject placedObject = PlacedObject.Create(placedObjectWorldPosition, new Vector2Int(_x, _z), dir, _placedObjectSO);
+
+        // update our grid on these coordinates so that we can't build there anymore
+        foreach (Vector2Int pos in gridPosList)
+        {
+            GridObject tempObject = mapGrid.GetGridObject(pos.x, pos.y);
+            tempObject.isBuilding = true;
+            tempObject.SetPlacedObject(placedObject);
+            tempObject.dCost += 20;
+        }
+
+        enemyManager.RecalcPaths();
+
+        if (_placedObjectSO.nameString == "Habitat Light")
+        {
+            PlaceCircleHabitatLight(_x, _z, false);
+        }
     }
 
     public void PlaceCircleHabitatLight(int _x, int _z, bool _bool)
     {
         GridObject tempGridObject = mapGrid.GetGridObject(_x, _z);
-
-        if (!tempGridObject.isBaseArea) { return; }
-
-        if (tempGridObject.isBuilding) { return; }
-
-        PlaceBuilding(_x, _z, buildingsListSO.habitatLightSO, true);
-
 
         foreach (var indexPos in circlePoints)
         {
@@ -277,84 +331,6 @@ public class MapGridManager : MonoBehaviour
     }
 
 
-    public void PlaceBuilding(Vector3 _mouseWorldPosition, PlacedObjectSO _placedObjectSO)
-    {
-        mapGrid.GetXZ(_mouseWorldPosition, out int x, out int z);
-        //Debug.Log("coord" + x + ":" + z);
-
-        if (!mapGrid.GetGridObject(x, z).isBaseArea) { return; }
-
-        if (_placedObjectSO.nameString == "Habitat Light")
-        {
-            PlaceHabitatLight(_mouseWorldPosition, false);
-        }
-        else
-        {
-            PlaceBuilding(x, z, _placedObjectSO, true);
-        }
-    }
-
-
-    private void PlaceBuilding(int _x, int _z, PlacedObjectSO _placedObjectSO, bool _location)
-    {
-        // return a list of grid coordinates that the current selected placedObjectSO will occupy
-        // we pass in the origin and  direction (dir) to know which coordinates to search through
-        List<Vector2Int> gridPosList = _placedObjectSO.GetGridPositionList(new Vector2Int(_x, _z), dir);
-        //Debug.Log(gridPosList.Count);
-
-        // initialise if we can build
-        bool canBuild = true;
-        // check each coordinate pulled above to see if there is a grid object on this position
-        // if there is can build = false and break
-        foreach (Vector2Int pos in gridPosList)
-        {
-            if (mapGrid.GetGridObject(pos.x, pos.y).isBuilding)
-            {
-                canBuild = false; break;
-            }
-        }
-
-        // if we can build
-        if (canBuild)
-        {
-            foreach (Vector2Int pos in gridPosList)
-            {
-                if (_location)
-                {
-                    BuildingAddedEvent?.Invoke(this, new BuildingAddedEventArgs { coord = new Vector3(pos.x, 0, pos.y), remove = false});
-                }
-            }
-
-            // when we rotate the game object there is an offset needed to keep the object at the origin
-            Vector2Int rotationOffset = _placedObjectSO.GetRotationOffset(dir);
-            Vector3 placedObjectWorldPosition = mapGrid.GetWorldPosition(_x, _z) +
-                new Vector3(rotationOffset.x, 0, rotationOffset.y) * mapGrid.GetCellSize();
-
-            // Instantiate our gameobject and store the transform
-            PlacedObject placedObject = PlacedObject.Create(placedObjectWorldPosition, new Vector2Int(_x, _z), dir, _placedObjectSO);
-
-            // update our grid on these coordinates so that we can't build there anymore
-            foreach (Vector2Int pos in gridPosList)
-            {
-                GridObject tempObject = mapGrid.GetGridObject(pos.x, pos.y);
-                tempObject.isBuilding = true;
-                tempObject.SetPlacedObject(placedObject);
-                tempObject.dCost += 20;
-            }
-
-        }
-        else
-        {
-            //Debug.Log("can't build here");
-        }
-    }
-
-    public void DestroyBuilding(Vector3 _mouseWorldPosition)
-    {
-        mapGrid.GetXZ(_mouseWorldPosition, out int _x, out int _z);
-        DestroyBuilding(_x, _z);
-    }
-
     public void DestroyBuilding(int _x, int _z)
     {
         GridObject gridObject = mapGrid.GetGridObject(_x, _z);
@@ -369,31 +345,14 @@ public class MapGridManager : MonoBehaviour
             foreach (Vector2Int pos in gridPosList)
             {
                 GridObject tempObject = mapGrid.GetGridObject(pos.x, pos.y);
-                tempObject.isBuilding = true;
+                tempObject.isBuilding = false;
                 tempObject.ClearPlacedObject();
 
                 BuildingAddedEvent?.Invoke(this, new BuildingAddedEventArgs { coord = new Vector3(pos.x, 0, pos.y), remove = true });
             }
         }
-    }
 
-    public void DestroyBuilding(PlacedObject _placedObject)
-    {
-        if (_placedObject != null)
-        {
-            _placedObject.DestroySelf();
-
-            List<Vector2Int> gridPosList = _placedObject.GetGridPositionList();
-
-            foreach (Vector2Int pos in gridPosList)
-            {
-                GridObject tempObject = mapGrid.GetGridObject(pos.x, pos.y);
-                tempObject.isBuilding = true;
-                tempObject.ClearPlacedObject();
-
-                BuildingAddedEvent?.Invoke(this, new BuildingAddedEventArgs { coord = new Vector3(pos.x, 0, pos.y), remove = true });
-            }
-        }
+        enemyManager.RecalcPaths();
     }
 
     public PlacedObjectSO.Dir GetPlacedBuildingDirection()
