@@ -362,7 +362,8 @@ public class CollisionManager : MonoBehaviour
                         break;
                     }
 
-                    mapGridManager.DestroyBuilding(tempObject);
+                    mapGridManager.mapGrid.GetXZ(tempData.GridPosition, out int _x, out int _z);
+                    mapGridManager.DestroyBuilding(_x, _z);
                 }
             }
         }

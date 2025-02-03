@@ -6835,7 +6835,7 @@ MonoBehaviour:
   bossVisual: {fileID: 2156180079196364993, guid: 024223902d20f194780cc8f69b46237d,
     type: 3}
   speed: 10
-  centre: {fileID: 0}
+  centre: {fileID: 427440953}
 --- !u!1 &289209529
 GameObject:
   m_ObjectHideFlags: 0

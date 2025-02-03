@@ -121,6 +121,6 @@ public class WallObjects : MonoBehaviour
 
     private void DisableWall()
     {
-        MapGridManager.Instance.DestroyBuilding(transform.position);
+        //MapGridManager.Instance.DestroyBuilding(transform.position);
     }
 }
