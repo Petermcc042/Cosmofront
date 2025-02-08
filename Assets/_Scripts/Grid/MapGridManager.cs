@@ -73,7 +73,6 @@ public class MapGridManager : MonoBehaviour
 
         circlePoints = ReadCSVFile(circlePointsPath);
         pathfindingCirclePoints = ReadCSVFile(pathfindingCirclePointsPath);
-
     }
 
 

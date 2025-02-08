@@ -50,9 +50,12 @@ public class CollisionManager : MonoBehaviour
 
     uint mySeed = 1;
 
+    private List<(GameObject obj, float timer)> lightningVFX = new List<(GameObject obj, float timer)>();
+    private const float LIGHTNING_DURATION = 0.1f;
 
     void Awake()
     {
+        //tes
         enemyDataList = new NativeList<EnemyData>(Allocator.Persistent);
         obstructPathList = new NativeList<Vector3>(Allocator.Persistent);
         shieldPositions = new NativeList<Vector3>(Allocator.Persistent);
@@ -106,6 +109,7 @@ public class CollisionManager : MonoBehaviour
             CheckBulletCollisions();
             RemovalAndUpdate();
             DamageBuildings();
+            UpdateLightningVFX();
         }
     }
 
@@ -113,16 +117,24 @@ public class CollisionManager : MonoBehaviour
     {
         uint seed = (mySeed != 0) ? mySeed : 1;
 
+        NativeArray<EnemyData> enemyDataOffset = new NativeArray<EnemyData>(enemyDataList.AsArray().Length, Allocator.Persistent);
+
+        for (int i = 0; i < enemyDataList.AsArray().Length; i++) {
+            enemyDataOffset[i] = enemyDataList.AsArray()[i];
+        }
+
         var updateEnemyTargetJob = new UpdateEnemyTargetPos
         {
             EnemyData = enemyDataList.AsArray(),
+            EnemyDataOffset = enemyDataOffset,
             FlowGridArray = pathfinding.flowNodes,
-            seed = seed
+            Seed = seed
         };
 
         JobHandle updateEnemyTargetPosHandle = updateEnemyTargetJob.Schedule(enemyDataList.Length, 64);
         updateEnemyTargetPosHandle.Complete();
         
+        enemyDataOffset.Dispose();
 
         var moveEnemyJob = new UpdateEnemyPosition
         {
@@ -216,19 +228,14 @@ public class CollisionManager : MonoBehaviour
             float distance = Vector3.Distance(start, end);
 
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
             cube.GetComponent<MeshRenderer>().material = lightningPrefabMaterial;
-
             cube.transform.position = midpoint;
-
             Vector3 scale = new Vector3(0.1f, 0.1f, distance);
             cube.transform.localScale = scale;
-
-
-            // Rotate the cube to align it with the direction between the points
             cube.transform.rotation = Quaternion.LookRotation(end - start);
 
-            Destroy(cube, 0.1f);
+            // Add to tracking list instead of using Destroy
+            lightningVFX.Add((cube, 0f));
         }
 
         while (enemySlowData.TryDequeue(out int _index))
@@ -256,9 +263,13 @@ public class CollisionManager : MonoBehaviour
             {
                 bulletManager.SpawnBullet(_data.Position, Vector3.zero, 0, _data.TurretID, 1, 0, BulletType.Firestorm, BulletType.Blank);
             }
-            else
+            else if (_data.Type == BulletType.Slow)
             {
                 bulletManager.SpawnBullet(_data.Position, Vector3.zero, 0, _data.TurretID, 1, 0, BulletType.Timewarp, BulletType.Blank);
+            }
+            else
+            {
+                bulletManager.SpawnBullet(_data.Position, Vector3.zero, 0, _data.TurretID, 1, 0, BulletType.Standard, BulletType.Blank);
             }
         }
 
@@ -279,6 +290,30 @@ public class CollisionManager : MonoBehaviour
         lightningData.Dispose();
         enemySlowData.Dispose();
         createBulletData.Dispose();
+    }
+
+    private void UpdateLightningVFX()
+    {
+        if (gameManager.GetGameState()) return; // Skip if game is paused
+
+        for (int i = lightningVFX.Count - 1; i >= 0; i--)
+        {
+            var (obj, timer) = lightningVFX[i];
+            timer += Time.deltaTime;
+
+            if (timer >= LIGHTNING_DURATION)
+            {
+                if (obj != null)
+                {
+                    Destroy(obj);
+                }
+                lightningVFX.RemoveAt(i);
+            }
+            else
+            {
+                lightningVFX[i] = (obj, timer);
+            }
+        }
     }
 
     private void RemovalAndUpdate()
@@ -453,54 +488,74 @@ public class CollisionManager : MonoBehaviour
 public struct UpdateEnemyTargetPos : IJobParallelFor
 {
     public NativeArray<EnemyData> EnemyData;
+    [ReadOnly] public NativeArray<EnemyData> EnemyDataOffset;
     [ReadOnly] public NativeArray<FlowGridNode> FlowGridArray;
-    
+
     // A seed that you can set from your main thread
-    public uint seed;
+    public uint Seed;
 
     public void Execute(int index)
+
     {
-        // Initialize a random number generator for this enemy.
-        // Using the index (plus a base seed) gives each enemy a unique sequence.
-        Unity.Mathematics.Random random = new Unity.Mathematics.Random(seed + (uint)index);
-        
+        uint seed = Seed < 1 ? 1 : Seed;
+
         // Get the current enemy data.
         EnemyData enemy = EnemyData[index];
         Vector3 currentPos = enemy.Position;
         int currentIndex = GetGridIndex(currentPos);
+        Vector3 flowDir = Vector3.zero;
 
-        // Determine the next grid node via the flow field.
-        int adjustedIndex = (FlowGridArray[currentIndex].goToIndex < 0)
-            ? GetGridIndex(currentPos + GetStepTowardsCenter(currentPos))
-            : FlowGridArray[currentIndex].goToIndex;
-        int nextIndex = FlowGridArray[adjustedIndex].goToIndex;
+        if (currentIndex < 0 || currentIndex >= FlowGridArray.Length)
+        {
+            flowDir = currentPos + GetStepTowardsCenter(currentPos);
 
-        // Calculate the base target position.
-        Vector3 targetPos = (nextIndex < 0)
-            ? currentPos + GetStepTowardsCenter(currentPos)
-            : FlowGridArray[nextIndex].position;
+        } else {
+            // Determine the next grid node via the flow field.
+            int adjustedIndex = (FlowGridArray[currentIndex].goToIndex < 0)
 
-        // --- Variability starts here ---
-        // Define how much variability you want.
-        float variance = 0.5f; // Adjust this to taste.
-        Vector3 randomOffset = new Vector3(
-            random.NextFloat(-variance, variance),
+                ? GetGridIndex(currentPos + GetStepTowardsCenter(currentPos))
+                : FlowGridArray[currentIndex].goToIndex;
+            int nextIndex = FlowGridArray[adjustedIndex].goToIndex;
+
+            // Calculate the base target position.
+            flowDir = (nextIndex < 0)
+                ? currentPos + GetStepTowardsCenter(currentPos)
+                : FlowGridArray[nextIndex].position; 
+
+        }
+
+
+        Vector3 separationForce = Vector3.zero;
+        for (int i = 0; i < EnemyDataOffset.Length; i++) {
+            if (Vector3.Distance(EnemyDataOffset[i].Position, enemy.Position) > 2f) { continue; }
+            Vector3 away = enemy.Position - EnemyDataOffset[i].Position;
+            if(away.magnitude > 0)
+                separationForce += away.normalized / away.magnitude;
+        }
+
+
+
+
+        // Optionally, add a small random "wander" force.
+        Unity.Mathematics.Random random = new Unity.Mathematics.Random(seed + (uint)index);
+        Vector3 wanderForce = new Vector3(
+            random.NextFloat(-0.1f, 0.1f),
             0,
-            random.NextFloat(-variance, variance)
+            random.NextFloat(-0.1f, 0.1f)
         );
 
-        // Apply the random offset to the target position.
-        enemy.TargetPos = targetPos;// + randomOffset;
-        // --- Variability ends here ---
+
+        // Blend the forces (tweak these weights as needed).
+        Vector3 desiredDirection = (flowDir * 1f) + (separationForce * 0.4f) + (wanderForce * 0.3f);
 
         // Write the modified enemy data back.
+        enemy.TargetPos = desiredDirection;
         EnemyData[index] = enemy;
     }
 
     // Converts a world position to a grid index.
     private int GetGridIndex(Vector3 pos)
     {
-        // Example grid indexing; adjust based on your grid layout.
         return Mathf.FloorToInt(pos.z) + Mathf.FloorToInt(pos.x) * 200;
     }
 

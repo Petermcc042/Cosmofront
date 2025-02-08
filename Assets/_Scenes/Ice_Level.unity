@@ -8045,6 +8045,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1834726414}
     m_Modifications:
+    - target: {fileID: -719959278894226401, guid: 9b8d9477eba5d2a46bf1765c17f2c17a,
+        type: 3}
+      propertyPath: health
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 382510719641021968, guid: 9b8d9477eba5d2a46bf1765c17f2c17a,
         type: 3}
       propertyPath: circumPoint
@@ -30801,8 +30806,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14c1ab18185af49f2b22a39a3dc80aac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  costsRemoved: 0
+  costsRemoved: 1
   autoUpgrade: 1
+  invincible: 1
   gameSettings: {fileID: 11400000, guid: e38f55fe86a74314db66ae42a3f2e21c, type: 2}
   buildingsList: {fileID: 11400000, guid: 512f1a6ef67b9bf4d9f2efa25328505f, type: 2}
   gridManager: {fileID: 134987664}

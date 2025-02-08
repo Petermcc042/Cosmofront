@@ -300,12 +300,15 @@ public class EnemyManager : MonoBehaviour
         GameObject targetPos = Instantiate(targetPosGO, spawnPoint, Quaternion.identity, enemy.transform);
         enemyTargetList.Add(targetPos);
 
+        int tempDamage = (gameManager.invincible) ? 0 : 2;
+
+
         EnemyData eData = new()
         {
             EnemyID = enemyCount,
             Health = gameSettingsSO.enemyHealthList[enemyIndex],
             Armour = 1,
-            Damage = 1,
+            Damage = tempDamage,
             Position = spawnPoint,// take the overall list and based on the 
             PathPositionIndex = 1,
             PathIndex = 1, // not used
