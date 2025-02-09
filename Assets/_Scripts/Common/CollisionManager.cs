@@ -33,8 +33,8 @@ public class CollisionManager : MonoBehaviour
     [SerializeField] private GameObject lightningPrefab;
     [SerializeField] private Material lightningPrefabMaterial;
 
-    public NativeArray<Vector3> pathArray;
-    public NativeArray<int> pathIndexArray;
+    //public NativeArray<Vector3> pathArray;
+    //public NativeArray<int> pathIndexArray;
     private NativeList<Vector3> obstructPathList;
     private NativeList<Vector3> shieldPositions;
 
@@ -55,31 +55,22 @@ public class CollisionManager : MonoBehaviour
 
     void Awake()
     {
-        //tes
         enemyDataList = new NativeList<EnemyData>(Allocator.Persistent);
-        obstructPathList = new NativeList<Vector3>(Allocator.Persistent);
-        shieldPositions = new NativeList<Vector3>(Allocator.Persistent);
-
         bulletDataList = new NativeList<BulletData>(Allocator.Persistent);
         terrainDataArray = new NativeArray<Vector3>(0, Allocator.Persistent);
+    }
 
-        mapGridManager.BuildingAddedEvent += MGM_BuildingAddedEvent;
-        gen.BuildingAddedEvent += MGM_BuildingAddedEvent;
+    private void Start()
+    {
+        obstructPathList = mapGridManager.buildingGridSquareList;
+        shieldPositions = gen.shieldGridSquareList; 
     }
 
     private void OnDestroy()
     {
-        pathArray.Dispose();
-        pathIndexArray.Dispose();
-        obstructPathList.Dispose();
-        shieldPositions.Dispose();
-
         enemyDataList.Dispose();
         bulletDataList.Dispose();
         terrainDataArray.Dispose();
-
-        mapGridManager.BuildingAddedEvent -= MGM_BuildingAddedEvent;
-        gen.BuildingAddedEvent -= MGM_BuildingAddedEvent;
     }
 
     public void InitCollisionManager(GameSettingsSO _gameSettings)
@@ -141,7 +132,6 @@ public class CollisionManager : MonoBehaviour
             EnemyData = enemyDataList.AsArray(),
             ShieldPositions = shieldPositions.AsArray(),
             ObstructedPositions = obstructPathList.AsArray(),
-            PathArrayLength = pathArray.Length,
             DeltaTime = _deltaTime
         };
 
@@ -419,68 +409,6 @@ public class CollisionManager : MonoBehaviour
     {
         bulletDataList.Add(_bulletData);
     }
-
-    public void AddEnemyPaths(NativeArray<Vector3> _pathArray, NativeArray<int> _pathIndexArray)
-    {
-        pathIndexArray = _pathIndexArray;
-        pathArray = _pathArray;
-    }
-
-    private void MGM_BuildingAddedEvent(object sender, MapGridManager.BuildingAddedEventArgs e)
-    {
-        if (!e.shield)
-        {
-            if (!e.remove)
-            {
-                obstructPathList.Add(e.coord);
-            }
-            else
-            {
-                for (int i = obstructPathList.Length - 1; i >= 0; i--)
-                {
-                    if (obstructPathList[i] == e.coord)
-                    {
-                        obstructPathList.RemoveAtSwapBack(i);
-                        break;
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (!e.remove)
-            {
-                shieldPositions.Add(e.coord);
-            }
-            else
-            {
-                for (int i = shieldPositions.Length - 1; i >= 0; i--)
-                {
-                    if (shieldPositions[i] == e.coord)
-                    {
-                        shieldPositions.RemoveAtSwapBack(i);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    // Helper method to compute the grid index from a world position.
-    private int GetGridIndex(Vector3 pos)
-    {
-        // Here we assume a grid width of 200 (i.e. index = z + x * 200)
-        return Mathf.FloorToInt(pos.z) + Mathf.FloorToInt(pos.x) * 200;
-    }
-
-    // Helper method to compute a one-grid-step vector toward the center.
-    private Vector3 GetStepTowardsCenter(Vector3 pos)
-    {
-        Vector3 center = new Vector3(100, 0, 100);
-        Vector3 direction = (center - pos).normalized;
-        // Move one grid cell (1 unit) in the direction of the center.
-        return new Vector3(Mathf.Sign(direction.x), 0, Mathf.Sign(direction.z));
-    }
 }
 
 
@@ -501,9 +429,12 @@ public struct UpdateEnemyTargetPos : IJobParallelFor
 
         // Get the current enemy data.
         EnemyData enemy = EnemyData[index];
+
+        if (!enemy.TargetNeeded) { return; }
+
         Vector3 currentPos = enemy.Position;
         int currentIndex = GetGridIndex(currentPos);
-        Vector3 flowDir = Vector3.zero;
+        Vector3 flowDir;
 
         if (currentIndex < 0 || currentIndex >= FlowGridArray.Length)
         {
@@ -520,10 +451,8 @@ public struct UpdateEnemyTargetPos : IJobParallelFor
             // Calculate the base target position.
             flowDir = (nextIndex < 0)
                 ? currentPos + GetStepTowardsCenter(currentPos)
-                : FlowGridArray[nextIndex].position; 
-
+                : FlowGridArray[nextIndex].position;
         }
-
 
         Vector3 separationForce = Vector3.zero;
         for (int i = 0; i < EnemyDataOffset.Length; i++) {
@@ -532,9 +461,6 @@ public struct UpdateEnemyTargetPos : IJobParallelFor
             if(away.magnitude > 0)
                 separationForce += away.normalized / away.magnitude;
         }
-
-
-
 
         // Optionally, add a small random "wander" force.
         Unity.Mathematics.Random random = new Unity.Mathematics.Random(seed + (uint)index);
@@ -546,7 +472,7 @@ public struct UpdateEnemyTargetPos : IJobParallelFor
 
 
         // Blend the forces (tweak these weights as needed).
-        Vector3 desiredDirection = (flowDir * 1f) + (separationForce * 0.4f) + (wanderForce * 0.3f);
+        Vector3 desiredDirection = flowDir + (separationForce * 0.4f) + (wanderForce * 0.3f);
 
         // Write the modified enemy data back.
         enemy.TargetPos = desiredDirection;
@@ -577,7 +503,6 @@ public struct UpdateEnemyPosition : IJobParallelFor
 
     [ReadOnly] public NativeArray<Vector3> ObstructedPositions;
     [ReadOnly] public NativeArray<Vector3> ShieldPositions;
-    [ReadOnly] public int PathArrayLength;
     [ReadOnly] public float DeltaTime;
 
     public void Execute(int index)
@@ -597,14 +522,19 @@ public struct UpdateEnemyPosition : IJobParallelFor
             }
         }
 
-        if (!isAtShield)
+        if (!isAtShield) // so that enemies always damage the shield first not a building poking out
         {
             for (int j = 0; j < ObstructedPositions.Length; j++)
             {
-                if (ObstructedPositions[j] == enemy.TargetPos)
+                if (Vector3.Distance(enemy.Position, ObstructedPositions[j]) <= 0.2f)
                 {
+                    enemy.AttackPos = ObstructedPositions[j];
                     isObstructed = true;
                     break;
+                }
+                else
+                {
+                    enemy.AttackPos = default;
                 }
             }
         }
@@ -628,15 +558,6 @@ public struct UpdateEnemyPosition : IJobParallelFor
             else
             {
                 enemy.TargetNeeded = true;
-
-                if (enemy.PathPositionIndex + 1 >= PathArrayLength)
-                {
-                    //enemy.ToRemove = true;
-                }
-                else
-                {
-                    enemy.PathPositionIndex += 1;
-                }
             }
         }
 
@@ -1006,12 +927,11 @@ public struct BuildingCollision : IJobParallelFor
             BuildingCollisionData bData = new()
             {
                 Damage = eData.Damage * DeltaTime,
-                GridPosition = eData.TargetPos
+                GridPosition = eData.AttackPos
             };
 
             BuildingCollisionDataArray[index] = bData;
         }
-
     }
 }
 

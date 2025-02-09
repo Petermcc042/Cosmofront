@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,6 +10,7 @@ using UnityEngine.UI;
 public class Generator : MonoBehaviour
 {
     [SerializeField] GameManager gameManager;
+    [SerializeField] MapGridManager mapGridManager;
     [SerializeField] private EnemyManager enemyManager;
     [SerializeField] private CollisionManager collisionManager;
     [SerializeField] private BuildableAreaMesh shieldAreaMesh;
@@ -16,8 +20,6 @@ public class Generator : MonoBehaviour
     private List<Vector3> shieldSquares;
 
     [SerializeField] private Slider shieldHealthUI;
-
-    public event EventHandler<MapGridManager.BuildingAddedEventArgs> BuildingAddedEvent;
 
     private float health = 10;
     public int shieldRadius = 5; // The radius of the shield in world units
@@ -29,14 +31,24 @@ public class Generator : MonoBehaviour
     private const float rechargeDelay = 2f; // 2 seconds delay
     private const float rechargeRate = 3f; // Rate at which the shield recharges
 
+    public NativeList<Vector3> shieldGridSquareList;
+
 
     private void Awake()
     {
         shield.transform.localScale = new Vector3(50, 50, 50);
 
         shieldSquares = GetCirclePoints(100, 100, shieldRadius, 0.2f);
+        shieldGridSquareList = new NativeList<Vector3>(Allocator.Persistent);
+
+        // keep for testing
         //shieldAreaMesh.buildableAreas = shieldSquares;
         //shieldAreaMesh.GenerateMesh();
+    }
+
+    private void OnDestroy()
+    {
+        shieldGridSquareList.Dispose();
     }
 
 
@@ -49,9 +61,15 @@ public class Generator : MonoBehaviour
                 Instantiate(circumPoint, shieldSquares[i], Quaternion.identity);
             }
 
-            BuildingAddedEvent?.Invoke(this, new MapGridManager.BuildingAddedEventArgs { coord = shieldSquares[i], remove = _toRemove, shield = true });
+            if (_toRemove)
+            {
+                RemoveFromNativeList(shieldGridSquareList, shieldSquares[i]);
+            }
+            else
+            {
+                shieldGridSquareList.Add(shieldSquares[i]);
+            }   
         }
-
     }
 
     public void DamageLoop(float _damage, float _deltaTime)
@@ -87,35 +105,6 @@ public class Generator : MonoBehaviour
         }
     }
 
-    List<Vector3> CalculateShieldGridSquares()
-    {
-        List<Vector3> shieldGridSquares = new List<Vector3>();
-
-        int centerX = 200 / 2;
-        int centerZ = 200 / 2;
-
-        for (int i = -shieldRadius; i <= shieldRadius; i++)
-        {
-            for (int j = -shieldRadius; j <= shieldRadius; j++)
-            {
-                int distanceSquared = i * i + j * j;
-                int outerRadiusSquared = shieldRadius * shieldRadius;
-                int innerRadiusSquared = (shieldRadius - 1) * (shieldRadius - 1);
-
-                // Check if the point (i, j) is on the boundary of the circle
-                if (distanceSquared <= outerRadiusSquared && distanceSquared > innerRadiusSquared)
-                {
-                    int gridPosX = centerX + i;
-                    int gridPosZ = centerZ + j;
-
-                    shieldGridSquares.Add(new Vector3(gridPosX, 0, gridPosZ));
-                }
-            }
-        }
-
-        return shieldGridSquares;
-    }
-
     // Function to get positions on the circumference of a circle with a specified distance between each point
     public List<Vector3> GetCirclePoints(float centerX, float centerZ, float radius, float distanceBetweenPoints)
     {
@@ -144,5 +133,18 @@ public class Generator : MonoBehaviour
         }
 
         return points;
+    }
+
+    public static void RemoveFromNativeList(NativeList<Vector3> list, Vector3 positionToRemove)
+    {
+        // Find and remove the position using a swap-and-pop approach
+        for (int i = list.Length - 1; i >= 0; i--)
+        {
+            if (list[i].Equals(positionToRemove))
+            {
+                list.RemoveAtSwapBack(i);
+                break; // Exit once we've found and removed the position
+            }
+        }
     }
 }

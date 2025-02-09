@@ -37,9 +37,6 @@ public class TurretManager : MonoBehaviour
 
         if (gameManager.GetGameState()) return;
 
-        // maybe add logic to see if the previous turret is in the list from last frame
-        // rather than jump about screen to one then back to the same turret
-
         if (turretsToUpgrade.Count > 0)
         {
             TurretUpgrade tempUpgrade = turretsToUpgrade[0];

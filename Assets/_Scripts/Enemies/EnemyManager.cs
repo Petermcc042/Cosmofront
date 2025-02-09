@@ -8,9 +8,6 @@ using UnityEngine;
 public struct EnemyData
 {
     public int EnemyID;
-    public int PathIndex; //PathIndex = _spawnIndexCount can be 0 through to _numberOfSpawns
-    public int MaxPathIndex;
-    public int PathPositionIndex; //PositionIndex = 0 increments as the enemy moves along the apth
     public Vector3 Position; //Position = pathArray[pathIndexArray[_spawnIndexCount]]
     public Vector3 TargetPos;
     public Vector3 Velocity;
@@ -23,6 +20,7 @@ public struct EnemyData
     public bool TargetNeeded;
     public bool IsActive;
     public bool IsAtShield;
+    public Vector3 AttackPos;
 }
 
 public class EnemyManager : MonoBehaviour
@@ -285,7 +283,6 @@ public class EnemyManager : MonoBehaviour
     {
         if (spawnIndexCount >= numberOfSpawns) { spawnIndexCount = 0; } // spawn index count never exceeds the number of paths to the centre
 
-        int tempInt;
         Vector3 spawnPoint = spawnOriginVectorList[spawnIndexCount];
 
         GameObject enemy = Instantiate(enemyParent, spawnPoint, Quaternion.identity, gameObject.transform);
@@ -310,9 +307,6 @@ public class EnemyManager : MonoBehaviour
             Armour = 1,
             Damage = tempDamage,
             Position = spawnPoint,// take the overall list and based on the 
-            PathPositionIndex = 1,
-            PathIndex = 1, // not used
-            MaxPathIndex = 1, // not used
             Speed = 8,
             Velocity = Vector3.zero,
             ToRemove = false,
