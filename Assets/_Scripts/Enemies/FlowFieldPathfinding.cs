@@ -19,6 +19,8 @@ public struct FlowGridNode
     public int goToIndex; // Index of the parent node for path reconstruction
 }
 
+
+
 [BurstCompile]
 public struct UpdateNodesMovementCost : IJobParallelFor
 {

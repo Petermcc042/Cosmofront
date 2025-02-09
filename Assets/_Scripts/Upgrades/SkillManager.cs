@@ -112,9 +112,17 @@ public class SkillManager: MonoBehaviour
     public void GetMediumUpgradeOptions(Turret _turret, int position)
     {
         gameManager.InvertGameState();
+        optionUpgrades = GetRandomUpgradeOptions(3, mediumUpgrades);
         currentTurret = _turret;
-        rightPanelUI.SetActive(true);
         currentPosition = position;
+
+        if (gameManager.autoUpgrade)
+        {
+            UpgradeOptions(0);
+            return;
+        }
+
+        rightPanelUI.SetActive(true);
 
         turretNameUI.text = $"{_turret.GetInstanceID()}";
         bulletDamageUI.text = $"Damage: {_turret.bulletDamage}";
@@ -122,18 +130,28 @@ public class SkillManager: MonoBehaviour
         killCountUI.text = $"Kill Count: {_turret.killCount}";
         turretLevelUI.text = $"Level: {_turret.turretLevel}";
 
-        optionUpgrades = GetRandomUpgradeOptions(3, mediumUpgrades);
+        
         for (int i = 0; i < buttonsText.Count; i++)
         {
             buttonsText[i].text = optionUpgrades[i].GetDescription();
             buttonsText[i].fontSize = optionUpgrades[i].GetTextSize();
         }
+
+        
     }
 
     public void GetLargeUpgradeOptions(Turret _turret)
     {
         gameManager.InvertGameState();
+        optionUpgrades = GetRandomUpgradeOptions(3, largeUpgrades);
         currentTurret = _turret;
+
+        if (gameManager.autoUpgrade)
+        {
+            UpgradeOptions(0);
+            return;
+        }
+
         rightPanelUI.SetActive(true);
 
         turretNameUI.text = $"{_turret.GetInstanceID()}";
@@ -141,8 +159,6 @@ public class SkillManager: MonoBehaviour
         fireRateUI.text = $"Fire Rate: {_turret.fireRate}";
         killCountUI.text = $"Kill Count: {_turret.killCount}";
         turretLevelUI.text = $"Level: {_turret.turretLevel}";
-
-        optionUpgrades = GetRandomUpgradeOptions(3, largeUpgrades);
 
         for (int i = 0; i < buttonsText.Count; i++)
         {

@@ -1,5 +1,3 @@
-using NUnit.Framework;
-using Rive;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,13 +7,13 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static SkillManager;
 
 public class GameManager : MonoBehaviour
 {
     [Header("Dev Controls")]
     [SerializeField] private bool costsRemoved;
     [SerializeField] public bool autoUpgrade;
+    [SerializeField] public bool invincible;
 
     [Header("Level Settings")]
     [SerializeField] private GameSettingsSO gameSettings;
@@ -103,6 +101,8 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1;
         totalTime = gameSettings.totalTime;
 
+        CountAllCSLinesInScriptsFolder();
+
         playerData = saveSystem.LoadGame();
 
         if (playerData != null)
@@ -143,6 +143,35 @@ public class GameManager : MonoBehaviour
 
         resourceManager.AddAttanium(1);
         resourceManager.SetAttanium(50);
+    }
+
+    /// <summary>
+    /// Loops over all *.cs files in Assets/_Scripts and counts the total number of lines.
+    /// </summary>
+    /// <returns>Total number of lines of code found in the folder.</returns>
+    public static int CountAllCSLinesInScriptsFolder()
+    {
+        int totalLines = 0;
+        // Build the absolute path to Assets/_Scripts.
+        string scriptsFolderPath = Path.Combine(Application.dataPath, "_Scripts");
+
+        if (!Directory.Exists(scriptsFolderPath))
+        {
+            Debug.LogWarning("Directory not found: " + scriptsFolderPath);
+            return 0;
+        }
+
+        // Get all *.cs files, searching recursively.
+        string[] csFiles = Directory.GetFiles(scriptsFolderPath, "*.cs", SearchOption.AllDirectories);
+
+        foreach (string file in csFiles)
+        {
+            // Read all lines of the file and count them.
+            totalLines += File.ReadAllLines(file).Length;
+        }
+
+        Debug.Log("Total number of lines in .cs files in Assets/_Scripts: " + totalLines);
+        return totalLines;
     }
 
 

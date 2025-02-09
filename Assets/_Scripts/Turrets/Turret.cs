@@ -152,7 +152,6 @@ public class Turret : MonoBehaviour
         if (orbitalAnimating)
         {
             AnimateOrbitalStrike();
-            return;
         }
 
         if (target == null) return;

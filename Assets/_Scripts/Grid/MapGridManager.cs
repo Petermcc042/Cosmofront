@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using Unity.Collections;
+using Unity.Jobs;
+using Unity.Burst;
 
 public class MapGridManager : MonoBehaviour
 {
@@ -38,11 +40,9 @@ public class MapGridManager : MonoBehaviour
 
     public GridXZ<GridObject> mapGrid;
     public List<Vector3> gridLocations;
+    
 
     private PlacedObjectSO.Dir dir = PlacedObjectSO.Dir.Down;
-
-    public event EventHandler<BuildingAddedEventArgs> BuildingAddedEvent;
-    public class BuildingAddedEventArgs : EventArgs { public Vector3 coord; public bool remove; public bool shield = false; }
 
 
     private int gridWidth = 200; //x
@@ -51,8 +51,8 @@ public class MapGridManager : MonoBehaviour
 
     // For Walls And Building
     private List<Vector3> buildableAreaList;
-    private List<Vector3> habitatLightList;
     private List<Vector3> pathfindingAreaList;
+    public NativeList<Vector3> buildingGridSquareList;
 
 
     private void Awake()
@@ -67,13 +67,18 @@ public class MapGridManager : MonoBehaviour
         Instance = this;
 
         buildableAreaList = new List<Vector3>();
-        habitatLightList = new List<Vector3>();
         gridLocations = new List<Vector3>();
         pathfindingAreaList = new List<Vector3>();
 
+        buildingGridSquareList = new NativeList<Vector3>(Allocator.Persistent);
+
         circlePoints = ReadCSVFile(circlePointsPath);
         pathfindingCirclePoints = ReadCSVFile(pathfindingCirclePointsPath);
+    }
 
+    private void OnDestroy()
+    {
+        buildingGridSquareList.Dispose();
     }
 
 
@@ -260,7 +265,11 @@ public class MapGridManager : MonoBehaviour
         {
             if (_location)
             {
-                BuildingAddedEvent?.Invoke(this, new BuildingAddedEventArgs { coord = new Vector3(pos.x, 0, pos.y), remove = false});
+                // add to list
+                buildingGridSquareList.Add(new Vector3(pos.x, 0, pos.y));
+                //buildingGridSquareList.Add(new Vector3(pos.x + 1, 0, pos.y));
+                //buildingGridSquareList.Add(new Vector3(pos.x, 0, pos.y + 1));
+                //buildingGridSquareList.Add(new Vector3(pos.x + 1, 0, pos.y + 1));
             }
         }
 
@@ -348,7 +357,10 @@ public class MapGridManager : MonoBehaviour
                 tempObject.isBuilding = false;
                 tempObject.ClearPlacedObject();
 
-                BuildingAddedEvent?.Invoke(this, new BuildingAddedEventArgs { coord = new Vector3(pos.x, 0, pos.y), remove = true });
+                RemoveFromNativeList(buildingGridSquareList, new Vector3(pos.x, 0, pos.y));
+                //RemoveFromNativeList(buildingGridSquareList, new Vector3(pos.x, 0, pos.y + 1));
+                //RemoveFromNativeList(buildingGridSquareList, new Vector3(pos.x + 1, 0, pos.y));
+                //RemoveFromNativeList(buildingGridSquareList, new Vector3(pos.x + 1, 0, pos.y + 1));
             }
         }
 
@@ -463,8 +475,12 @@ public class MapGridManager : MonoBehaviour
 
                 if (_location)
                 {
-                    BuildingAddedEvent?.Invoke(this, new BuildingAddedEventArgs { coord = new Vector3(pos.x, 0, pos.y), remove = false });
+                    buildingGridSquareList.Add(new Vector3(pos.x, 0, pos.y));
+                    //buildingGridSquareList.Add(new Vector3(pos.x + 1, 0, pos.y));
+                    //buildingGridSquareList.Add(new Vector3(pos.x, 0, pos.y + 1));
+                    //buildingGridSquareList.Add(new Vector3(pos.x + 1, 0, pos.y + 1));
                 }
+
             }
 
             // when we rotate the game object there is an offset needed to keep the object at the origin
@@ -499,6 +515,19 @@ public class MapGridManager : MonoBehaviour
         else
         {
             //Debug.Log("can't build here");
+        }
+    }
+
+    public static void RemoveFromNativeList(NativeList<Vector3> list, Vector3 positionToRemove)
+    {
+        // Find and remove the position using a swap-and-pop approach
+        for (int i = list.Length - 1; i >= 0; i--)
+        {
+            if (list[i].Equals(positionToRemove))
+            {
+                list.RemoveAtSwapBack(i);
+                break; // Exit once we've found and removed the position
+            }
         }
     }
 }
