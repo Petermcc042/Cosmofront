@@ -4,7 +4,6 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 [BurstCompile]
 public struct ReturnTargetIndex : IJobParallelFor
@@ -23,7 +22,8 @@ public enum BulletType
 {
     Blank,
     Standard,
-    Explosive, Piercing, ChainLightning, Spread, Slow, Ricochet, Overcharge,
+    Explosive, Piercing, Spread, Slow, Ricochet, Overcharge,
+    ChainLightning, ChainLightningTwo,
     OrbitalStrike, MeteorShower, Overclocked, FirestormPayload, Firestorm, TimewarpPayload, Timewarp
 }
 
@@ -38,7 +38,7 @@ public class Turret : MonoBehaviour
     private TurretManager turretManager;
 
     [Header("Damage Attributes")]
-    public float fireRate = 1f; // higher is faster
+    public float fireRate = 25f; // higher is faster
     public int killCount = 0;
     public int bulletDamage = 1;
     public int fleshMultiplier = 1;
@@ -53,7 +53,7 @@ public class Turret : MonoBehaviour
     public float range = 5f;
     public float turnSpeed = 10f;
     public float fireCountdown = 0f;
-    public float targetingRate = 1f;
+    public float targetingRate = 0.1f;
     public float targetingCountdown = 0f;
     public float lockOnSpeed = 1f;
 
@@ -101,14 +101,17 @@ public class Turret : MonoBehaviour
     public int xpToAdd;
     public int turretLevel;
     public UpgradeType upgradeType;
-    public List<BulletType> bulletTypes;
+    public BulletType bulletType;
 
     [Header("Unity Setup")]
     public Transform partToRotate;
     public Transform firePoint;
     [SerializeField] public GameObject highlightBox;
 
+    [Header("Upgrades")]
+    public List<IUpgradeOption> unlockedUpgradeList;
     public bool autoUpgrade;
+
 
     private void Awake()
     {
@@ -122,8 +125,8 @@ public class Turret : MonoBehaviour
         collisionManager.TurretXPEvent += OnTurretXPEvent;
 
         autoUpgrade = gameManager.autoUpgrade;
-        bulletTypes.Add(BulletType.Standard);
-        bulletTypes.Add(BulletType.Blank);
+
+        unlockedUpgradeList = new List<IUpgradeOption>();
     }
 
     private void OnDestroy()
@@ -142,7 +145,8 @@ public class Turret : MonoBehaviour
     private void SequentialUpdate()
     {
         HandleXPAddition();
-        if (bulletTypes.Contains(BulletType.Overcharge))
+
+        if (bulletType == BulletType.Overcharge)
         {
             overchargeMultiplier += Time.deltaTime;
         }
@@ -190,7 +194,6 @@ public class Turret : MonoBehaviour
                 break;
             case 140:
                 turretUpgrade.UpgradeTypeRef = UpgradeType.Medium;
-                turretUpgrade.Position = 1;
                 turretManager.AddTurretForUpgrade(turretUpgrade);
                 break;
             case 200:
@@ -232,7 +235,12 @@ public class Turret : MonoBehaviour
 
     private void Shoot(Vector3 _dir)
     {
-        BulletManager.Instance.SpawnBullet(firePoint.position, _dir.normalized, 40, gameObject.GetInstanceID(), Mathf.RoundToInt(bulletDamage * (1 + overchargeMultiplier)), passThrough, bulletTypes[0], bulletTypes[1]);
+        BulletManager.Instance.SpawnBullet(firePoint.position, _dir.normalized, 40, gameObject.GetInstanceID(), Mathf.RoundToInt(bulletDamage * (1 + overchargeMultiplier)), passThrough, bulletType);
+    }
+
+    public bool HasUpgrade(IUpgradeOption upgradeType)
+    {
+        return unlockedUpgradeList.Contains(upgradeType);
     }
 
     private void HandleLargeUpgrades()
@@ -317,7 +325,7 @@ public class Turret : MonoBehaviour
     private void EndOrbitalAnimation()
     {
         Vector3 spawnPos = orbitalLaser.transform.position - new Vector3(0, 40f, 0);
-        BulletManager.Instance.SpawnBullet(spawnPos, Vector3.zero, 80, gameObject.GetInstanceID(), 40, 0, BulletType.OrbitalStrike, BulletType.Blank);
+        BulletManager.Instance.SpawnBullet(spawnPos, Vector3.zero, 80, gameObject.GetInstanceID(), 40, 0, BulletType.OrbitalStrike);
         Destroy(orbitalLaser);
         orbitalAnimating = false;
     }
@@ -332,7 +340,7 @@ public class Turret : MonoBehaviour
                 for (int i = 0; i < 3; i++)
                 {
                     Vector3 spawnPos = meteorTarget.position + new Vector3(UnityEngine.Random.Range(-5f, 5f), 0, UnityEngine.Random.Range(-5f, 5f));
-                    BulletManager.Instance.SpawnBullet(spawnPos, Vector3.down, 80, gameObject.GetInstanceID(), 40, 0, BulletType.MeteorShower, BulletType.Blank);
+                    BulletManager.Instance.SpawnBullet(spawnPos, Vector3.down, 80, gameObject.GetInstanceID(), 40, 0, BulletType.MeteorShower);
                 }
             }
 
@@ -349,7 +357,7 @@ public class Turret : MonoBehaviour
             if (firestormTarget != null)
             {
                 Vector3 spawnPos = firestormTarget.position;
-                BulletManager.Instance.SpawnBullet(spawnPos, Vector3.zero, 80, gameObject.GetInstanceID(), 5, 0, BulletType.FirestormPayload, BulletType.Blank);
+                BulletManager.Instance.SpawnBullet(spawnPos, Vector3.zero, 80, gameObject.GetInstanceID(), 5, 0, BulletType.FirestormPayload);
             }
 
             firestormCountdown = firestormFireDelay;
@@ -365,7 +373,7 @@ public class Turret : MonoBehaviour
             if (timewarpTarget != null)
             {
                 Vector3 spawnPos = timewarpTarget.position;
-                BulletManager.Instance.SpawnBullet(spawnPos, Vector3.zero, 80, gameObject.GetInstanceID(), 5, 0, BulletType.TimewarpPayload, BulletType.Blank);
+                BulletManager.Instance.SpawnBullet(spawnPos, Vector3.zero, 80, gameObject.GetInstanceID(), 5, 0, BulletType.TimewarpPayload);
             }
 
             timewarpCountdown = timewarpFireDelay;
@@ -421,62 +429,6 @@ public class Turret : MonoBehaviour
         if (!e.global)
         {
             if (e.buildingID != gameObject.GetInstanceID()) { return; }
-        }
-
-        switch (e.skillType)
-        {
-            case SkillManager.SkillType.MegaUpgrade:
-                fireRate = 20;
-                passThrough = 2;
-                targetingRate = 0.1f;
-                bulletDamage = 10;
-                break;
-            case SkillManager.SkillType.ExplosiveRound:
-                bulletTypes[1] = BulletType.Explosive;
-                fireRate = 1;
-                passThrough = 0;
-                targetingRate = 0.1f;
-                break;
-            case SkillManager.SkillType.LightningRound:
-                bulletTypes[1] = BulletType.ChainLightning;
-                fireRate = 1;
-                passThrough = 0;
-                targetingRate = 0.1f;
-                break;
-            case SkillManager.SkillType.SlowRound:
-                bulletTypes[1] = BulletType.Slow;
-                passThrough = 6;
-                targetingRate = 0.1f;
-                break;
-            case SkillManager.SkillType.SpreadRound:
-                bulletTypes[1] = BulletType.Spread;
-                passThrough = 0;
-                fireRate = 3;
-                targetingRate = 0.1f;
-                break;
-            case SkillManager.SkillType.RicochetRound:
-                bulletTypes[1] = BulletType.Ricochet;
-                fireRate = 25;
-                targetingRate = 0.1f;
-                break;
-            case SkillManager.SkillType.OrbitalStrike:
-                allowOrbitalStrike = true;
-                break;
-            case SkillManager.SkillType.MeteorShower:
-                allowMeteorShower = true;
-                break;
-            case SkillManager.SkillType.Overclocked:
-                bulletDamage = 1;
-                fireRate = 10;
-                targetingRate = 0.1f;
-                passThrough = 5;
-                break;
-            case SkillManager.SkillType.Firestorm:
-                allowFirestorm = true;
-                break;
-            case SkillManager.SkillType.Timewarp:
-                allowTimewarp = true;
-                break;
         }
     }
 }

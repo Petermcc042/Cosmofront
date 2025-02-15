@@ -6774,6 +6774,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 269101018}
+  - component: {fileID: 269101020}
   - component: {fileID: 269101019}
   m_Layer: 0
   m_Name: EnemyManager
@@ -6836,6 +6837,20 @@ MonoBehaviour:
     type: 3}
   speed: 10
   centre: {fileID: 427440953}
+--- !u!114 &269101020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 269101017}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1190a888296ceb34fb462bbda5d42f2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyMesh: {fileID: 4300000, guid: 920896bcb1a838344938778ae6f878c2, type: 3}
+  enemyMaterial: {fileID: 2100000, guid: 482e923c77c464559873a2fdb97e4b68, type: 2}
 --- !u!1 &289209529
 GameObject:
   m_ObjectHideFlags: 0
@@ -30806,7 +30821,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14c1ab18185af49f2b22a39a3dc80aac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  costsRemoved: 0
+  costsRemoved: 1
   autoUpgrade: 1
   invincible: 0
   gameSettings: {fileID: 11400000, guid: e38f55fe86a74314db66ae42a3f2e21c, type: 2}
@@ -31822,6 +31837,53 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1779950285}
   m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1803536554
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1803536556}
+  - component: {fileID: 1803536555}
+  m_Layer: 0
+  m_Name: InstanceExample
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &1803536555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1803536554}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 953695bc53d36e74084fa495f8edd2af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mesh: {fileID: 4300000, guid: 5ac00d3df3341eb4cb96d7fc548cfdd2, type: 3}
+  material: {fileID: 2100000, guid: 482e923c77c464559873a2fdb97e4b68, type: 2}
+  instanceCount: 10000
+--- !u!4 &1803536556
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1803536554}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1812297012
 GameObject:
   m_ObjectHideFlags: 0
@@ -31960,6 +32022,7 @@ MonoBehaviour:
   lightningPrefab: {fileID: 352128907}
   lightningPrefabMaterial: {fileID: 2100000, guid: 83154145f0bcc4d4e8dd461594548b8a,
     type: 2}
+  lightningPrefabMaterialTwo: {fileID: 0}
   shieldDamageAmount: 0
   damageTextPrefab: {fileID: 464875000}
 --- !u!1 &1834726413
@@ -34574,6 +34637,7 @@ SceneRoots:
   - {fileID: 1512581171}
   - {fileID: 383542162}
   - {fileID: 1137781123}
+  - {fileID: 1803536556}
   - {fileID: 1447731565}
   - {fileID: 1631921845}
   - {fileID: 556035302}

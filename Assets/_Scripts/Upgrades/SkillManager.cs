@@ -1,3 +1,4 @@
+using NUnit.Framework.Constraints;
 using System;
 using System.Collections.Generic;
 using TMPro;
@@ -87,7 +88,7 @@ public class SkillManager: MonoBehaviour
         currentTurret = _turret;
 
         optionUpgrades = GetRandomUpgradeOptions(3, smallUpgrades);
-        optionUpgrades[1].Apply(currentTurret, 1);
+        optionUpgrades[1].Apply(currentTurret);
     }
 
     public void GetSmallUpgradeOptions(Turret _turret)
@@ -112,9 +113,34 @@ public class SkillManager: MonoBehaviour
     public void GetMediumUpgradeOptions(Turret _turret, int position)
     {
         gameManager.InvertGameState();
-        optionUpgrades = GetRandomUpgradeOptions(3, mediumUpgrades);
         currentTurret = _turret;
         currentPosition = position;
+
+        // Filter the list of available medium upgrades based on previous selections
+        List<IUpgradeOption> availableUpgrades = mediumUpgrades;
+
+        // If turret has LightningRound, add Lightning2ndLevel to available upgrades
+        foreach (IUpgradeOption e in _turret.unlockedUpgradeList)
+        {
+            Debug.Log("possible upgrades: " + e.GetType().Name);
+            for (int i = 0; i < availableUpgrades.Count; i++)
+            {
+                if (availableUpgrades[i] == e)
+                {
+                    availableUpgrades.RemoveAt(i);
+                }
+            }
+
+            if (e.NextUpgradeOption() == null) { continue; }
+            for (int i = 0; i < 40; i++)
+            {
+                availableUpgrades.Add(e.NextUpgradeOption());
+            }
+            
+        }
+
+        // Select 3 random upgrades from the filtered list
+        optionUpgrades = GetRandomUpgradeOptions(3, availableUpgrades);
 
         if (gameManager.autoUpgrade)
         {
@@ -169,7 +195,7 @@ public class SkillManager: MonoBehaviour
 
     public void UpgradeOptions(int _num)
     {
-        optionUpgrades[_num].Apply(currentTurret, currentPosition);
+        optionUpgrades[_num].Apply(currentTurret);
         gameManager.InvertGameState();
     }
 

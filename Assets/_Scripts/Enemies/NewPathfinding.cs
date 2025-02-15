@@ -87,62 +87,9 @@ public class NewPathfinding : MonoBehaviour
     private void RunFlowField(Vector3 endWorldPosition, bool _runFullFlow)
     {
         gridManager.mapGrid.GetXZ(endWorldPosition, out int endX, out int endZ);
-        // we are passing the correct end position
         
-
-        UpdateNodesMovementCost flowJob1 = new UpdateNodesMovementCost
-        {
-            GridArray = flowNodes,
-            endX = endX, endZ = endZ,
-            runFullGrid = _runFullFlow
-        };
-
-        JobHandle flowHandle1 = flowJob1.Schedule(flowNodes.Length, 64);
-        flowHandle1.Complete();
-
-
-        NativeQueue<FlowGridNode> nodeQueue = new NativeQueue<FlowGridNode>(Allocator.Persistent);
-
-        UpdateNodesIntegration flowJob2 = new UpdateNodesIntegration
-        {
-            GridArray = flowNodes,
-            NodeQueue = nodeQueue,
-            endX = endX,
-            endZ = endZ,
-            gridWidth = gridLength,
-            runFullGrid = _runFullFlow
-        };
-
-        JobHandle flowHandle2 = flowJob2.Schedule();
-        flowHandle2.Complete();
-
-        nodeQueue.Dispose();
-
-        WeightBuildingNodes flowJob3 = new WeightBuildingNodes
-        {
-            GridArray = flowNodes,
-            endX = endX,
-            endZ = endZ,
-            runFullGrid = _runFullFlow,
-            gridWidth = gridLength
-        };
-
-        JobHandle flowHandle3 = flowJob3.Schedule();
-        flowHandle3.Complete();
-
-
-        UpdateGoToIndex flowJob4 = new UpdateGoToIndex
-        {
-            GridArray = flowNodes,
-            endX = endX,
-            endZ = endZ,
-            runFullGrid = _runFullFlow,
-            gridWidth = gridLength
-        };
-
-        JobHandle flowHandle4 = flowJob4.Schedule();
-        flowHandle4.Complete();
-
+        FlowFieldScheduler flowFieldJobScheduler = new FlowFieldScheduler();
+        flowFieldJobScheduler.ScheduleFlowFieldJobs(flowNodes, gridLength, endX, endZ, _runFullFlow);
 
         WriteDataToCSV("output.csv");
     }

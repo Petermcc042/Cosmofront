@@ -145,35 +145,6 @@ public class GameManager : MonoBehaviour
         resourceManager.SetAttanium(50);
     }
 
-    /// <summary>
-    /// Loops over all *.cs files in Assets/_Scripts and counts the total number of lines.
-    /// </summary>
-    /// <returns>Total number of lines of code found in the folder.</returns>
-    public static int CountAllCSLinesInScriptsFolder()
-    {
-        int totalLines = 0;
-        // Build the absolute path to Assets/_Scripts.
-        string scriptsFolderPath = Path.Combine(Application.dataPath, "_Scripts");
-
-        if (!Directory.Exists(scriptsFolderPath))
-        {
-            Debug.LogWarning("Directory not found: " + scriptsFolderPath);
-            return 0;
-        }
-
-        // Get all *.cs files, searching recursively.
-        string[] csFiles = Directory.GetFiles(scriptsFolderPath, "*.cs", SearchOption.AllDirectories);
-
-        foreach (string file in csFiles)
-        {
-            // Read all lines of the file and count them.
-            totalLines += File.ReadAllLines(file).Length;
-        }
-
-        Debug.Log("Total number of lines in .cs files in Assets/_Scripts: " + totalLines);
-        return totalLines;
-    }
-
 
     private void Update()
     {
@@ -434,6 +405,36 @@ public class GameManager : MonoBehaviour
             return true;
         else
             return false;
+    }
+
+
+    /// <summary>
+    /// Loops over all *.cs files in Assets/_Scripts and counts the total number of lines.
+    /// </summary>
+    /// <returns>Total number of lines of code found in the folder.</returns>
+    public static int CountAllCSLinesInScriptsFolder()
+    {
+        int totalLines = 0;
+        // Build the absolute path to Assets/_Scripts.
+        string scriptsFolderPath = Path.Combine(Application.dataPath, "_Scripts");
+
+        if (!Directory.Exists(scriptsFolderPath))
+        {
+            Debug.LogWarning("Directory not found: " + scriptsFolderPath);
+            return 0;
+        }
+
+        // Get all *.cs files, searching recursively.
+        string[] csFiles = Directory.GetFiles(scriptsFolderPath, "*.cs", SearchOption.AllDirectories);
+
+        foreach (string file in csFiles)
+        {
+            // Read all lines of the file and count them.
+            totalLines += File.ReadAllLines(file).Length;
+        }
+
+        Debug.Log("Total number of lines in .cs files in Assets/_Scripts: " + totalLines);
+        return totalLines;
     }
 
 

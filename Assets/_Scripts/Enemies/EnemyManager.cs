@@ -3,14 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 
 public struct EnemyData
 {
     public int EnemyID;
-    public Vector3 Position; //Position = pathArray[pathIndexArray[_spawnIndexCount]]
-    public Vector3 TargetPos;
-    public Vector3 Velocity;
+    public float3 Position; //Position = pathArray[pathIndexArray[_spawnIndexCount]]
+    public float3 TargetPos;
+    public float3 Velocity;
     public Quaternion Rotation;
     public float Speed; //Speed = 20
     public float Health; //EnemyHealth = 1
@@ -20,7 +21,7 @@ public struct EnemyData
     public bool TargetNeeded;
     public bool IsActive;
     public bool IsAtShield;
-    public Vector3 AttackPos;
+    public float3 AttackPos;
 }
 
 public class EnemyManager : MonoBehaviour
@@ -81,6 +82,7 @@ public class EnemyManager : MonoBehaviour
     private int activeEnemyCount;
 
     // lists of whether to logic to apply to enemies
+    public NativeList<EnemyData> enemyDataList;
     private List<GameObject> enemyList;
     private List<GameObject> damageEnemyList;
 
@@ -98,12 +100,15 @@ public class EnemyManager : MonoBehaviour
 
     public Transform centre;
 
+
     void Awake()
     {
+
         skillManager.OnSkillUnlocked += SkillManager_OnSkillUnlocked;
 
         enemyList = new List<GameObject>();
         enemyTargetList = new List<GameObject>();
+        enemyDataList = new NativeList<EnemyData>(Allocator.Persistent);
 
         damageEnemyList = new List<GameObject>();
         spawnOriginVectorList = new List<Vector3>();
@@ -149,28 +154,6 @@ public class EnemyManager : MonoBehaviour
         // increase timer to allow spawn loop to begin, then begin spawning
         spawnInterval = spawnCountdown;
         //keepSpawning = true; 
-    }
-
-    private void CheckPaths()
-    {
-        Debug.Log("Checking paths");
-        
-        int currentIndexPostition = Mathf.FloorToInt(spawnOriginVectorList[0].z) + Mathf.FloorToInt(spawnOriginVectorList[0].x) * 200;
-        Debug.Log(spawnOriginVectorList[0] + " : " + pathfinding.flowNodes[currentIndexPostition].position);
-
-        for (int i = 0; i < 150; i++) {
-            Instantiate(targetPosGO, pathfinding.flowNodes[currentIndexPostition].position, Quaternion.identity, gameObject.transform);
-            if (pathfinding.flowNodes[currentIndexPostition].goToIndex < 0) {
-                // Move one square towards center if we hit a negative index
-                Vector3 currentPos = pathfinding.flowNodes[currentIndexPostition].position;
-                Vector3 towardsCenter = (centre.position - currentPos).normalized;
-                currentIndexPostition = Mathf.FloorToInt(currentPos.z + Mathf.Sign(towardsCenter.z)) + 
-                                      Mathf.FloorToInt(currentPos.x + Mathf.Sign(towardsCenter.x)) * 200;
-            } else {
-                currentIndexPostition = pathfinding.flowNodes[currentIndexPostition].goToIndex;
-            }
-            
-        }
     }
 
 
@@ -315,7 +298,8 @@ public class EnemyManager : MonoBehaviour
             IsActive = true
         };
 
-        collisionManager.AddEnemyData(eData);
+        //collisionManager.AddEnemyData(eData);
+        enemyDataList.Add(eData);
 
         spawnIndexCount++;
         enemyCount++;
@@ -357,6 +341,38 @@ public class EnemyManager : MonoBehaviour
 
 
 
+
+    /// <summary>
+    /// Old Debug Code to place an item where each enemy target position should be
+    /// </summary>
+    private void CheckPaths()
+    {
+        Debug.Log("Checking paths");
+
+        int currentIndexPostition = Mathf.FloorToInt(spawnOriginVectorList[0].z) + Mathf.FloorToInt(spawnOriginVectorList[0].x) * 200;
+        Debug.Log(spawnOriginVectorList[0] + " : " + pathfinding.flowNodes[currentIndexPostition].position);
+
+        for (int i = 0; i < 150; i++)
+        {
+            Instantiate(targetPosGO, pathfinding.flowNodes[currentIndexPostition].position, Quaternion.identity, gameObject.transform);
+            if (pathfinding.flowNodes[currentIndexPostition].goToIndex < 0)
+            {
+                // Move one square towards center if we hit a negative index
+                Vector3 currentPos = pathfinding.flowNodes[currentIndexPostition].position;
+                Vector3 towardsCenter = (centre.position - currentPos).normalized;
+                currentIndexPostition = Mathf.FloorToInt(currentPos.z + Mathf.Sign(towardsCenter.z)) +
+                                      Mathf.FloorToInt(currentPos.x + Mathf.Sign(towardsCenter.x)) * 200;
+            }
+            else
+            {
+                currentIndexPostition = pathfinding.flowNodes[currentIndexPostition].goToIndex;
+            }
+
+        }
+    }
+
+
+
     // OLD CODE
     public void DestroyEnemy(GameObject _enemy)
     {
@@ -390,6 +406,9 @@ public class EnemyManager : MonoBehaviour
     {
         gameManager.EndGame("You Win");
     }
+
+
+
 }
 
 

@@ -4,21 +4,24 @@ using UnityEngine;
 using System.Collections.Generic;
 using Unity.Jobs;
 using System;
+using Unity.Mathematics;
 
 public struct BulletData
 {
     public int TurretID;
-    public Vector3 Position;
-    public Vector3 Velocity;
+    public float3 Position;
+    public float3 Velocity;
     public float Lifetime;
     public int Speed;
     public int Damage;
     public bool ToRemove;
     public int PassThrough;
     public BulletType Type;
-    public BulletType TypeTwo;
-    public FixedList64Bytes<int> hitEnemies;
+    public FixedList128Bytes<int> hitEnemies; 
+    // Fixed-length lists (specify element count)
+    // FixedList<T, N>        // Where N is the capacity
 }
+
 
 
 public class BulletManager : MonoBehaviour
@@ -36,6 +39,7 @@ public class BulletManager : MonoBehaviour
     [SerializeField] private GameObject firestormPrefab;
 
     private List<GameObject> bulletObjects;
+    public NativeList<BulletData> bulletDataList;
 
 
     private void Awake()
@@ -51,9 +55,10 @@ public class BulletManager : MonoBehaviour
 
         // Initialize bullets
         bulletObjects = new List<GameObject>();
+        bulletDataList = new NativeList<BulletData>(Allocator.Persistent);
     }
 
-    public void SpawnBullet(Vector3 _origin, Vector3 _direction, int _speed, int _turretID, int _damage, int _passThrough, BulletType _bulletType, BulletType _bulletTypeTwo)
+    public void SpawnBullet(Vector3 _origin, Vector3 _direction, int _speed, int _turretID, int _damage, int _passThrough, BulletType _bulletType)
     {
         GameObject bullet = Instantiate(GetBulletPrefab(_bulletType), _origin, Quaternion.identity, gameObject.transform);
         bulletObjects.Add(bullet);
@@ -67,11 +72,11 @@ public class BulletManager : MonoBehaviour
             Damage = _damage,
             PassThrough = _passThrough,
             TurretID = _turretID,
-            Type = _bulletType,
-            TypeTwo = _bulletTypeTwo
+            Type = _bulletType
         };
 
-        collisionManager.AddBulletData(bulletData);
+        //collisionManager.AddBulletData(bulletData);
+        bulletDataList.Add(bulletData);
     }
 
     private GameObject GetBulletPrefab(BulletType bulletType)

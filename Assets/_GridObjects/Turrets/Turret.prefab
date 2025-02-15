@@ -104,7 +104,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ab6d2594d39b1744b400f12061324b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fireRate: 1
+  fireRate: 25
   killCount: 0
   bulletDamage: 1
   fleshMultiplier: 1
@@ -115,7 +115,7 @@ MonoBehaviour:
   range: 15
   turnSpeed: 10
   fireCountdown: 0
-  targetingRate: 1
+  targetingRate: 0.1
   targetingCountdown: 0
   lockOnSpeed: 1
   orbitalSearchRadius: 20
@@ -139,12 +139,14 @@ MonoBehaviour:
   timewarpRadiusGO: {fileID: 5964435541544293207}
   allowTimewarp: 0
   turretXP: 0
+  xpToAdd: 0
   turretLevel: 0
-  bulletTypes: 
+  upgradeType: 0
+  bulletType: 0
   partToRotate: {fileID: 6417055713613626388}
   firePoint: {fileID: 7504641739250698944}
   highlightBox: {fileID: 5278750429639919215}
-  turretPause: 0
+  autoUpgrade: 0
 --- !u!65 &1887822194214673697
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -256,6 +258,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -388,6 +393,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -472,6 +480,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:

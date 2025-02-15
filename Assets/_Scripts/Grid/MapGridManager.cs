@@ -5,6 +5,7 @@ using System.IO;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Burst;
+using Unity.Mathematics;
 
 public class MapGridManager : MonoBehaviour
 {
@@ -39,7 +40,7 @@ public class MapGridManager : MonoBehaviour
     [SerializeField] private bool debugLinesBool;
 
     public GridXZ<GridObject> mapGrid;
-    public List<Vector3> gridLocations;
+    public List<float3> gridLocations;
     
 
     private PlacedObjectSO.Dir dir = PlacedObjectSO.Dir.Down;
@@ -50,9 +51,9 @@ public class MapGridManager : MonoBehaviour
     private float cellSize = 1f;
 
     // For Walls And Building
-    private List<Vector3> buildableAreaList;
-    private List<Vector3> pathfindingAreaList;
-    public NativeList<Vector3> buildingGridSquareList;
+    private List<float3> buildableAreaList;
+    private List<float3> pathfindingAreaList;
+    public NativeList<float3> buildingGridSquareList;
 
 
     private void Awake()
@@ -66,11 +67,11 @@ public class MapGridManager : MonoBehaviour
         // Set the instance to this object
         Instance = this;
 
-        buildableAreaList = new List<Vector3>();
-        gridLocations = new List<Vector3>();
-        pathfindingAreaList = new List<Vector3>();
+        buildableAreaList = new List<float3>();
+        gridLocations = new List<float3>();
+        pathfindingAreaList = new List<float3>();
 
-        buildingGridSquareList = new NativeList<Vector3>(Allocator.Persistent);
+        buildingGridSquareList = new NativeList<float3>(Allocator.Persistent);
 
         circlePoints = ReadCSVFile(circlePointsPath);
         pathfindingCirclePoints = ReadCSVFile(pathfindingCirclePointsPath);
@@ -357,7 +358,7 @@ public class MapGridManager : MonoBehaviour
                 tempObject.isBuilding = false;
                 tempObject.ClearPlacedObject();
 
-                RemoveFromNativeList(buildingGridSquareList, new Vector3(pos.x, 0, pos.y));
+                RemoveFromNativeList(buildingGridSquareList, new float3(pos.x, 0, pos.y));
                 //RemoveFromNativeList(buildingGridSquareList, new Vector3(pos.x, 0, pos.y + 1));
                 //RemoveFromNativeList(buildingGridSquareList, new Vector3(pos.x + 1, 0, pos.y));
                 //RemoveFromNativeList(buildingGridSquareList, new Vector3(pos.x + 1, 0, pos.y + 1));
@@ -518,7 +519,7 @@ public class MapGridManager : MonoBehaviour
         }
     }
 
-    public static void RemoveFromNativeList(NativeList<Vector3> list, Vector3 positionToRemove)
+    public static void RemoveFromNativeList(NativeList<float3> list, float3 positionToRemove)
     {
         // Find and remove the position using a swap-and-pop approach
         for (int i = list.Length - 1; i >= 0; i--)

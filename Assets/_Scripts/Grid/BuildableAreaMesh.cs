@@ -1,9 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Unity.Mathematics;
 
 public class BuildableAreaMesh : MonoBehaviour
 {
-    public List<Vector3> buildableAreas; // List of buildable area positions
+    public List<float3> buildableAreas; // List of buildable area positions
     [SerializeField] private MeshFilter meshFilter;
     [SerializeField] private MeshRenderer meshRenderer;
 
