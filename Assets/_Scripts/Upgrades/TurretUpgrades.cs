@@ -3,9 +3,10 @@ using UnityEngine.UIElements;
 
 public interface IUpgradeOption
 {
-    void Apply(Turret turret, int position);
+    void Apply(Turret turret);
     string GetDescription();  // For UI purposes
     int GetTextSize();
+    IUpgradeOption NextUpgradeOption();
 }
 
 public class FireRateUpgrade : IUpgradeOption
@@ -17,10 +18,11 @@ public class FireRateUpgrade : IUpgradeOption
         fireRateIncrease = increase;
     }
 
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
         turret.fireRate += fireRateIncrease;
+        turret.unlockedUpgradeList.Add(this);
     }
 
     public int GetTextSize() { return 20; }
@@ -29,9 +31,12 @@ public class FireRateUpgrade : IUpgradeOption
     {
         return $"Increases fire rate by {fireRateIncrease}";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
 
 public class TargetingRateUpgrade : IUpgradeOption
+
 {
     public float targetRate;
 
@@ -40,11 +45,13 @@ public class TargetingRateUpgrade : IUpgradeOption
         targetRate = increase;
     }
 
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
         turret.targetingRate -= targetRate;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 20; }
 
@@ -52,6 +59,8 @@ public class TargetingRateUpgrade : IUpgradeOption
     {
         return $"Increases targeting rate by {targetRate}";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
 
 public class TargetRangeUpgrade : IUpgradeOption
@@ -63,11 +72,13 @@ public class TargetRangeUpgrade : IUpgradeOption
         targetRange = increase;
     }
 
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
         turret.range += targetRange;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 18; }
 
@@ -75,7 +86,10 @@ public class TargetRangeUpgrade : IUpgradeOption
     {
         return $"Increases the targeting range of the turret by {targetRange}";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
+
 
 public class MegaUpgrade : IUpgradeOption
 {
@@ -91,13 +105,15 @@ public class MegaUpgrade : IUpgradeOption
         targetingRate /= increase;
     }
 
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
         turret.fireRate = fireRateIncrease;
         turret.bulletDamage = bulletDamage;
         turret.targetingRate = targetingRate;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 20; }
 
@@ -105,6 +121,8 @@ public class MegaUpgrade : IUpgradeOption
     {
         return $"Mega Upgrade";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
 
 public class DamageUpgrade : IUpgradeOption
@@ -116,11 +134,13 @@ public class DamageUpgrade : IUpgradeOption
         damageIncrease = increase;
     }
 
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
         turret.bulletDamage += damageIncrease;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 20; }
 
@@ -128,6 +148,8 @@ public class DamageUpgrade : IUpgradeOption
     {
         return $"Increases damage by {damageIncrease}";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
 
 
@@ -140,10 +162,12 @@ public class ChangeProjectileUpgrade : IUpgradeOption
         newProjectilePrefab = newPrefab;
     }
 
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 20; }
 
@@ -151,6 +175,8 @@ public class ChangeProjectileUpgrade : IUpgradeOption
     {
         return "Changes the projectile type";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
 
 public class PassThroughUpgrade : IUpgradeOption
@@ -162,11 +188,13 @@ public class PassThroughUpgrade : IUpgradeOption
         passThroughIncrease = _increase;
     }
 
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
         turret.passThrough += passThroughIncrease;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 18; }
 
@@ -174,16 +202,20 @@ public class PassThroughUpgrade : IUpgradeOption
     {
         return $"Increases the number of enemies hit by {passThroughIncrease}";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
 
 public class ExplosiveRoundsUpgrade : IUpgradeOption
 {
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
-        turret.bulletTypes[position] = BulletType.Explosive;
+        turret.bulletType = BulletType.Explosive;
         turret.passThrough = 0;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 17; }
 
@@ -192,16 +224,20 @@ public class ExplosiveRoundsUpgrade : IUpgradeOption
     {
         return $"Turns the rounds explosive dealing damage to nearby enemies";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
 
 public class LightningRoundsUpgrade : IUpgradeOption
 {
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
-        turret.bulletTypes[position] = BulletType.ChainLightning;
+        turret.bulletType = BulletType.ChainLightning;
         turret.passThrough = 0;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 17; }
 
@@ -209,17 +245,40 @@ public class LightningRoundsUpgrade : IUpgradeOption
     {
         return $"creates a chain of lightning dealing damage to nearby enemies";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return new LightningTwoUpgrade(); }
 }
 
+public class LightningTwoUpgrade : IUpgradeOption
+{
+    public void Apply(Turret turret)
+    {
+        turret.highlightBox.SetActive(false);
+        turret.bulletType = BulletType.ChainLightningTwo;
+        turret.unlockedUpgradeList.Add(this);
+    }
+
+
+    public int GetTextSize() { return 17; }
+
+    public string GetDescription()
+    {
+        return $"creates a chain of lightning dealing damage to nearby enemies";
+    }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
+}
 
 public class SlowRoundsUpgrade : IUpgradeOption
 {
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
-        turret.bulletTypes[position] = BulletType.Slow;
+        turret.bulletType = BulletType.Slow;
         turret.passThrough = 0;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 17; }
 
@@ -227,16 +286,21 @@ public class SlowRoundsUpgrade : IUpgradeOption
     {
         return $"A bullet that slows and damages enemies";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
+
 
 public class SpreadRoundsUpgrade : IUpgradeOption
 {
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
-        turret.bulletTypes[position] = BulletType.Spread;
+        turret.bulletType = BulletType.Spread;
         turret.passThrough = 0;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 17; }
 
@@ -244,15 +308,20 @@ public class SpreadRoundsUpgrade : IUpgradeOption
     {
         return $"Bullets split into multiple projectiles on impact";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
+
 
 public class PiercingRoundsUpgrade : IUpgradeOption
 {
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
         turret.passThrough = 5;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 17; }
 
@@ -260,15 +329,19 @@ public class PiercingRoundsUpgrade : IUpgradeOption
     {
         return $"Hardened bullets can pass through 5 enemies";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
 
 public class RicochetRoundsUpgrade : IUpgradeOption
 {
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
-        turret.bulletTypes[position] = BulletType.Ricochet;
+        turret.bulletType = BulletType.Ricochet;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 17; }
 
@@ -276,15 +349,20 @@ public class RicochetRoundsUpgrade : IUpgradeOption
     {
         return $"Bullets can ricochet off the terrain";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
+
 
 public class OverchargeRoundsUpgrade : IUpgradeOption
 {
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
-        turret.bulletTypes[position] = BulletType.Overcharge;
+        turret.bulletType = BulletType.Overcharge;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 17; }
 
@@ -292,14 +370,18 @@ public class OverchargeRoundsUpgrade : IUpgradeOption
     {
         return $"Bullets charge up damage between shots";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
+
 
 public class OrbitalStrikeUpgrade : IUpgradeOption
 {
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
         turret.allowOrbitalStrike = true;
+        turret.unlockedUpgradeList.Add(this);
     }
 
     public int GetTextSize() { return 17; }
@@ -308,14 +390,19 @@ public class OrbitalStrikeUpgrade : IUpgradeOption
     {
         return $"Auto lock on and fire a laser that charges then detonates after a second";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
+
 }
 
 public class MeteorShowerUpgrade : IUpgradeOption
 {
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
+
         turret.highlightBox.SetActive(false);
         turret.allowMeteorShower = true;
+        turret.unlockedUpgradeList.Add(this);
     }
 
     public int GetTextSize() { return 17; }
@@ -324,15 +411,20 @@ public class MeteorShowerUpgrade : IUpgradeOption
     {
         return $"Every few seconds nudge a few asteroids on a collision course with your enemies";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
+
 }
 
 public class FirestormUpgrade : IUpgradeOption
 {
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
         turret.allowFirestorm = true;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 17; }
 
@@ -340,15 +432,20 @@ public class FirestormUpgrade : IUpgradeOption
     {
         return $"Every 5 seconds triggers a payload to fall from above coating the area in fire that deals damage over time";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }
+
 
 public class TimewarpUpgrade : IUpgradeOption
 {
-    public void Apply(Turret turret, int position)
+    public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
         turret.allowTimewarp = true;
+        turret.unlockedUpgradeList.Add(this);
     }
+
 
     public int GetTextSize() { return 16; }
 
@@ -356,4 +453,6 @@ public class TimewarpUpgrade : IUpgradeOption
     {
         return $"The turret creates an aura that slows down all enemy movement within a certain radius, giving other turrets more time to attack";
     }
+
+    public IUpgradeOption NextUpgradeOption() { return null; }
 }

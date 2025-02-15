@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,7 +18,7 @@ public class Generator : MonoBehaviour
     [SerializeField] private GameObject circumPoint;
     [SerializeField] private bool showCircleCirum;
     [SerializeField] GameObject shield;
-    private List<Vector3> shieldSquares;
+    private List<float3> shieldSquares;
 
     [SerializeField] private Slider shieldHealthUI;
 
@@ -31,15 +32,15 @@ public class Generator : MonoBehaviour
     private const float rechargeDelay = 2f; // 2 seconds delay
     private const float rechargeRate = 3f; // Rate at which the shield recharges
 
-    public NativeList<Vector3> shieldGridSquareList;
+    public NativeList<float3> shieldGridSquareList;
 
 
     private void Awake()
     {
-        shield.transform.localScale = new Vector3(50, 50, 50);
+        shield.transform.localScale = new float3(50, 50, 50);
 
         shieldSquares = GetCirclePoints(100, 100, shieldRadius, 0.2f);
-        shieldGridSquareList = new NativeList<Vector3>(Allocator.Persistent);
+        shieldGridSquareList = new NativeList<float3>(Allocator.Persistent);
 
         // keep for testing
         //shieldAreaMesh.buildableAreas = shieldSquares;
@@ -106,9 +107,9 @@ public class Generator : MonoBehaviour
     }
 
     // Function to get positions on the circumference of a circle with a specified distance between each point
-    public List<Vector3> GetCirclePoints(float centerX, float centerZ, float radius, float distanceBetweenPoints)
+    public List<float3> GetCirclePoints(float centerX, float centerZ, float radius, float distanceBetweenPoints)
     {
-        List<Vector3> points = new List<Vector3>();
+        List<float3> points = new List<float3>();
 
         // Calculate the circumference of the circle
         float circumference = 2 * Mathf.PI * radius;
@@ -129,13 +130,13 @@ public class Generator : MonoBehaviour
             float z = centerZ + Mathf.Sin(angle) * radius;
 
             // Add the point to the list (keeping y as 0 for flat on ground or adjust as needed)
-            points.Add(new Vector3(x, 0, z));
+            points.Add(new float3(x, 0, z));
         }
 
         return points;
     }
 
-    public static void RemoveFromNativeList(NativeList<Vector3> list, Vector3 positionToRemove)
+    public static void RemoveFromNativeList(NativeList<float3> list, float3 positionToRemove)
     {
         // Find and remove the position using a swap-and-pop approach
         for (int i = list.Length - 1; i >= 0; i--)
