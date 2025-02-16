@@ -51,10 +51,8 @@ public class PhaseManager : MonoBehaviour
     private float pauseTimer = 0f;
     private bool isPausing = false;
 
-    void Update()
-    {
-        if (gameManager.GetGameState()) { return; }
-
+    public void CallUpdate()
+    { 
         if (isPausing)
         {
             // Handle the pause countdown

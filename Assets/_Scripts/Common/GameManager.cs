@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private CollisionManager collisionManager;
     [SerializeField] private NewPathfinding pathfinder;
     [SerializeField] private SaveSystem saveSystem;
+    [SerializeField] private TurretManager turretManager;
 
 
     [Header("Building Aid")]
@@ -85,7 +86,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Escape Menu UI")]
     [SerializeField] private GameObject escapeMenuUI;
-    private bool gameState = true;
+    private bool gameRunning = true;
 
     // help for menu ui
     private GameObject lastSelectedBuilding;
@@ -97,7 +98,7 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        gameState = false;
+        gameRunning = false;
         Time.timeScale = 1;
         totalTime = gameSettings.totalTime;
 
@@ -143,6 +144,8 @@ public class GameManager : MonoBehaviour
 
         resourceManager.AddAttanium(1);
         resourceManager.SetAttanium(50);
+
+        gameRunning = true;
     }
 
 
@@ -151,10 +154,22 @@ public class GameManager : MonoBehaviour
         HandleInput();
         UpdateBuildingUI();
         UpdateRotation();
+
+        if (!gameRunning) { return; }
+
+        phaseManager.CallUpdate();
+
+        turretManager.CallUpdateAllTurrets();
+        turretManager.CallUpdate();
+        
+        collisionManager.CallUpdate();
+        enemyManager.CallUpdate();
     }
 
     private void HandleInput()
     {
+        if (Input.GetKeyDown(KeyCode.P)) { InvertGameState(); }
+
         if (Input.GetKeyDown(KeyCode.B)) { ToggleBuilding(); }
 
         if (Input.GetKeyDown(KeyCode.Escape)) { PauseGame(); }
@@ -249,17 +264,17 @@ public class GameManager : MonoBehaviour
 
     private void PauseGame()
     {
-        if (gameState == true)
+        if (gameRunning == true)
         {
             Time.timeScale = 0;
             escapeMenuUI.SetActive(true);
-            gameState = false;
+            gameRunning = false;
         } 
         else
         {
             Time.timeScale = 1;
             escapeMenuUI.SetActive(false);
-            gameState = true;
+            gameRunning = true;
         }
 
     }
@@ -502,11 +517,11 @@ public class GameManager : MonoBehaviour
 
     public void InvertGameState()
     {
-        gameState = !gameState;
+        gameRunning = !gameRunning;
     }
 
     public bool GetGameState()
     {
-        return gameState;
+        return gameRunning;
     }
 }

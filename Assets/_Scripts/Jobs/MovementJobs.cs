@@ -466,12 +466,17 @@ public struct BulletCollision : IJobParallelFor
     }
 }
 
+public struct TurretUpgradeData {
+    public int XPAmount;
+    public int TurretID;
+}
+
 [BurstCompile]
 public struct EnemyCollisionData : IJob
 {
     public NativeQueue<CollisionData> CollisionQueue;
     public NativeArray<EnemyData> EnemyDataArray;
-    public NativeList<int> TurretIDList;
+    public NativeList<TurretUpgradeData> TurretUpgradeDataList;
     [ReadOnly] public float DeltaTime;
 
     public void Execute()
@@ -493,7 +498,14 @@ public struct EnemyCollisionData : IJob
             if (tempEnemy.Health <= 0)
             {
                 tempEnemy.ToRemove = true;
-                TurretIDList.Add(colData.TurretID);
+                TurretUpgradeData tempUpgrade = new()
+                {
+                    XPAmount = 2,
+                    TurretID = colData.TurretID
+                };
+
+                TurretUpgradeDataList.Add(tempUpgrade);
+                    
             }
 
             EnemyDataArray[colData.EnemyIndex] = tempEnemy;

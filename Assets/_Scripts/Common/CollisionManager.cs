@@ -26,6 +26,7 @@ public class CollisionManager : MonoBehaviour
     [SerializeField] public TerrainGen terrainGen;
     [SerializeField] public ParticlePool particlePool;
     [SerializeField] public NewPathfinding pathfinding;
+    [SerializeField] public TurretManager turretManager;
 
     [SerializeField] private Slider genHealth;
     [SerializeField] private int explosionRadius;
@@ -88,22 +89,17 @@ public class CollisionManager : MonoBehaviour
         }
     }
 
-    private void Update()
+    public void CallUpdate()
     {
-        if (Input.GetKeyDown(KeyCode.P)) { gameManager.InvertGameState(); }
+        float deltaTime = Time.deltaTime;
 
-        if (!gameManager.GetGameState())
-        {
-            float deltaTime = Time.deltaTime;
+        MovementScheduler movementScheduler = new MovementScheduler();
+        movementScheduler.ScheduleMoveJobs(enemyDataList, bulletDataList, shieldPositions, obstructPathList, pathfinding.flowNodes, deltaTime, mySeed);
 
-            MovementScheduler movementScheduler = new MovementScheduler();
-            movementScheduler.ScheduleMoveJobs(enemyDataList, bulletDataList, shieldPositions, obstructPathList, pathfinding.flowNodes, deltaTime, mySeed);
-
-            CheckBulletCollisions();
-            RemovalAndUpdate();
-            DamageBuildings();
-            UpdateLightningVFX();
-        }
+        CheckBulletCollisions();
+        RemovalAndUpdate();
+        DamageBuildings();
+        UpdateLightningVFX();
     }
 
 
@@ -135,13 +131,13 @@ public class CollisionManager : MonoBehaviour
         bulletHandle.Complete();
 
 
-        NativeList<int> turretXP = new(Allocator.Persistent);
+        NativeList<TurretUpgradeData> turretXP = new(Allocator.Persistent);
 
         var collisionJob = new EnemyCollisionData
         {
             EnemyDataArray = enemyDataList.AsArray(),
             CollisionQueue = colData,
-            TurretIDList = turretXP,
+            TurretUpgradeDataList = turretXP,
         };
 
         JobHandle collisionJobHandle = collisionJob.Schedule(bulletHandle);
@@ -227,16 +223,7 @@ public class CollisionManager : MonoBehaviour
             }
         }
 
-
-        for (int i = 0; i < turretXP.Length; i++)
-        {
-            TurretXPEvent?.Invoke(this,
-                new TurretXPEventArgs
-                {
-                    turretID = turretXP[i],
-                    xpAmount = enemyXPAmount
-                });
-        }
+        turretManager.HandleXPUpdate(turretXP);
 
         turretXP.Dispose();
         colData.Dispose();
@@ -248,8 +235,6 @@ public class CollisionManager : MonoBehaviour
 
     private void UpdateLightningVFX()
     {
-        if (gameManager.GetGameState()) return; // Skip if game is paused
-
         for (int i = lightningVFX.Count - 1; i >= 0; i--)
         {
             var (obj, timer) = lightningVFX[i];

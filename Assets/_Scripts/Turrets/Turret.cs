@@ -97,6 +97,7 @@ public class Turret : MonoBehaviour
     private Transform target;
 
     [Header("Stats Attributes")]
+    public int turretID;
     public int turretXP;
     public int xpToAdd;
     public int turretLevel;
@@ -110,7 +111,6 @@ public class Turret : MonoBehaviour
 
     [Header("Upgrades")]
     public List<IUpgradeOption> unlockedUpgradeList;
-    public bool autoUpgrade;
 
 
     private void Awake()
@@ -122,30 +122,20 @@ public class Turret : MonoBehaviour
         turretManager = GameObject.Find("TurretManager").GetComponent<TurretManager>();
 
         skillManager.OnSkillUnlocked += SkillManager_OnSkillUnlocked;
-        collisionManager.TurretXPEvent += OnTurretXPEvent;
-
-        autoUpgrade = gameManager.autoUpgrade;
 
         unlockedUpgradeList = new List<IUpgradeOption>();
+
+        turretID = gameObject.GetInstanceID();
+        turretManager.AddTurret(this);
     }
 
     private void OnDestroy()
     {
         skillManager.OnSkillUnlocked -= SkillManager_OnSkillUnlocked;
-        collisionManager.TurretXPEvent -= OnTurretXPEvent;
     }
 
-    private void Update()
+    public void CallUpdate()
     {
-        if (gameManager.GetGameState()) return;
-
-        SequentialUpdate();
-    }
-
-    private void SequentialUpdate()
-    {
-        HandleXPAddition();
-
         if (bulletType == BulletType.Overcharge)
         {
             overchargeMultiplier += Time.deltaTime;
@@ -163,44 +153,6 @@ public class Turret : MonoBehaviour
         UpdateRotation();
         HandleShooting();
         HandleLargeUpgrades();
-
-    }
-
-    private void HandleXPAddition()
-    {
-        if (xpToAdd <= 0) { return; }
-
-        turretXP++;
-        xpToAdd--;
-
-        TurretUpgrade turretUpgrade = new() { TurretRef = this, UpgradeTypeRef = UpgradeType.Small, Position = 0 };
-
-        // Check upgrade milestones
-        switch (turretXP)
-        {
-            case 20:
-            case 40:
-            case 60:
-            case 100:
-            case 120:
-            case 160:
-            case 180:
-                turretUpgrade.UpgradeTypeRef = UpgradeType.Small;
-                turretManager.AddTurretForUpgrade(turretUpgrade);
-                break;
-            case 80:
-                turretUpgrade.UpgradeTypeRef = UpgradeType.Medium;
-                turretManager.AddTurretForUpgrade(turretUpgrade);
-                break;
-            case 140:
-                turretUpgrade.UpgradeTypeRef = UpgradeType.Medium;
-                turretManager.AddTurretForUpgrade(turretUpgrade);
-                break;
-            case 200:
-                turretUpgrade.UpgradeTypeRef = UpgradeType.Large;
-                turretManager.AddTurretForUpgrade(turretUpgrade);
-                break;
-        }
     }
 
     private void UpdateTargeting()
@@ -235,7 +187,7 @@ public class Turret : MonoBehaviour
 
     private void Shoot(Vector3 _dir)
     {
-        BulletManager.Instance.SpawnBullet(firePoint.position, _dir.normalized, 40, gameObject.GetInstanceID(), Mathf.RoundToInt(bulletDamage * (1 + overchargeMultiplier)), passThrough, bulletType);
+        BulletManager.Instance.SpawnBullet(firePoint.position, _dir.normalized, 40, turretID, Mathf.RoundToInt(bulletDamage * (1 + overchargeMultiplier)), passThrough, bulletType);
     }
 
     public bool HasUpgrade(IUpgradeOption upgradeType)
@@ -325,7 +277,7 @@ public class Turret : MonoBehaviour
     private void EndOrbitalAnimation()
     {
         Vector3 spawnPos = orbitalLaser.transform.position - new Vector3(0, 40f, 0);
-        BulletManager.Instance.SpawnBullet(spawnPos, Vector3.zero, 80, gameObject.GetInstanceID(), 40, 0, BulletType.OrbitalStrike);
+        BulletManager.Instance.SpawnBullet(spawnPos, Vector3.zero, 80,turretID, 40, 0, BulletType.OrbitalStrike);
         Destroy(orbitalLaser);
         orbitalAnimating = false;
     }
@@ -340,7 +292,7 @@ public class Turret : MonoBehaviour
                 for (int i = 0; i < 3; i++)
                 {
                     Vector3 spawnPos = meteorTarget.position + new Vector3(UnityEngine.Random.Range(-5f, 5f), 0, UnityEngine.Random.Range(-5f, 5f));
-                    BulletManager.Instance.SpawnBullet(spawnPos, Vector3.down, 80, gameObject.GetInstanceID(), 40, 0, BulletType.MeteorShower);
+                    BulletManager.Instance.SpawnBullet(spawnPos, Vector3.down, 80, turretID, 40, 0, BulletType.MeteorShower);
                 }
             }
 
@@ -357,7 +309,7 @@ public class Turret : MonoBehaviour
             if (firestormTarget != null)
             {
                 Vector3 spawnPos = firestormTarget.position;
-                BulletManager.Instance.SpawnBullet(spawnPos, Vector3.zero, 80, gameObject.GetInstanceID(), 5, 0, BulletType.FirestormPayload);
+                BulletManager.Instance.SpawnBullet(spawnPos, Vector3.zero, 80, turretID, 5, 0, BulletType.FirestormPayload);
             }
 
             firestormCountdown = firestormFireDelay;
@@ -373,7 +325,7 @@ public class Turret : MonoBehaviour
             if (timewarpTarget != null)
             {
                 Vector3 spawnPos = timewarpTarget.position;
-                BulletManager.Instance.SpawnBullet(spawnPos, Vector3.zero, 80, gameObject.GetInstanceID(), 5, 0, BulletType.TimewarpPayload);
+                BulletManager.Instance.SpawnBullet(spawnPos, Vector3.zero, 80, turretID, 5, 0, BulletType.TimewarpPayload);
             }
 
             timewarpCountdown = timewarpFireDelay;
@@ -415,20 +367,11 @@ public class Turret : MonoBehaviour
         return nearestEnemy != null && shortestDistance <= range ? nearestEnemy.transform : null;
     }
 
-    private void OnTurretXPEvent(object sender, CollisionManager.TurretXPEventArgs e)
-    {
-        if (e.turretID != gameObject.GetInstanceID()) return;
-
-        killCount++;
-        xpToAdd += e.xpAmount;
-        //turretManager.AddTurretForUpgrade(this);
-    }
-
     private void SkillManager_OnSkillUnlocked(object sender, SkillManager.OnSkillUnlockedEventArgs e)
     {
         if (!e.global)
         {
-            if (e.buildingID != gameObject.GetInstanceID()) { return; }
+            if (e.buildingID != turretID) { return; }
         }
     }
 }

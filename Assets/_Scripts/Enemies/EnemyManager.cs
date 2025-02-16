@@ -157,7 +157,7 @@ public class EnemyManager : MonoBehaviour
     }
 
 
-    private void Update()
+    public void CallUpdate()
     {
         float deltaTime = Time.deltaTime;
 

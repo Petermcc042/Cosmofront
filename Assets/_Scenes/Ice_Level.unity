@@ -30822,8 +30822,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   costsRemoved: 1
-  autoUpgrade: 1
-  invincible: 0
+  autoUpgrade: 0
+  invincible: 1
   gameSettings: {fileID: 11400000, guid: e38f55fe86a74314db66ae42a3f2e21c, type: 2}
   buildingsList: {fileID: 11400000, guid: 512f1a6ef67b9bf4d9f2efa25328505f, type: 2}
   gridManager: {fileID: 134987664}
@@ -30834,6 +30834,7 @@ MonoBehaviour:
   collisionManager: {fileID: 1829282140}
   pathfinder: {fileID: 734098101}
   saveSystem: {fileID: 2008247147}
+  turretManager: {fileID: 1547833866}
   buildingUI: {fileID: 1390875255}
   extendedArea: {fileID: 228057979}
   buildableArea: {fileID: 1512581167}
@@ -32016,6 +32017,7 @@ MonoBehaviour:
   terrainGen: {fileID: 1198590197}
   particlePool: {fileID: 377535641}
   pathfinding: {fileID: 734098101}
+  turretManager: {fileID: 1547833866}
   genHealth: {fileID: 896661396}
   explosionRadius: 4
   explosionPrefab: {fileID: 1631921842}

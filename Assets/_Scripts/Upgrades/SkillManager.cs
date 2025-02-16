@@ -93,7 +93,18 @@ public class SkillManager: MonoBehaviour
 
     public void GetSmallUpgradeOptions(Turret _turret)
     {
+        gameManager.InvertGameState();
         currentTurret = _turret;
+
+        optionUpgrades = GetRandomUpgradeOptions(3, smallUpgrades);
+
+        // to do decide if we want small upgrades
+        if (gameManager.autoUpgrade || true)
+        {
+            UpgradeOptions(0);
+            return;
+        }
+
         rightPanelUI.SetActive(true);
 
         turretNameUI.text = $"{_turret.GetInstanceID()}";
@@ -102,7 +113,7 @@ public class SkillManager: MonoBehaviour
         killCountUI.text = $"Kill Count: {_turret.killCount}";
         turretLevelUI.text = $"Level: {_turret.turretLevel}";
 
-        optionUpgrades = GetRandomUpgradeOptions(3, smallUpgrades);
+        
         for (int i = 0; i < buttonsText.Count; i++)
         {
             buttonsText[i].text = optionUpgrades[i].GetDescription();
@@ -110,11 +121,10 @@ public class SkillManager: MonoBehaviour
         }
     }
 
-    public void GetMediumUpgradeOptions(Turret _turret, int position)
+    public void GetMediumUpgradeOptions(Turret _turret)
     {
         gameManager.InvertGameState();
         currentTurret = _turret;
-        currentPosition = position;
 
         // Filter the list of available medium upgrades based on previous selections
         List<IUpgradeOption> availableUpgrades = mediumUpgrades;
@@ -162,15 +172,14 @@ public class SkillManager: MonoBehaviour
             buttonsText[i].text = optionUpgrades[i].GetDescription();
             buttonsText[i].fontSize = optionUpgrades[i].GetTextSize();
         }
-
-        
     }
 
     public void GetLargeUpgradeOptions(Turret _turret)
     {
         gameManager.InvertGameState();
-        optionUpgrades = GetRandomUpgradeOptions(3, largeUpgrades);
         currentTurret = _turret;
+
+        optionUpgrades = GetRandomUpgradeOptions(3, largeUpgrades);
 
         if (gameManager.autoUpgrade)
         {

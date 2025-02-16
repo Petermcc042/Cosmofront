@@ -1,6 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.Collections;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public struct TurretUpgrade
 {
@@ -16,47 +20,78 @@ public class TurretManager : MonoBehaviour
     [SerializeField] private GameManager gameManager;
     private List<TurretUpgrade> turretsToUpgrade;
     private List<TurretUpgrade> turretsToAdd;
+    private List<Turret> allTurrets;
+    private List<int> turretUpgradeIDs;
 
     private void Awake()
     {
         turretsToUpgrade = new List<TurretUpgrade>();
         turretsToAdd = new List<TurretUpgrade>();
+        allTurrets = new List<Turret>();
+        turretUpgradeIDs = new List<int>();
     }
 
-    private void Update()
+    public void CallUpdate()
     {
-        if (turretsToAdd.Count > 0)
-        {
-            for (int i = 0; i < turretsToAdd.Count; i++)
-            {
-                turretsToUpgrade.Add(turretsToAdd[i]);
-            }
+        SequentialUpgrades();
+    }
 
-            turretsToAdd.Clear();
+    private void SequentialUpgrades()
+    {
+        if (turretUpgradeIDs.Count == 0) return;
+
+        int upgradeID = turretUpgradeIDs[0];
+        Turret tempTurret = null;
+
+        // Find the turret with the matching ID
+        for (int j = 0; j < allTurrets.Count; j++)
+        {
+            if (allTurrets[j].turretID == upgradeID)
+            {
+                tempTurret = allTurrets[j];
+                break;
+            }
         }
 
-        if (gameManager.GetGameState()) return;
-
-        if (turretsToUpgrade.Count > 0)
+        if (tempTurret == null)
         {
-            TurretUpgrade tempUpgrade = turretsToUpgrade[0];
-            switch (tempUpgrade.UpgradeTypeRef)
-            {
-                case UpgradeType.Small:
-                    SmallUpgradeTurret(tempUpgrade.TurretRef);
-                    break;
-                case UpgradeType.Medium:
-                    MediumUpgradeTurret(tempUpgrade.TurretRef, tempUpgrade.Position);
-                    break;
-                case UpgradeType.Large:
-                    LargeUpgradeTurret(tempUpgrade.TurretRef);
-                    break;
-            }
-
-            turretsToUpgrade.RemoveAt(0);
+            turretUpgradeIDs.RemoveAt(0);
+            return;
         }
 
+        Debug.Log("making it to upgrading");
+        tempTurret.turretXP += 1;
 
+        switch (tempTurret.turretXP)
+        {
+            case 20:
+            case 40:
+            case 60:
+            case 100:
+            case 120:
+            case 160:
+            case 180:
+                SmallUpgradeTurret(tempTurret);
+                break;
+            case 80:
+            case 140:
+                MediumUpgradeTurret(tempTurret);
+                break;
+            case 200:
+                LargeUpgradeTurret(tempTurret);
+                break;
+        }
+
+        turretUpgradeIDs.RemoveAt(0);
+    }
+
+
+    public void CallUpdateAllTurrets()
+    {
+        for (int i = 0; i < allTurrets.Count; i++)
+        {
+            allTurrets[i].CallUpdate();
+        }
     }
 
     public void AddTurretForUpgrade(TurretUpgrade turret)
@@ -71,28 +106,40 @@ public class TurretManager : MonoBehaviour
     {
         turret.highlightBox.SetActive(true);
         turret.turretLevel++;
+        skillManager.GetSmallUpgradeOptions(turret);
 
-        if (turret.autoUpgrade)
-        {
-            skillManager.GetAutoUpgradeOptions(turret);
-        }
-        else
-        {
-            skillManager.GetSmallUpgradeOptions(turret);
-        }
     }
 
-    private void MediumUpgradeTurret(Turret turret, int position)
+    private void MediumUpgradeTurret(Turret turret)
     {
         turret.highlightBox.SetActive(true);
-        skillManager.GetMediumUpgradeOptions(turret, position);
         turret.turretLevel++;
+        skillManager.GetMediumUpgradeOptions(turret);
     }
 
     private void LargeUpgradeTurret(Turret turret)
     {
         turret.highlightBox.SetActive(true);
-        skillManager.GetLargeUpgradeOptions(turret);
         turret.turretLevel++;
+        skillManager.GetLargeUpgradeOptions(turret);   
+    }
+
+    public void AddTurret(Turret turret)
+    {
+        if (!allTurrets.Contains(turret))
+        {
+            allTurrets.Add(turret);
+        }
+    }
+
+    public void HandleXPUpdate(NativeList<TurretUpgradeData> _turretXP)
+    {
+        for (int i = 0; i < _turretXP.Length; i++)
+        {
+            for (int j = 0; j < _turretXP[i].XPAmount; j++)
+            {
+                turretUpgradeIDs.Add(_turretXP[i].TurretID);
+            }
+        }
     }
 }
