@@ -58,6 +58,11 @@ public class SkillManager: MonoBehaviour
             mediumUpgrades.Add(new PiercingRoundsUpgrade());
         }
 
+        for (int i = 0; i < 10; i++)
+        {
+            mediumUpgrades.Add(new LightningRoundsUpgrade());
+        }
+
         for (int i = 0; i < 4; i++)
         {
             largeUpgrades.Add(new OrbitalStrikeUpgrade());
@@ -121,33 +126,30 @@ public class SkillManager: MonoBehaviour
         }
     }
 
-    public void GetMediumUpgradeOptions(Turret _turret)
+    public void GetMediumUpgradeOptions(Turret _turret, bool _firstTime)
     {
         gameManager.InvertGameState();
         currentTurret = _turret;
 
-        // Filter the list of available medium upgrades based on previous selections
-        List<IUpgradeOption> availableUpgrades = mediumUpgrades;
+        List<IUpgradeOption> availableUpgrades = new List<IUpgradeOption>();
 
-        // If turret has LightningRound, add Lightning2ndLevel to available upgrades
-        foreach (IUpgradeOption e in _turret.unlockedUpgradeList)
+        if (_firstTime)
         {
-            Debug.Log("possible upgrades: " + e.GetType().Name);
-            for (int i = 0; i < availableUpgrades.Count; i++)
+            availableUpgrades = mediumUpgrades;
+        } 
+        else
+        {
+            foreach (IUpgradeOption e in _turret.unlockedUpgradeList)
             {
-                if (availableUpgrades[i] == e)
+                if (e.NextUpgradeOption() == null || e.GetLevel() != 2) { continue; }
+
+                foreach (var upgrade in e.NextUpgradeOption())
                 {
-                    availableUpgrades.RemoveAt(i);
+                    availableUpgrades.Add(upgrade);
                 }
             }
-
-            if (e.NextUpgradeOption() == null) { continue; }
-            for (int i = 0; i < 40; i++)
-            {
-                availableUpgrades.Add(e.NextUpgradeOption());
-            }
-            
         }
+
 
         // Select 3 random upgrades from the filtered list
         optionUpgrades = GetRandomUpgradeOptions(3, availableUpgrades);
@@ -179,7 +181,20 @@ public class SkillManager: MonoBehaviour
         gameManager.InvertGameState();
         currentTurret = _turret;
 
+        List<IUpgradeOption> availableUpgrades = largeUpgrades;
+
+        foreach (IUpgradeOption e in _turret.unlockedUpgradeList)
+        {
+            if (e.NextUpgradeOption() == null || e.GetLevel() != 3) { continue; }
+
+            foreach (var upgrade in e.NextUpgradeOption())
+            {
+                availableUpgrades.Add(upgrade);
+            }
+        }
+
         optionUpgrades = GetRandomUpgradeOptions(3, largeUpgrades);
+
 
         if (gameManager.autoUpgrade)
         {

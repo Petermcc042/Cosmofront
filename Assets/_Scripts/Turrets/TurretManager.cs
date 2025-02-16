@@ -74,8 +74,10 @@ public class TurretManager : MonoBehaviour
                 SmallUpgradeTurret(tempTurret);
                 break;
             case 80:
+                MediumUpgradeTurret(tempTurret, true);
+                break;
             case 140:
-                MediumUpgradeTurret(tempTurret);
+                MediumUpgradeTurret(tempTurret, false);
                 break;
             case 200:
                 LargeUpgradeTurret(tempTurret);
@@ -110,11 +112,11 @@ public class TurretManager : MonoBehaviour
 
     }
 
-    private void MediumUpgradeTurret(Turret turret)
+    private void MediumUpgradeTurret(Turret _turret, bool _firstTime)
     {
-        turret.highlightBox.SetActive(true);
-        turret.turretLevel++;
-        skillManager.GetMediumUpgradeOptions(turret);
+        _turret.highlightBox.SetActive(true);
+        _turret.turretLevel++;
+        skillManager.GetMediumUpgradeOptions(_turret, _firstTime);
     }
 
     private void LargeUpgradeTurret(Turret turret)

@@ -157,6 +157,7 @@ public class GameManager : MonoBehaviour
 
         if (!gameRunning) { return; }
 
+        resourceManager.CallUpdate();
         phaseManager.CallUpdate();
 
         turretManager.CallUpdateAllTurrets();

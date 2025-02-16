@@ -1,17 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Reflection;
-using System.Xml;
-using TMPro;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEngine.EventSystems.EventTrigger;
 
 public class CollisionManager : MonoBehaviour
 {
@@ -116,9 +109,6 @@ public class CollisionManager : MonoBehaviour
             EnemyData = enemyDataList.AsArray(),
             TerrainData = terrainDataArray,
             ExplosionRadius = explosionRadius,
-            ChainRadius = 10,
-            MaxChainTargets = 10,
-            ChainDamageReductionFactor = 0.8f,
             BulletData = bulletDataList.AsArray(),
             CollisionQueue = colData.AsParallelWriter(),
             VFXQueue = lightningData.AsParallelWriter(),

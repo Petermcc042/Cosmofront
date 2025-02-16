@@ -44,9 +44,9 @@ public class ResourceManager : MonoBehaviour
         //Invoke("UpdateResources", 1f);
     }
 
-    private void Update()
+    public void CallUpdate()
     {
-        if (countdown <= 0f && !gameManager.GetGameState())
+        if (countdown <= 0f)
         {
             UpdateResources();
             countdown = 1f;

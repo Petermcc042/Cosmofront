@@ -1,3 +1,4 @@
+using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -213,10 +214,6 @@ public struct BulletCollision : IJobParallelFor
     [ReadOnly] public NativeArray<EnemyData> EnemyData;
     [ReadOnly] public NativeArray<float3> TerrainData;
     [ReadOnly] public int ExplosionRadius;
-    [ReadOnly] public int ChainRadius;     // Radius for chaining the lightning
-    [ReadOnly] public int MaxChainTargets; // Maximum number of chain hits
-    [ReadOnly] public float ChainDamageReductionFactor; // Damage reduction per chain
-
 
     public NativeArray<BulletData> BulletData;
     public NativeQueue<CollisionData>.ParallelWriter CollisionQueue;
@@ -270,62 +267,12 @@ public struct BulletCollision : IJobParallelFor
 
                 if (bullet.Type == BulletType.ChainLightning)
                 {
-                    bullet.ToRemove = true;
+                    LightingCalc(bullet, index, i, 3, 3, 0.8f);
+                }
 
-                    EnemyData eData = EnemyData[i];
-
-                    int chainCount = 0;
-                    float currentDamage = bullet.Damage;
-                    float3 lastHitPos = eData.Position;
-
-                    while (chainCount < MaxChainTargets && currentDamage > 0)
-                    {
-                        float closestDistance = float.MaxValue;
-                        int closestEnemyIndex = -1;
-
-                        // Find the closest enemy within the chain radius
-                        for (int j = 0; j < EnemyData.Length; j++)
-                        {
-                            if (bullet.hitEnemies.Contains(EnemyData[j].EnemyID) || EnemyData[j].EnemyID == eData.EnemyID) { continue; }
-
-                            float distance = math.distance(bullet.Position, EnemyData[j].Position + new float3(0, 0.5f, 0));
-
-                            if (distance < ChainRadius && distance < closestDistance)
-                            {
-                                closestDistance = distance;
-                                closestEnemyIndex = j;
-                            }
-                        }
-
-                        // If a valid enemy is found, apply chain damage
-                        if (closestEnemyIndex != -1)
-                        {
-                            EnqueueCollision(index, bullet, closestEnemyIndex);
-
-                            // Queue lightning VFX between the last hit and the new target
-                            LightningVFXData vfxData = new LightningVFXData
-                            {
-                                StartPos = lastHitPos,
-                                EndPos = EnemyData[closestEnemyIndex].Position + new float3(0, 0.5f, 0),
-                                Duration = 0.5f // Example duration for the lightning effect
-                            };
-                            VFXQueue.Enqueue(vfxData);
-
-
-                            currentDamage *= ChainDamageReductionFactor;
-
-                            bullet.hitEnemies.Add(EnemyData[closestEnemyIndex].EnemyID);
-
-                            lastHitPos = EnemyData[closestEnemyIndex].Position + new float3(0, 0.5f, 0);
-
-                            chainCount++;
-                        }
-                        else
-                        {
-                            // No valid enemy found within the chain radius, stop chaining
-                            break;
-                        }
-                    }
+                if (bullet.Type == BulletType.ChainLightningTwo)
+                {
+                    LightingCalc(bullet, index, i, 10, 10, 0.8f);
                 }
 
                 if (bullet.hitEnemies.Length > bullet.PassThrough)
@@ -450,6 +397,66 @@ public struct BulletCollision : IJobParallelFor
         }
 
         BulletData[index] = bullet;
+    }
+
+    private void LightingCalc(BulletData bullet, int index, int enemyIndex, int _maxChainTargets, int _chainRadius, float _chainDamageReductionFactor)
+    {
+        bullet.ToRemove = true;
+
+        EnemyData eData = EnemyData[enemyIndex];
+
+        int chainCount = 0;
+        float currentDamage = bullet.Damage;
+        float3 lastHitPos = eData.Position;
+
+        while (chainCount < _maxChainTargets && currentDamage > 0)
+        {
+            float closestDistance = float.MaxValue;
+            int closestEnemyIndex = -1;
+
+            // Find the closest enemy within the chain radius
+            for (int j = 0; j < EnemyData.Length; j++)
+            {
+                if (bullet.hitEnemies.Contains(EnemyData[j].EnemyID) || EnemyData[j].EnemyID == eData.EnemyID) { continue; }
+
+                float distance = math.distance(bullet.Position, EnemyData[j].Position + new float3(0, 0.5f, 0));
+
+                if (distance < _chainRadius && distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestEnemyIndex = j;
+                }
+            }
+
+            // If a valid enemy is found, apply chain damage
+            if (closestEnemyIndex != -1)
+            {
+                EnqueueCollision(index, bullet, closestEnemyIndex);
+
+                // Queue lightning VFX between the last hit and the new target
+                LightningVFXData vfxData = new LightningVFXData
+                {
+                    StartPos = lastHitPos,
+                    EndPos = EnemyData[closestEnemyIndex].Position + new float3(0, 0.5f, 0),
+                    Duration = 0.5f // Example duration for the lightning effect
+                };
+                VFXQueue.Enqueue(vfxData);
+
+
+                currentDamage *= _chainDamageReductionFactor;
+
+                bullet.hitEnemies.Add(EnemyData[closestEnemyIndex].EnemyID);
+
+                lastHitPos = EnemyData[closestEnemyIndex].Position + new float3(0, 0.5f, 0);
+
+                chainCount++;
+            }
+            else
+            {
+                // No valid enemy found within the chain radius, stop chaining
+                break;
+            }
+        }
     }
 
     private void EnqueueCollision(int bulletIndex, BulletData bullet, int enemyIndex)

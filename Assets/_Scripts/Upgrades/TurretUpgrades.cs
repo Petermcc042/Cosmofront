@@ -1,12 +1,35 @@
 using UnityEngine;
-using UnityEngine.UIElements;
+using System.Collections.Generic;
+using System;
+using System.Linq;
 
 public interface IUpgradeOption
 {
     void Apply(Turret turret);
     string GetDescription();  // For UI purposes
     int GetTextSize();
-    IUpgradeOption NextUpgradeOption();
+    int GetLevel();
+    IUpgradeOption[] NextUpgradeOption();
+    
+}
+
+public static class UpgradeMethods
+{
+    public static IUpgradeOption[] PopulateOptions(IUpgradeOption[] options, int[] weights)
+    {
+        List<IUpgradeOption> weightedOptions = new List<IUpgradeOption>();
+
+        for (int i = 0; i < options.Length; i++)
+        {
+            int count = weights[i] * 10;
+            for (int j = 0; j < count; j++)
+            {
+                weightedOptions.Add(options[i]);
+            }
+        }
+
+        return weightedOptions.ToArray();
+    }
 }
 
 public class FireRateUpgrade : IUpgradeOption
@@ -32,11 +55,12 @@ public class FireRateUpgrade : IUpgradeOption
         return $"Increases fire rate by {fireRateIncrease}";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 1; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 public class TargetingRateUpgrade : IUpgradeOption
-
 {
     public float targetRate;
 
@@ -52,7 +76,6 @@ public class TargetingRateUpgrade : IUpgradeOption
         turret.unlockedUpgradeList.Add(this);
     }
 
-
     public int GetTextSize() { return 20; }
 
     public string GetDescription()
@@ -60,7 +83,9 @@ public class TargetingRateUpgrade : IUpgradeOption
         return $"Increases targeting rate by {targetRate}";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 1; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 public class TargetRangeUpgrade : IUpgradeOption
@@ -79,7 +104,6 @@ public class TargetRangeUpgrade : IUpgradeOption
         turret.unlockedUpgradeList.Add(this);
     }
 
-
     public int GetTextSize() { return 18; }
 
     public string GetDescription()
@@ -87,33 +111,26 @@ public class TargetRangeUpgrade : IUpgradeOption
         return $"Increases the targeting range of the turret by {targetRange}";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 1; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 
 public class MegaUpgrade : IUpgradeOption
 {
-    public float fireRateIncrease = 25;
-    public int bulletDamage = 10;
-    public float targetingRate = 0.1f;
-
-
-    public MegaUpgrade(int increase)
-    {
-        fireRateIncrease *= increase;
-        bulletDamage *= increase;
-        targetingRate /= increase;
-    }
+    public float fireRateIncrease = 3;
+    public int bulletDamage = 2;
+    public float targetingRate = 0.5f;
 
     public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
-        turret.fireRate = fireRateIncrease;
-        turret.bulletDamage = bulletDamage;
-        turret.targetingRate = targetingRate;
+        turret.fireRate += fireRateIncrease;
+        turret.bulletDamage += bulletDamage;
+        turret.targetingRate *= targetingRate;
         turret.unlockedUpgradeList.Add(this);
     }
-
 
     public int GetTextSize() { return 20; }
 
@@ -122,8 +139,51 @@ public class MegaUpgrade : IUpgradeOption
         return $"Mega Upgrade";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption()
+    {
+
+        IUpgradeOption[] tempArray =
+        {
+            new MegaMegaUpgrade(),
+            new PassThroughUpgrade(3)
+        };
+
+        int[] tempWeights = { 2, 8 };
+
+        return UpgradeMethods.PopulateOptions(tempArray, tempWeights);
+    }
 }
+
+
+public class MegaMegaUpgrade : IUpgradeOption
+{
+    public float fireRateIncrease = 10;
+    public int bulletDamage = 5;
+    public float targetingRate = 0.25f;
+
+    public void Apply(Turret turret)
+    {
+        turret.highlightBox.SetActive(false);
+        turret.fireRate += fireRateIncrease;
+        turret.bulletDamage += bulletDamage;
+        turret.targetingRate *= targetingRate;
+        turret.unlockedUpgradeList.Add(this);
+    }
+
+    public int GetTextSize() { return 20; }
+
+    public string GetDescription()
+    {
+        return $"Mega Upgrade";
+    }
+
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
+}
+
 
 public class DamageUpgrade : IUpgradeOption
 {
@@ -141,7 +201,6 @@ public class DamageUpgrade : IUpgradeOption
         turret.unlockedUpgradeList.Add(this);
     }
 
-
     public int GetTextSize() { return 20; }
 
     public string GetDescription()
@@ -149,7 +208,9 @@ public class DamageUpgrade : IUpgradeOption
         return $"Increases damage by {damageIncrease}";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 1; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 
@@ -176,7 +237,9 @@ public class ChangeProjectileUpgrade : IUpgradeOption
         return "Changes the projectile type";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 public class PassThroughUpgrade : IUpgradeOption
@@ -203,11 +266,15 @@ public class PassThroughUpgrade : IUpgradeOption
         return $"Increases the number of enemies hit by {passThroughIncrease}";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 public class ExplosiveRoundsUpgrade : IUpgradeOption
 {
+    public int level = 2;
+
     public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
@@ -215,7 +282,6 @@ public class ExplosiveRoundsUpgrade : IUpgradeOption
         turret.passThrough = 0;
         turret.unlockedUpgradeList.Add(this);
     }
-
 
     public int GetTextSize() { return 17; }
 
@@ -225,7 +291,46 @@ public class ExplosiveRoundsUpgrade : IUpgradeOption
         return $"Turns the rounds explosive dealing damage to nearby enemies";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption()
+    {
+
+        IUpgradeOption[] tempArray =
+        {
+            new ClusterBombUpgrade(),
+            new PiercingRoundsUpgrade()
+        };
+
+        int[] tempWeights = { 2, 8 };
+
+        return UpgradeMethods.PopulateOptions(tempArray, tempWeights);
+    }
+}
+
+public class ClusterBombUpgrade : IUpgradeOption
+{
+    public int level = 2;
+
+    public void Apply(Turret turret)
+    {
+        turret.highlightBox.SetActive(false);
+        turret.bulletType = BulletType.Explosive;
+        turret.passThrough = 0;
+        turret.unlockedUpgradeList.Add(this);
+    }
+
+    public int GetTextSize() { return 17; }
+
+
+    public string GetDescription()
+    {
+        return $"The initial explosion causes a cluster of smaller explosions";
+    }
+
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 public class LightningRoundsUpgrade : IUpgradeOption
@@ -238,7 +343,6 @@ public class LightningRoundsUpgrade : IUpgradeOption
         turret.unlockedUpgradeList.Add(this);
     }
 
-
     public int GetTextSize() { return 17; }
 
     public string GetDescription()
@@ -246,10 +350,65 @@ public class LightningRoundsUpgrade : IUpgradeOption
         return $"creates a chain of lightning dealing damage to nearby enemies";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return new LightningTwoUpgrade(); }
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption() {
+        
+        IUpgradeOption[] tempArray =
+        {
+            new ArcLightning(),
+            new PassThroughUpgrade(3)
+        };
+
+        int[] tempWeights = { 2, 8 };
+
+        return UpgradeMethods.PopulateOptions(tempArray, tempWeights); 
+    }
 }
 
-public class LightningTwoUpgrade : IUpgradeOption
+
+
+public class ArcLightning : IUpgradeOption
+{
+    public int level = 2;
+
+    public void Apply(Turret turret)
+    {
+        turret.highlightBox.SetActive(false);
+        turret.bulletType = BulletType.ChainLightningTwo;
+        turret.unlockedUpgradeList.Add(this);
+    }
+
+    public int GetTextSize() { return 15; }
+
+    public string GetDescription()
+    {
+        return $"increases the length and damage of lightning";
+    }
+
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption()
+    {
+
+        IUpgradeOption[] tempArray =
+        {
+            new PlasmaOverload(),
+            new PassThroughUpgrade(3),
+            new OrbitalStrikeUpgrade(),
+            new MeteorShowerUpgrade(),
+            new TimewarpUpgrade(),
+            new FirestormUpgrade(),
+            new MegaUpgrade()
+        };
+
+        int[] tempWeights = { 1,2,1,1,1,1,1 };
+
+        return UpgradeMethods.PopulateOptions(tempArray, tempWeights);
+    }
+}
+
+public class PlasmaOverload : IUpgradeOption
 {
     public void Apply(Turret turret)
     {
@@ -258,15 +417,16 @@ public class LightningTwoUpgrade : IUpgradeOption
         turret.unlockedUpgradeList.Add(this);
     }
 
-
-    public int GetTextSize() { return 17; }
+    public int GetTextSize() { return 15; }
 
     public string GetDescription()
     {
-        return $"creates a chain of lightning dealing damage to nearby enemies";
+        return $"increases the length and damage of lightning";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 3; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 public class SlowRoundsUpgrade : IUpgradeOption
@@ -287,7 +447,20 @@ public class SlowRoundsUpgrade : IUpgradeOption
         return $"A bullet that slows and damages enemies";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption()
+    {
+
+        IUpgradeOption[] tempArray =
+        {
+            new DiamondTipUpgrade()
+        };
+
+        int[] tempWeights = { 2 };
+
+        return UpgradeMethods.PopulateOptions(tempArray, tempWeights);
+    }
 }
 
 
@@ -301,36 +474,102 @@ public class SpreadRoundsUpgrade : IUpgradeOption
         turret.unlockedUpgradeList.Add(this);
     }
 
+    public int GetTextSize() { return 17; }
+
+    public string GetDescription()
+    {
+        return $"Bullets split into three projectiles on impact";
+    }
+
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption()
+    {
+
+        IUpgradeOption[] tempArray =
+        {
+            new CirclerUpgrade()
+        };
+
+        int[] tempWeights = { 2 };
+
+        return UpgradeMethods.PopulateOptions(tempArray, tempWeights);
+    }
+}
+
+public class CirclerUpgrade : IUpgradeOption
+{
+    public void Apply(Turret turret)
+    {
+        turret.highlightBox.SetActive(false);
+        turret.bulletType = BulletType.Spread;
+        turret.passThrough = 0;
+        turret.unlockedUpgradeList.Add(this);
+    }
 
     public int GetTextSize() { return 17; }
 
     public string GetDescription()
     {
-        return $"Bullets split into multiple projectiles on impact";
+        return $"Bullets split into 10 projectiles on impact";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
-}
+    public int GetLevel() { return 2; }
 
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
+}
 
 public class PiercingRoundsUpgrade : IUpgradeOption
 {
     public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
-        turret.passThrough = 5;
+        turret.passThrough = 1;
         turret.unlockedUpgradeList.Add(this);
     }
-
 
     public int GetTextSize() { return 17; }
 
     public string GetDescription()
     {
-        return $"Hardened bullets can pass through 5 enemies";
+        return $"Hardened bullets can pass through 1 enemies";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption()
+    {
+
+        IUpgradeOption[] tempArray =
+        {
+            new DiamondTipUpgrade()
+        };
+
+        int[] tempWeights = { 2 };
+
+        return UpgradeMethods.PopulateOptions(tempArray, tempWeights);
+    }
+}
+
+public class DiamondTipUpgrade : IUpgradeOption
+{
+    public void Apply(Turret turret)
+    {
+        turret.highlightBox.SetActive(false);
+        turret.passThrough = 3;
+        turret.unlockedUpgradeList.Add(this);
+    }
+
+    public int GetTextSize() { return 17; }
+
+    public string GetDescription()
+    {
+        return $"Hardened bullets can pass through 3 enemies";
+    }
+
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 public class RicochetRoundsUpgrade : IUpgradeOption
@@ -342,7 +581,6 @@ public class RicochetRoundsUpgrade : IUpgradeOption
         turret.unlockedUpgradeList.Add(this);
     }
 
-
     public int GetTextSize() { return 17; }
 
     public string GetDescription()
@@ -350,7 +588,9 @@ public class RicochetRoundsUpgrade : IUpgradeOption
         return $"Bullets can ricochet off the terrain";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 
@@ -363,7 +603,6 @@ public class OverchargeRoundsUpgrade : IUpgradeOption
         turret.unlockedUpgradeList.Add(this);
     }
 
-
     public int GetTextSize() { return 17; }
 
     public string GetDescription()
@@ -371,7 +610,9 @@ public class OverchargeRoundsUpgrade : IUpgradeOption
         return $"Bullets charge up damage between shots";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 
@@ -391,7 +632,9 @@ public class OrbitalStrikeUpgrade : IUpgradeOption
         return $"Auto lock on and fire a laser that charges then detonates after a second";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 3; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 
 }
 
@@ -412,7 +655,9 @@ public class MeteorShowerUpgrade : IUpgradeOption
         return $"Every few seconds nudge a few asteroids on a collision course with your enemies";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 3; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 
 }
 
@@ -425,7 +670,6 @@ public class FirestormUpgrade : IUpgradeOption
         turret.unlockedUpgradeList.Add(this);
     }
 
-
     public int GetTextSize() { return 17; }
 
     public string GetDescription()
@@ -433,7 +677,9 @@ public class FirestormUpgrade : IUpgradeOption
         return $"Every 5 seconds triggers a payload to fall from above coating the area in fire that deals damage over time";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 3; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 
@@ -446,7 +692,6 @@ public class TimewarpUpgrade : IUpgradeOption
         turret.unlockedUpgradeList.Add(this);
     }
 
-
     public int GetTextSize() { return 16; }
 
     public string GetDescription()
@@ -454,5 +699,7 @@ public class TimewarpUpgrade : IUpgradeOption
         return $"The turret creates an aura that slows down all enemy movement within a certain radius, giving other turrets more time to attack";
     }
 
-    public IUpgradeOption NextUpgradeOption() { return null; }
+    public int GetLevel() { return 3; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
