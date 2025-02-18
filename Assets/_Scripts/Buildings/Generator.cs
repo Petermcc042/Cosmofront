@@ -11,7 +11,7 @@ using UnityEngine.UI;
 public class Generator : MonoBehaviour
 {
     [SerializeField] GameManager gameManager;
-    [SerializeField] MapGridManager mapGridManager;
+    //[SerializeField] MapGridManager mapGridManager;
     [SerializeField] private EnemyManager enemyManager;
     [SerializeField] private CollisionManager collisionManager;
     [SerializeField] private BuildableAreaMesh shieldAreaMesh;
@@ -23,7 +23,7 @@ public class Generator : MonoBehaviour
     [SerializeField] private Slider shieldHealthUI;
 
     private float health = 10;
-    public int shieldRadius = 5; // The radius of the shield in world units
+    private int shieldRadius = 5; // The radius of the shield in world units
     public float gridSize = 1; // The size of each grid square in world units
 
     private bool isRecharging = false;
@@ -55,22 +55,19 @@ public class Generator : MonoBehaviour
 
     public void CheckShieldSquares(bool _toRemove)
     {
+        shieldGridSquareList.Clear();
+
+        if (_toRemove) { return; }
+
         for (int i = 0; i < shieldSquares.Count; i++)
         {
             if (showCircleCirum)
             {
                 Instantiate(circumPoint, shieldSquares[i], Quaternion.identity);
             }
-
-            if (_toRemove)
-            {
-                RemoveFromNativeList(shieldGridSquareList, shieldSquares[i]);
-            }
-            else
-            {
-                shieldGridSquareList.Add(shieldSquares[i]);
-            }   
+            shieldGridSquareList.Add(shieldSquares[i]);
         }
+
     }
 
     public void DamageLoop(float _damage, float _deltaTime)
@@ -147,5 +144,14 @@ public class Generator : MonoBehaviour
                 break; // Exit once we've found and removed the position
             }
         }
+    }
+
+    public void UpdateShieldSize(int radius)
+    {
+        int transRadius = radius * 10;
+        shield.transform.localScale = new float3(transRadius, transRadius, transRadius);
+
+        shieldSquares = GetCirclePoints(100, 100, radius, 0.2f);
+        CheckShieldSquares(false);
     }
 }

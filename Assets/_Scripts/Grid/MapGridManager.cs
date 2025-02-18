@@ -1,10 +1,7 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using Unity.Collections;
-using Unity.Jobs;
-using Unity.Burst;
 using Unity.Mathematics;
 
 public class MapGridManager : MonoBehaviour

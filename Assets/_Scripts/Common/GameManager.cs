@@ -29,6 +29,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private NewPathfinding pathfinder;
     [SerializeField] private SaveSystem saveSystem;
     [SerializeField] private TurretManager turretManager;
+    [SerializeField] private Generator generator;
 
 
     [Header("Building Aid")]
@@ -179,7 +180,7 @@ public class GameManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.E)) { skillManager.IsSkillUnlocked(SkillManager.SkillType.TurretFireRate); }
 
-        if (Input.GetKeyDown(KeyCode.J)) { enemyManager.RecalcPaths(); }
+        if (Input.GetKeyDown(KeyCode.J)) { generator.UpdateShieldSize(10); }
     }
 
     private void UpdateBuildingUI()

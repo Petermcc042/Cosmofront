@@ -56,11 +56,7 @@ public class SkillManager: MonoBehaviour
             mediumUpgrades.Add(new ExplosiveRoundsUpgrade());
             mediumUpgrades.Add(new SpreadRoundsUpgrade());
             mediumUpgrades.Add(new PiercingRoundsUpgrade());
-        }
-
-        for (int i = 0; i < 10; i++)
-        {
-            mediumUpgrades.Add(new LightningRoundsUpgrade());
+            mediumUpgrades.Add(new MegaUpgrade());
         }
 
         for (int i = 0; i < 4; i++)

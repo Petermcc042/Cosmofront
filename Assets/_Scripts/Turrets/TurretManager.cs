@@ -59,7 +59,6 @@ public class TurretManager : MonoBehaviour
             return;
         }
 
-        Debug.Log("making it to upgrading");
         tempTurret.turretXP += 1;
 
         switch (tempTurret.turretXP)

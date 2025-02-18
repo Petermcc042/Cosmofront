@@ -30823,7 +30823,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   costsRemoved: 1
   autoUpgrade: 0
-  invincible: 1
+  invincible: 0
   gameSettings: {fileID: 11400000, guid: e38f55fe86a74314db66ae42a3f2e21c, type: 2}
   buildingsList: {fileID: 11400000, guid: 512f1a6ef67b9bf4d9f2efa25328505f, type: 2}
   gridManager: {fileID: 134987664}
@@ -30835,6 +30835,7 @@ MonoBehaviour:
   pathfinder: {fileID: 734098101}
   saveSystem: {fileID: 2008247147}
   turretManager: {fileID: 1547833866}
+  generator: {fileID: 982423168}
   buildingUI: {fileID: 1390875255}
   extendedArea: {fileID: 228057979}
   buildableArea: {fileID: 1512581167}
