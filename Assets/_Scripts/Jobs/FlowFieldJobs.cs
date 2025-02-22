@@ -6,17 +6,17 @@ using Unity.Mathematics;
 
 public struct FlowGridNode
 {
-    public int index;
     public float3 position;
+    public int index;
     public int x;
     public int z;
     public int cost;             // Movement cost (terrain difficulty)
     public int integrationCost;  // Cumulative cost to reach the target
-    //public Vector2 flowDirection; // Normalized vector for movement direction
+    public int goToIndex; // Index of the parent node for path reconstruction
     public bool isWalkable;
     public bool isPathfindingArea;
     public bool isBuilding;
-    public int goToIndex; // Index of the parent node for path reconstruction
+    public bool isTraversable;
 }
 
 
@@ -119,7 +119,6 @@ public struct WeightBuildingNodes : IJob
     public NativeArray<FlowGridNode> GridArray;
     [ReadOnly] public int gridWidth;
     [ReadOnly] public int endX, endZ;
-    [ReadOnly] public bool runFullGrid;
 
     public void Execute()
     {
@@ -164,7 +163,7 @@ public struct WeightBuildingNodes : IJob
             int neighborIndex = GetIndex(newX, newZ);
             FlowGridNode neighborNode = GridArray[neighborIndex];
 
-            if (!neighborNode.isBuilding && neighborNode.isWalkable)
+            if (!neighborNode.isBuilding && neighborNode.isWalkable && neighborNode.isTraversable)
             {
                 neighborNode.integrationCost -= costReduction;
                 GridArray[neighborIndex] = neighborNode;
@@ -177,6 +176,7 @@ public struct WeightBuildingNodes : IJob
         return z + x * gridWidth;
     }
 }
+
 
 
 [BurstCompile]
@@ -228,3 +228,4 @@ public struct UpdateGoToIndex : IJob
         return z + x * gridWidth;
     }
 }
+

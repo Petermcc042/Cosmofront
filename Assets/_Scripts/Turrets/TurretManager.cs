@@ -75,10 +75,10 @@ public class TurretManager : MonoBehaviour
             case 80:
                 MediumUpgradeTurret(tempTurret, true);
                 break;
-            case 140:
+            case 200:
                 MediumUpgradeTurret(tempTurret, false);
                 break;
-            case 200:
+            case 250:
                 LargeUpgradeTurret(tempTurret);
                 break;
         }

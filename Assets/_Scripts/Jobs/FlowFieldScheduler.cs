@@ -42,7 +42,6 @@ public class FlowFieldScheduler
                 GridArray = gridNodes,
                 endX = endX,
                 endZ = endZ,
-                runFullGrid = runFullFlow,
                 gridWidth = gridLength
             };
 

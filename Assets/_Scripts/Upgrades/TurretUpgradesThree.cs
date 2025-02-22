@@ -112,3 +112,24 @@ public class TimewarpUpgrade : IUpgradeOption
 
     public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
+
+public class SpreadCircles : IUpgradeOption
+{
+    public void Apply(Turret turret)
+    {
+        turret.highlightBox.SetActive(false);
+        turret.bulletType = BulletType.SpreadCircles;
+        turret.unlockedUpgradeList.Add(this);
+    }
+
+    public int GetTextSize() { return 17; }
+
+    public string GetDescription()
+    {
+        return $"The bullets that split also split bullets";
+    }
+
+    public int GetLevel() { return 3; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
+}

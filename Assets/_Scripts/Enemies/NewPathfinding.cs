@@ -44,6 +44,7 @@ public class NewPathfinding : MonoBehaviour
                     cost = 0,
                     integrationCost = 0,
                     isWalkable = tempObject.isWalkable,
+                    isTraversable = tempObject.isTraversable,
                     isPathfindingArea = tempObject.isPathfindingArea,
                     goToIndex = 0
                 };
@@ -69,6 +70,7 @@ public class NewPathfinding : MonoBehaviour
                 tempNode.isWalkable = tempObject.isWalkable;
                 tempNode.isPathfindingArea = tempObject.isPathfindingArea;
                 tempNode.isBuilding = tempObject.isBuilding;
+                tempNode.isTraversable = tempObject.isTraversable;
                 flowNodes[count] = tempNode;
 
                 count++;

@@ -104,8 +104,8 @@ public class TerrainGen : MonoBehaviour
         {
             for (int z = 0; z < length+1; z++)
             {
-                int innerLen = 7;
-                int outerLen = length - 7;
+                int innerLen = 15;
+                int outerLen = length - innerLen;
                 if (x < innerLen || x >= outerLen || z < innerLen || z >= outerLen)
                 {
                     // Set the y position to 0 for vertices within this range
@@ -118,7 +118,7 @@ public class TerrainGen : MonoBehaviour
     void SplitTerrainIntoQuadrants(int iterations)
     {
         int gridSize = (int)Mathf.Pow(2, iterations);  // Number of divisions in each axis (e.g., 2x2, 4x4, etc.)
-        int quadrantSize = length / gridSize;        // Size of each quadrant
+        int quadrantSize = length / gridSize;          // Size of each quadrant
 
         for (int i = 0; i < groundObjects.Count; i++)
         {

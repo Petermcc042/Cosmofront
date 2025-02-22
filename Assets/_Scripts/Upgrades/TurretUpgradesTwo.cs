@@ -211,7 +211,7 @@ public class SpreadRoundsUpgrade : IUpgradeOption
             new MegaUpgrade()
         };
 
-        int[] tempWeights = { 4, 8, 1 };
+        int[] tempWeights = { 100, 8, 1 }; // to change
 
         return UpgradeMethods.PopulateOptions(tempArray, tempWeights);
     }

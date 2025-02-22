@@ -22,7 +22,9 @@ public enum BulletType
 {
     Blank,
     Standard,
-    Explosive, Piercing, Spread, Slow, Ricochet, Overcharge,
+    Explosive, Piercing, 
+    Spread, Circler, SpreadCircles,
+    Slow, Ricochet, Overcharge,
     ChainLightning, ChainLightningTwo,
     OrbitalStrike, MeteorShower, Overclocked, FirestormPayload, Firestorm, TimewarpPayload, Timewarp
 }

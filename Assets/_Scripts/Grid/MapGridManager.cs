@@ -3,6 +3,9 @@ using UnityEngine;
 using System.IO;
 using Unity.Collections;
 using Unity.Mathematics;
+using System;
+using static UnityEditor.PlayerSettings;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class MapGridManager : MonoBehaviour
 {
@@ -51,6 +54,7 @@ public class MapGridManager : MonoBehaviour
     private List<float3> buildableAreaList;
     private List<float3> pathfindingAreaList;
     public NativeList<float3> buildingGridSquareList;
+    public NativeList<float3> traversableBuildingSquares;
 
 
     private void Awake()
@@ -69,6 +73,7 @@ public class MapGridManager : MonoBehaviour
         pathfindingAreaList = new List<float3>();
 
         buildingGridSquareList = new NativeList<float3>(Allocator.Persistent);
+        traversableBuildingSquares = new NativeList<float3>(Allocator.Persistent);
 
         circlePoints = ReadCSVFile(circlePointsPath);
         pathfindingCirclePoints = ReadCSVFile(pathfindingCirclePointsPath);
@@ -77,6 +82,7 @@ public class MapGridManager : MonoBehaviour
     private void OnDestroy()
     {
         buildingGridSquareList.Dispose();
+        traversableBuildingSquares.Dispose();
     }
 
 
@@ -249,9 +255,6 @@ public class MapGridManager : MonoBehaviour
         {
             GridObject tempGrid = mapGrid.GetGridObject(pos.x, pos.y);
 
-            // Can only build if:
-            // 1. The space is in the base area
-            // 2. The space is NOT already occupied by a building
             if (!tempGrid.isBaseArea || tempGrid.isBuilding)
             {
                 Debug.Log("Cannot build here - " + (!tempGrid.isBaseArea ? "Not in base area" : "Space already occupied"));
@@ -265,9 +268,6 @@ public class MapGridManager : MonoBehaviour
             {
                 // add to list
                 buildingGridSquareList.Add(new Vector3(pos.x, 0, pos.y));
-                //buildingGridSquareList.Add(new Vector3(pos.x + 1, 0, pos.y));
-                //buildingGridSquareList.Add(new Vector3(pos.x, 0, pos.y + 1));
-                //buildingGridSquareList.Add(new Vector3(pos.x + 1, 0, pos.y + 1));
             }
         }
 
@@ -288,6 +288,7 @@ public class MapGridManager : MonoBehaviour
             tempObject.dCost += 20;
         }
 
+        BuildingTraversal(_x, _z);
         enemyManager.RecalcPaths();
 
         if (_placedObjectSO.nameString == "Habitat Light")
@@ -295,6 +296,66 @@ public class MapGridManager : MonoBehaviour
             PlaceCircleHabitatLight(_x, _z, false);
         }
     }
+
+    private void BuildingTraversal(int _x, int _z)
+    {
+        // Start measuring time
+        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+        stopwatch.Start();
+
+        var nodeQueue = new Queue<GridObject>();
+        int searchSize = 8;
+
+        GridObject tempGrid = mapGrid.GetGridObject(_x, _z);
+        int minX = _x - searchSize; int maxX = _x + searchSize;
+        int minZ = _z - searchSize; int maxZ = _z + searchSize;
+
+        nodeQueue.Enqueue(tempGrid);
+
+        while (nodeQueue.Count > 0)
+        {
+            GridObject currentCell = nodeQueue.Dequeue();
+            if (currentCell.x < minX || currentCell.x > maxX || currentCell.z < minZ || currentCell.z > maxZ) { continue; }
+
+            for (int offsetX = -1; offsetX <= 1; offsetX++)
+            {
+                for (int offsetZ = -1; offsetZ <= 1; offsetZ++)
+                {
+                    if (offsetX == 0 && offsetZ == 0) continue; // Skip the current node
+
+                    int neighborX = currentCell.x + offsetX;
+                    int neighborZ = currentCell.z + offsetZ;
+
+                    if (neighborX >= 0 && neighborX < gridWidth && neighborZ >= 0 && neighborZ < gridWidth)
+                    {
+                        GridObject neighbour = mapGrid.GetGridObject(neighborX, neighborZ);
+                        if (!neighbour.isWalkable || neighbour.isTraversable) { continue; }
+
+                        neighbour.isTraversable = true;
+                        nodeQueue.Enqueue(neighbour);
+                    }
+                }
+            }
+        }
+
+        int count = 0;
+        for (int x = 0; x < gridLength; x++)
+        {
+            for (int z = 0; z < gridLength; z++)
+            {
+                GridObject tempObject = mapGrid.GetGridObject(x, z);
+                if (tempObject.isTraversable == true)
+                {
+                    count++;
+                }
+            }
+        }
+
+        // Stop measuring time
+        stopwatch.Stop();
+        Debug.Log($"BFS {count}: {stopwatch.ElapsedMilliseconds} ms");
+    }
+
 
     public void PlaceCircleHabitatLight(int _x, int _z, bool _bool)
     {
@@ -356,9 +417,6 @@ public class MapGridManager : MonoBehaviour
                 tempObject.ClearPlacedObject();
 
                 RemoveFromNativeList(buildingGridSquareList, new float3(pos.x, 0, pos.y));
-                //RemoveFromNativeList(buildingGridSquareList, new Vector3(pos.x, 0, pos.y + 1));
-                //RemoveFromNativeList(buildingGridSquareList, new Vector3(pos.x + 1, 0, pos.y));
-                //RemoveFromNativeList(buildingGridSquareList, new Vector3(pos.x + 1, 0, pos.y + 1));
             }
         }
 
@@ -474,11 +532,7 @@ public class MapGridManager : MonoBehaviour
                 if (_location)
                 {
                     buildingGridSquareList.Add(new Vector3(pos.x, 0, pos.y));
-                    //buildingGridSquareList.Add(new Vector3(pos.x + 1, 0, pos.y));
-                    //buildingGridSquareList.Add(new Vector3(pos.x, 0, pos.y + 1));
-                    //buildingGridSquareList.Add(new Vector3(pos.x + 1, 0, pos.y + 1));
                 }
-
             }
 
             // when we rotate the game object there is an offset needed to keep the object at the origin

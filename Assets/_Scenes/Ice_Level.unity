@@ -8060,11 +8060,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1834726414}
     m_Modifications:
-    - target: {fileID: -719959278894226401, guid: 9b8d9477eba5d2a46bf1765c17f2c17a,
-        type: 3}
-      propertyPath: health
-      value: 100
-      objectReference: {fileID: 0}
     - target: {fileID: 382510719641021968, guid: 9b8d9477eba5d2a46bf1765c17f2c17a,
         type: 3}
       propertyPath: circumPoint

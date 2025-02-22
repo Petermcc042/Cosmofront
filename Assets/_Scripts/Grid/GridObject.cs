@@ -17,6 +17,7 @@ public class GridObject
     public bool isBaseArea;
     public bool isPathfindingArea;
     public bool isBuilding;
+    public bool isTraversable;
 
     public GridObject(GridXZ<GridObject> grid, int x, int z)
     {

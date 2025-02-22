@@ -12,6 +12,7 @@ public class MovementScheduler
         NativeList<float3> shieldPositions,
         NativeList<float3> obstructPathList,
         NativeArray<FlowGridNode> flowNodes,
+        NativeArray<float3> terrainDataArray,
         float deltaTime,
         uint seed)
     {
@@ -30,6 +31,7 @@ public class MovementScheduler
             var updateEnemyTargetJob = new UpdateEnemyTargetPos
             {
                 EnemyData = enemyDataList.AsArray(),
+                TerrainDataArray = terrainDataArray,
                 EnemyDataOffset = enemyDataOffset,
                 FlowGridArray = flowNodes,
                 Seed = seed

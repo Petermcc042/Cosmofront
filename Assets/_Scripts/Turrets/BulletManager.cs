@@ -75,7 +75,6 @@ public class BulletManager : MonoBehaviour
             Type = _bulletType
         };
 
-        //collisionManager.AddBulletData(bulletData);
         bulletDataList.Add(bulletData);
     }
 

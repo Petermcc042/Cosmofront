@@ -103,8 +103,7 @@ public class CirclerUpgrade : IUpgradeOption
     public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
-        turret.bulletType = BulletType.Spread;
-        turret.passThrough = 0;
+        turret.bulletType = BulletType.Circler;
         turret.unlockedUpgradeList.Add(this);
     }
 
@@ -117,7 +116,24 @@ public class CirclerUpgrade : IUpgradeOption
 
     public int GetLevel() { return 2; }
 
-    public IUpgradeOption[] NextUpgradeOption() { return null; }
+    public IUpgradeOption[] NextUpgradeOption()
+    {
+
+        IUpgradeOption[] tempArray =
+        {
+            new SpreadCircles(),
+            new PiercingRoundsUpgrade(),
+            new OrbitalStrikeUpgrade(),
+            new MeteorShowerUpgrade(),
+            new TimewarpUpgrade(),
+            new FirestormUpgrade(),
+            new MegaUpgrade()
+        };
+
+        int[] tempWeights = { 100, 2, 1, 1, 1, 1, 1 }; // to change
+
+        return UpgradeMethods.PopulateOptions(tempArray, tempWeights);
+    }
 }
 
 

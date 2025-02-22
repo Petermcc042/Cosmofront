@@ -11,44 +11,62 @@ public struct UpdateEnemyTargetPos : IJobParallelFor
     public NativeArray<EnemyData> EnemyData;
     [ReadOnly] public NativeArray<EnemyData> EnemyDataOffset;
     [ReadOnly] public NativeArray<FlowGridNode> FlowGridArray;
+    [ReadOnly] public NativeArray<float3> TerrainDataArray;
 
     // A seed that you can set from your main thread
     public uint Seed;
+    private const float TERRAIN_DETECTION_RADIUS = 2f;
+    private const float TERRAIN_FORCE_MULTIPLIER = 2.5f;
+    private const float MIN_TERRAIN_DISTANCE = 1f;
 
     public void Execute(int index)
     {
         uint seed = Seed < 1 ? 1 : Seed;
         EnemyData enemy = EnemyData[index];
-
-        if (!enemy.TargetNeeded) { return; }
+        //if (!enemy.TargetNeeded) { return; }
 
         float3 currentPos = enemy.Position;
         int currentIndex = GetGridIndex(currentPos);
-        float3 flowDir;
 
+        float3 flowDir = CalculateFlowDirection(currentPos, currentIndex);
+
+        float3 separationForce = CalculateEnemySeparation(enemy);
+
+        float3 terrainSeparationForce = CalculateTerrainSeparation(enemy.Position);
+
+        float3 wanderForce = CalculateWanderForce(seed, index);
+
+        float3 desiredDirection = flowDir + (separationForce * 0.4f) + (wanderForce * 0.3f) + (terrainSeparationForce);
+
+        enemy.TargetPos = desiredDirection;
+        EnemyData[index] = enemy;
+    }
+
+    private float3 CalculateFlowDirection(float3 currentPos, int currentIndex)
+    {
         if (currentIndex < 0 || currentIndex >= FlowGridArray.Length)
         {
-            flowDir = currentPos + GetStepTowardsCenter(currentPos);
-        }
-        else
-        {
-            // Determine the next grid node via the flow field.
-            int adjustedIndex = (FlowGridArray[currentIndex].goToIndex < 0)
-                ? GetGridIndex(currentPos + GetStepTowardsCenter(currentPos))
-                : FlowGridArray[currentIndex].goToIndex;
-            int nextIndex = FlowGridArray[adjustedIndex].goToIndex;
-
-            // Calculate the base target position.
-            flowDir = (nextIndex < 0)
-                ? currentPos + GetStepTowardsCenter(currentPos)
-                : FlowGridArray[nextIndex].position;
+            return currentPos + GetStepTowardsCenter(currentPos);
         }
 
+        int adjustedIndex = (FlowGridArray[currentIndex].goToIndex < 0)
+            ? GetGridIndex(currentPos + GetStepTowardsCenter(currentPos))
+            : FlowGridArray[currentIndex].goToIndex;
+
+        int nextIndex = FlowGridArray[adjustedIndex].goToIndex;
+
+        return (nextIndex < 0)
+            ? currentPos + GetStepTowardsCenter(currentPos)
+            : FlowGridArray[nextIndex].position;
+    }
+
+    private float3 CalculateEnemySeparation(EnemyData enemy)
+    {
         float3 separationForce = float3.zero;
         for (int i = 0; i < EnemyDataOffset.Length; i++)
         {
             if (math.distance(EnemyDataOffset[i].Position, enemy.Position) > 2f) { continue; }
-            
+
             float3 away = enemy.Position - EnemyDataOffset[i].Position;
             float magnitude = math.length(away);
             if (magnitude > 0)
@@ -56,21 +74,37 @@ public struct UpdateEnemyTargetPos : IJobParallelFor
                 separationForce += math.normalize(away) / magnitude;
             }
         }
+        return separationForce;
+    }
 
-        // Optionally, add a small random "wander" force.
+    private float3 CalculateTerrainSeparation(float3 position)
+    {
+        float3 separationForce = float3.zero;
+        for (int i = 0; i < TerrainDataArray.Length; i++)
+        {
+            float distance = math.distance(position, TerrainDataArray[i]);
+            if (distance > TERRAIN_DETECTION_RADIUS) { continue; }
+
+            float3 away = position - TerrainDataArray[i];
+            float magnitude = math.length(away);
+            if (magnitude > 0)
+            {
+                // Exponential force increase as distance decreases
+                float forceMagnitude = 1f / (magnitude * magnitude);
+                separationForce += math.normalize(away) * forceMagnitude;
+            }
+        }
+        return separationForce;
+    }
+
+    private float3 CalculateWanderForce(uint seed, int index)
+    {
         Unity.Mathematics.Random random = new Unity.Mathematics.Random(seed + (uint)index);
-        float3 wanderForce = new float3(
+        return new float3(
             random.NextFloat(-0.1f, 0.1f),
             0,
             random.NextFloat(-0.1f, 0.1f)
         );
-
-        // Blend the forces (tweak these weights as needed).
-        float3 desiredDirection = flowDir + (separationForce * 0.4f) + (wanderForce * 0.3f);
-
-        // Write the modified enemy data back.
-        enemy.TargetPos = desiredDirection;
-        EnemyData[index] = enemy;
     }
 
     // Converts a world position to a grid index.
@@ -259,7 +293,7 @@ public struct BulletCollision : IJobParallelFor
                     }
                 }
 
-                if (bullet.Type == BulletType.Spread)
+                if (bullet.Type == BulletType.Spread || bullet.Type == BulletType.Circler || bullet.Type == BulletType.SpreadCircles)
                 {
                     bullet.ToRemove = true;
                     CreateBulletData.Enqueue(bullet);

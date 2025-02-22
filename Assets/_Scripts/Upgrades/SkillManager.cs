@@ -51,12 +51,12 @@ public class SkillManager: MonoBehaviour
 
         for (int i = 0; i < 4; i++)
         {
-            mediumUpgrades.Add(new LightningRoundsUpgrade());
+/*            mediumUpgrades.Add(new LightningRoundsUpgrade());
             mediumUpgrades.Add(new SlowRoundsUpgrade());
-            mediumUpgrades.Add(new ExplosiveRoundsUpgrade());
+            mediumUpgrades.Add(new ExplosiveRoundsUpgrade());*/
             mediumUpgrades.Add(new SpreadRoundsUpgrade());
-            mediumUpgrades.Add(new PiercingRoundsUpgrade());
-            mediumUpgrades.Add(new MegaUpgrade());
+/*            mediumUpgrades.Add(new PiercingRoundsUpgrade());
+            mediumUpgrades.Add(new MegaUpgrade());*/
         }
 
         for (int i = 0; i < 4; i++)
@@ -189,8 +189,9 @@ public class SkillManager: MonoBehaviour
             }
         }
 
-        optionUpgrades = GetRandomUpgradeOptions(3, largeUpgrades);
 
+        // Select 3 random upgrades from the filtered list
+        optionUpgrades = GetRandomUpgradeOptions(3, availableUpgrades);
 
         if (gameManager.autoUpgrade)
         {

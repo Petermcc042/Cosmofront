@@ -87,7 +87,7 @@ public class CollisionManager : MonoBehaviour
         float deltaTime = Time.deltaTime;
 
         MovementScheduler movementScheduler = new MovementScheduler();
-        movementScheduler.ScheduleMoveJobs(enemyDataList, bulletDataList, shieldPositions, obstructPathList, pathfinding.flowNodes, deltaTime, mySeed);
+        movementScheduler.ScheduleMoveJobs(enemyDataList, bulletDataList, shieldPositions, obstructPathList, pathfinding.flowNodes, terrainDataArray, deltaTime, mySeed);
 
         CheckBulletCollisions();
         RemovalAndUpdate();
@@ -196,7 +196,33 @@ public class CollisionManager : MonoBehaviour
                     float spreadAngle = (i - 1) * 0.5f; // Adjust spread factor as needed
                     Vector3 spreadDirection = Quaternion.AngleAxis(spreadAngle * 30f, Vector3.up) * originalDirection; // Rotate around Y axis for fan-out
 
-                    bulletManager.SpawnBullet(_data.Position, spreadDirection * math.length(_data.Velocity), 5, _data.TurretID, _data.Damage, 0, BulletType.Standard);
+                    bulletManager.SpawnBullet(_data.Position, spreadDirection * math.length(_data.Velocity), 10, _data.TurretID, _data.Damage, 0, BulletType.Standard);
+                }
+            }
+            else if (_data.Type == BulletType.Circler)
+            {
+                float magnitude = math.length(_data.Velocity);
+                Vector3 baseDirection = magnitude > 0 ? _data.Velocity / magnitude : Vector3.forward; // Default to forward if no velocity
+
+                for (int i = 0; i < 8; i++)
+                {
+                    float angle = i * 45f; // Spread evenly in 8 directions (360 degrees)
+                    Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;
+
+                    bulletManager.SpawnBullet(_data.Position, direction * magnitude, 10, _data.TurretID, _data.Damage, 0, BulletType.Standard);
+                }
+            }
+            else if (_data.Type == BulletType.SpreadCircles)
+            {
+                float magnitude = math.length(_data.Velocity);
+                Vector3 baseDirection = magnitude > 0 ? _data.Velocity / magnitude : Vector3.forward; // Default to forward if no velocity
+
+                for (int i = 0; i < 8; i++)
+                {
+                    float angle = i * 45f; // Spread evenly in 8 directions (360 degrees)
+                    Vector3 direction = Quaternion.Euler(0, angle, 0) * baseDirection;
+
+                    bulletManager.SpawnBullet(_data.Position, direction * magnitude, 10, _data.TurretID, _data.Damage, 0, BulletType.Spread);
                 }
             }
             else if (_data.Type == BulletType.FirestormPayload)
