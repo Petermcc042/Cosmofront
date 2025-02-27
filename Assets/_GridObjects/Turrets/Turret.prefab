@@ -104,7 +104,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ab6d2594d39b1744b400f12061324b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fireRate: 25
+  fireRate: 3
   killCount: 0
   bulletDamage: 1
   fleshMultiplier: 1
@@ -112,10 +112,10 @@ MonoBehaviour:
   critChance: 0
   critMultiplier: 2
   passThrough: 0
-  range: 15
+  range: 5
   turnSpeed: 10
   fireCountdown: 0
-  targetingRate: 0.1
+  targetingRate: 1
   targetingCountdown: 0
   lockOnSpeed: 1
   orbitalSearchRadius: 20
@@ -138,6 +138,7 @@ MonoBehaviour:
   timewarpFireDelay: 5
   timewarpRadiusGO: {fileID: 5964435541544293207}
   allowTimewarp: 0
+  turretID: 0
   turretXP: 0
   xpToAdd: 0
   turretLevel: 0
@@ -146,7 +147,6 @@ MonoBehaviour:
   partToRotate: {fileID: 6417055713613626388}
   firePoint: {fileID: 7504641739250698944}
   highlightBox: {fileID: 5278750429639919215}
-  autoUpgrade: 0
 --- !u!65 &1887822194214673697
 BoxCollider:
   m_ObjectHideFlags: 0

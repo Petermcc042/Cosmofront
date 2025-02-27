@@ -133,6 +133,14 @@ public class TurretManager : MonoBehaviour
         }
     }
 
+    public void RemoveTurret(Turret turret)
+    {
+        if (allTurrets.Contains(turret))
+        {
+            allTurrets.Remove(turret);
+        }
+    }
+
     public void HandleXPUpdate(NativeList<TurretUpgradeData> _turretXP)
     {
         for (int i = 0; i < _turretXP.Length; i++)

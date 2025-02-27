@@ -38,7 +38,7 @@ public class SceneManagement : MonoBehaviour
     {
         UpdateDifficulty(level_oneSO, spawnRate.value);
 
-        StartCoroutine(LoadAsync("Ice_Level"));
+        StartCoroutine(LoadAsync("Capital"));
     }
 
     IEnumerator LoadAsync(string _sceneName)

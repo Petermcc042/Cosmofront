@@ -8,8 +8,9 @@ using UnityEngine;
 [BurstCompile]
 public struct ReturnTargetIndex : IJobParallelFor
 {
-    public NativeArray<EnemyData> EnemyArray;
     public NativeArray<float> EnemyDistanceArray;
+
+    [ReadOnly] public NativeList<EnemyData> EnemyArray;
     [ReadOnly] public Vector3 CurrentTransform;
 
     public void Execute(int index)
@@ -40,7 +41,7 @@ public class Turret : MonoBehaviour
     private TurretManager turretManager;
 
     [Header("Damage Attributes")]
-    public float fireRate = 25f; // higher is faster
+    public float fireRate = 1f; // higher is faster
     public int killCount = 0;
     public int bulletDamage = 1;
     public int fleshMultiplier = 1;
@@ -52,10 +53,10 @@ public class Turret : MonoBehaviour
     private float overchargeMultiplier;
 
     [Header("Targeting Attributes")]
-    public float range = 5f;
+    public float range = 3f;
     public float turnSpeed = 10f;
     public float fireCountdown = 0f;
-    public float targetingRate = 0.1f;
+    public float targetingRate = 1f;
     public float targetingCountdown = 0f;
     public float lockOnSpeed = 1f;
 
@@ -96,7 +97,7 @@ public class Turret : MonoBehaviour
     [SerializeField] private GameObject timewarpRadiusGO;
     public bool allowTimewarp = false;
 
-    private Transform target;
+    
 
     [Header("Stats Attributes")]
     public int turretID;
@@ -114,6 +115,9 @@ public class Turret : MonoBehaviour
     [Header("Upgrades")]
     public List<IUpgradeOption> unlockedUpgradeList;
 
+    private Transform target;
+    private NativeList<EnemyData> enemyDataList;
+
 
     private void Awake()
     {
@@ -125,14 +129,16 @@ public class Turret : MonoBehaviour
 
         skillManager.OnSkillUnlocked += SkillManager_OnSkillUnlocked;
 
-        unlockedUpgradeList = new List<IUpgradeOption>();
-
         turretID = gameObject.GetInstanceID();
         turretManager.AddTurret(this);
+
+        unlockedUpgradeList = new List<IUpgradeOption>();
+        enemyDataList = collisionManager.ReturnEnemyDataList();
     }
 
     private void OnDestroy()
     {
+        turretManager.RemoveTurret(this);
         skillManager.OnSkillUnlocked -= SkillManager_OnSkillUnlocked;
     }
 
@@ -340,17 +346,16 @@ public class Turret : MonoBehaviour
         float shortestDistance = _range + 5f;
         GameObject nearestEnemy = null;
 
-        NativeArray<EnemyData> tempEnemyArray = collisionManager.ReturnEnemyDataList().AsArray();
-        NativeArray<float> tempEnemyDistanceArray = new(tempEnemyArray.Length, Allocator.Persistent);
+        NativeArray<float> tempEnemyDistanceArray = new(enemyDataList.Length, Allocator.Persistent);
 
         var job = new ReturnTargetIndex
         {
-            EnemyArray = tempEnemyArray,
+            EnemyArray = enemyDataList,
             EnemyDistanceArray = tempEnemyDistanceArray,
             CurrentTransform = transform.position
         };
 
-        JobHandle handle = job.Schedule(tempEnemyArray.Length, 64);
+        JobHandle handle = job.Schedule(enemyDataList.Length, 64);
         handle.Complete();
 
         for (int i = 0; i < tempEnemyDistanceArray.Length; i++)
@@ -363,7 +368,6 @@ public class Turret : MonoBehaviour
             }
         }
 
-        tempEnemyArray.Dispose();
         tempEnemyDistanceArray.Dispose();
 
         return nearestEnemy != null && shortestDistance <= range ? nearestEnemy.transform : null;

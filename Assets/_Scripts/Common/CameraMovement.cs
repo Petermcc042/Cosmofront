@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class CameraMovement : MonoBehaviour
 {
-    public float moveSpeed = 5f; // Adjust this to control camera movement speed
-    public float zoomSpeed = 5f; // Adjust this to control camera zoom speed
+    public float moveSpeed = 50f; // Adjust this to control camera movement speed
+    public float zoomSpeed = 2000f; // Adjust this to control camera zoom speed
     public float minHeight = 5f; // Minimum camera height
     public float maxHeight = 50f; // Maximum camera height
     public float maxZoomStep = 2f; // Maximum zoom change per frame

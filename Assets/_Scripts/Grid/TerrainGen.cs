@@ -104,7 +104,7 @@ public class TerrainGen : MonoBehaviour
         {
             for (int z = 0; z < length+1; z++)
             {
-                int innerLen = 15;
+                int innerLen = 30;
                 int outerLen = length - innerLen;
                 if (x < innerLen || x >= outerLen || z < innerLen || z >= outerLen)
                 {
