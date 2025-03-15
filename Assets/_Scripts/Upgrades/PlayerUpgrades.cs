@@ -4,30 +4,14 @@ using TMPro;
 using UnityEditor.Overlays;
 using UnityEngine;
 
-[System.Serializable]
-public class SaveData
-{
-    public int playerLevel;
-    public float generatorHealthIncrease;
-    public int turretDamageIncrease;
-    public Vector3 playerPosition;
-    public List<string> inventoryItems = new List<string>();
-}
-
 public class PlayerUpgrades : MonoBehaviour
 {
-    [SerializeField] private SaveSystem saveSystem;
-    private SaveData playerData;
-
-    [SerializeField] private TextMeshProUGUI generatorHealthUI;
-    [SerializeField] private TextMeshProUGUI turretDamageUI;
-
     private void Start()
     {
         // Example: Loading data
-        playerData = saveSystem.LoadGame();
+        SaveSystem.LoadGame();
 
-        if (playerData != null)
+        if (SaveSystem.playerData != null)
         {
             Debug.Log("Loaded Data");
         }
@@ -40,28 +24,25 @@ public class PlayerUpgrades : MonoBehaviour
                 playerPosition = new Vector3(1, 2, 3),
                 inventoryItems = new List<string> { "Sword", "Shield" }
             };
-            saveSystem.SaveGame(saveData);
+            SaveSystem.SaveGame(saveData);
 
-            playerData = saveSystem.LoadGame();
+            SaveSystem.LoadGame();
+
+            if (SaveSystem.playerData == null)
+            {
+                Debug.Log("FAILED LOAD");
+            }
         }
-
-        UpdateAllUI();
     }
 
     public enum PlayerUpgradesEnum
     {
-        PlayerLevel, GeneratorHealth, AttackSpeed, TurretDamage
+        PlayerLevel, GeneratorHealth, ShieldHealth, AttackSpeed, TurretDamage
     }
 
     public void SaveChanges()
     {
-        saveSystem.SaveGame(playerData);
-    }
-
-    private void UpdateAllUI()
-    {
-        generatorHealthUI.text = playerData.generatorHealthIncrease.ToString();
-        turretDamageUI.text = playerData.turretDamageIncrease.ToString()+"%";
+        SaveSystem.SaveGame();
     }
 
 
@@ -78,15 +59,13 @@ public class PlayerUpgrades : MonoBehaviour
             switch (upgradeType)
             {
                 case PlayerUpgradesEnum.GeneratorHealth:
-                    playerData.generatorHealthIncrease += GenHealthChange * direction;
+                    SaveSystem.playerData.generatorHealthIncrease += GenHealthChange * direction;
+                    Debug.Log(SaveSystem.playerData.generatorHealthIncrease);
                     break;
                 case PlayerUpgradesEnum.TurretDamage:
-                    playerData.turretDamageIncrease += turretDamageChange * direction;
+                    SaveSystem.playerData.turretDamageIncrease += turretDamageChange * direction;
                     break;
             }
-
-
-            UpdateAllUI();
         }
         else
         {
@@ -104,15 +83,12 @@ public class PlayerUpgrades : MonoBehaviour
             switch (upgradeType)
             {
                 case PlayerUpgradesEnum.GeneratorHealth:
-                    playerData.generatorHealthIncrease += GenHealthChange * direction;
+                    SaveSystem.playerData.generatorHealthIncrease += GenHealthChange * direction;
                     break;
                 case PlayerUpgradesEnum.TurretDamage:
-                    playerData.turretDamageIncrease += turretDamageChange * direction;
+                    SaveSystem.playerData.turretDamageIncrease += turretDamageChange * direction;
                     break;
             }
-
-
-            UpdateAllUI();
         }
         else
         {

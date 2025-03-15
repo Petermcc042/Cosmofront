@@ -38,7 +38,7 @@ public class SceneManagement : MonoBehaviour
     {
         UpdateDifficulty(level_oneSO, spawnRate.value);
 
-        StartCoroutine(LoadAsync("Capital"));
+        StartCoroutine(LoadAsync("2_Capital"));
     }
 
     IEnumerator LoadAsync(string _sceneName)
@@ -57,7 +57,7 @@ public class SceneManagement : MonoBehaviour
 
     public void LoadMenu()
     {
-        SceneManager.LoadScene("Menu");
+        SceneManager.LoadScene("1_Menu");
     }
 
     public void ExitGame()

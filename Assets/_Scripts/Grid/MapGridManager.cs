@@ -3,9 +3,6 @@ using UnityEngine;
 using System.IO;
 using Unity.Collections;
 using Unity.Mathematics;
-using System;
-using static UnityEditor.PlayerSettings;
-using static UnityEngine.EventSystems.EventTrigger;
 
 public class MapGridManager : MonoBehaviour
 {
@@ -14,32 +11,20 @@ public class MapGridManager : MonoBehaviour
     [Header("GameObject References")]
     [SerializeField] private GameObject skillManagerGO;
     [SerializeField] private EnemyManager enemyManager;
-    [SerializeField] private GameManager gameManager;
-    [SerializeField] private WallManager wallManager;
-    [SerializeField] private CollisionManager collisionManager;
     [SerializeField] private BuildableAreaMesh buildableAreaMesh;
     [SerializeField] private TerrainGen terrainGen;
 
     [Header("Base Buildings SO")]
     [SerializeField] private GameObject generator;
 
-    [Header("Environment PlacedObjectSO")]
-    [SerializeField] private GameObject groundGameObjects;
-    [SerializeField] private GameObject groundObject;
-    [SerializeField] private GameObject gridObjectTile;
-
     private BuildingListSO buildingsListSO;
 
     [Header("Circle Points Data")]
     [SerializeField] private string circlePointsPath;
     [SerializeField] private string pathfindingCirclePointsPath;
-    [SerializeField] private TextAsset circleDataCSV;
     private List<Vector3> circlePoints;
     private List<Vector3> pathfindingCirclePoints;
 
-    [SerializeField] private bool debugLinesBool;
-
-    public GridXZ<GridObject> mapGrid;
     public List<float3> gridLocations;
     
 
@@ -48,7 +33,6 @@ public class MapGridManager : MonoBehaviour
 
     private int gridWidth = 200; //x
     private int gridLength = 200; //z
-    private float cellSize = 1f;
 
     // For Walls And Building
     private List<float3> buildableAreaList;
@@ -91,8 +75,6 @@ public class MapGridManager : MonoBehaviour
         buildingsListSO = _buildingsList;
         gridWidth = _gameSettings.gridWidth;
         gridLength = _gameSettings.gridLength;
-
-        mapGrid = new GridXZ<GridObject>(gridWidth, gridLength, cellSize, Vector3.zero, (GridXZ<GridObject> g, int x, int z) => new GridObject(g, x, z));
 
         terrainGen.InitTerrain();
         //SetPlanetObstacles();
@@ -196,7 +178,10 @@ public class MapGridManager : MonoBehaviour
                     int gridPosZ = centerZ + j;
 
                     buildableAreaList.Add(new Vector3(gridPosX, 0, gridPosZ));
-                    mapGrid.GetGridObject(gridPosX, gridPosZ).isBaseArea = true;
+                    GridNode tempNode = PrecomputedData.GetGridObject(gridPosX, gridPosZ);
+                    tempNode.isBaseArea = true;
+                    PrecomputedData.SetGridNode(gridPosX, gridPosZ, tempNode);
+
                 }
             }
         }
@@ -213,7 +198,10 @@ public class MapGridManager : MonoBehaviour
                     int gridPosZ = centerZ + j;
 
                     pathfindingAreaList.Add(new Vector3(gridPosX, 0, gridPosZ));
-                    mapGrid.GetGridObject(gridPosX, gridPosZ).isPathfindingArea = true;
+
+                    GridNode tempNode = PrecomputedData.GetGridObject(gridPosX, gridPosZ);
+                    tempNode.isPathfindingArea = true;
+                    PrecomputedData.SetGridNode(gridPosX, gridPosZ, tempNode);
                 }
             }
         }
@@ -223,7 +211,10 @@ public class MapGridManager : MonoBehaviour
             for (int j = -1; j <= 0; j++)
             {
                 buildableAreaList.Remove(new Vector3(centerX + i, 0, centerZ + j));
-                mapGrid.GetGridObject(centerX + i, centerZ + j).isBaseArea = false;
+
+                GridNode tempNode = PrecomputedData.GetGridObject(centerX + i, centerZ + j);
+                tempNode.isBaseArea = true;
+                PrecomputedData.SetGridNode(centerX + i, centerZ + j, tempNode);
             } 
         }
 
@@ -235,9 +226,9 @@ public class MapGridManager : MonoBehaviour
 
     public void PlaceBuilding(Vector3 _mouseWorldPosition, PlacedObjectSO _placedObjectSO)
     {
-        mapGrid.GetXZ(_mouseWorldPosition, out int x, out int z);
+        PrecomputedData.GetXZ(_mouseWorldPosition, out int x, out int z);
 
-        if (!mapGrid.GetGridObject(x, z).isBaseArea) { return; }
+        if (!PrecomputedData.GetGridObject(x, z).isBaseArea) { return; }
 
         PlaceBuilding(x, z, _placedObjectSO, true);
     }
@@ -253,7 +244,7 @@ public class MapGridManager : MonoBehaviour
         // if there is can build = false and break
         foreach (Vector2Int pos in gridPosList)
         {
-            GridObject tempGrid = mapGrid.GetGridObject(pos.x, pos.y);
+            GridNode tempGrid = PrecomputedData.GetGridObject(pos.x, pos.y);
 
             if (!tempGrid.isBaseArea || tempGrid.isBuilding)
             {
@@ -273,8 +264,8 @@ public class MapGridManager : MonoBehaviour
 
         // when we rotate the game object there is an offset needed to keep the object at the origin
         Vector2Int rotationOffset = _placedObjectSO.GetRotationOffset(dir);
-        Vector3 placedObjectWorldPosition = mapGrid.GetWorldPosition(_x, _z) +
-            new Vector3(rotationOffset.x, 0, rotationOffset.y) * mapGrid.GetCellSize();
+        Vector3 placedObjectWorldPosition = PrecomputedData.GetWorldPosition(_x, _z) +
+            new Vector3(rotationOffset.x, 0, rotationOffset.y) * PrecomputedData.cellSize;
 
         // Instantiate our gameobject and store the transform
         PlacedObject placedObject = PlacedObject.Create(placedObjectWorldPosition, new Vector2Int(_x, _z), dir, _placedObjectSO);
@@ -282,10 +273,10 @@ public class MapGridManager : MonoBehaviour
         // update our grid on these coordinates so that we can't build there anymore
         foreach (Vector2Int pos in gridPosList)
         {
-            GridObject tempObject = mapGrid.GetGridObject(pos.x, pos.y);
-            tempObject.isBuilding = true;
-            tempObject.SetPlacedObject(placedObject);
-            tempObject.dCost += 20;
+            GridNode tempNode = PrecomputedData.GetGridObject(pos.x, pos.y);
+            tempNode.isBuilding = true;
+            PrecomputedData.SetGridNode(pos.x, pos.y, tempNode);
+            PrecomputedData.SetPlacedObject(pos.x, pos.y, placedObject);
         }
 
         BuildingTraversal(_x, _z);
@@ -303,10 +294,10 @@ public class MapGridManager : MonoBehaviour
         System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
         stopwatch.Start();
 
-        var nodeQueue = new Queue<GridObject>();
+        var nodeQueue = new Queue<GridNode>();
         int searchSize = 8;
 
-        GridObject tempGrid = mapGrid.GetGridObject(_x, _z);
+        GridNode tempGrid = PrecomputedData.GetGridObject(_x, _z);
         int minX = _x - searchSize; int maxX = _x + searchSize;
         int minZ = _z - searchSize; int maxZ = _z + searchSize;
 
@@ -314,7 +305,7 @@ public class MapGridManager : MonoBehaviour
 
         while (nodeQueue.Count > 0)
         {
-            GridObject currentCell = nodeQueue.Dequeue();
+            GridNode currentCell = nodeQueue.Dequeue();
             if (currentCell.x < minX || currentCell.x > maxX || currentCell.z < minZ || currentCell.z > maxZ) { continue; }
 
             for (int offsetX = -1; offsetX <= 1; offsetX++)
@@ -328,10 +319,11 @@ public class MapGridManager : MonoBehaviour
 
                     if (neighborX >= 0 && neighborX < gridWidth && neighborZ >= 0 && neighborZ < gridWidth)
                     {
-                        GridObject neighbour = mapGrid.GetGridObject(neighborX, neighborZ);
+                        GridNode neighbour = PrecomputedData.GetGridObject(neighborX, neighborZ);
                         if (!neighbour.isWalkable || neighbour.isTraversable) { continue; }
 
                         neighbour.isTraversable = true;
+                        PrecomputedData.SetGridNode(neighborX, neighborZ, neighbour);
                         nodeQueue.Enqueue(neighbour);
                     }
                 }
@@ -343,7 +335,7 @@ public class MapGridManager : MonoBehaviour
         {
             for (int z = 0; z < gridLength; z++)
             {
-                GridObject tempObject = mapGrid.GetGridObject(x, z);
+                GridNode tempObject = PrecomputedData.GetGridObject(x, z);
                 if (tempObject.isTraversable == true)
                 {
                     count++;
@@ -359,8 +351,6 @@ public class MapGridManager : MonoBehaviour
 
     public void PlaceCircleHabitatLight(int _x, int _z, bool _bool)
     {
-        GridObject tempGridObject = mapGrid.GetGridObject(_x, _z);
-
         foreach (var indexPos in circlePoints)
         {
             int gridX = _x + (int)indexPos.x;
@@ -369,7 +359,10 @@ public class MapGridManager : MonoBehaviour
 
             if (!buildableAreaList.Contains(gridPos))
             {
-                mapGrid.GetGridObject(gridX, gridZ).isBaseArea = true;
+                GridNode tempNode = PrecomputedData.GetGridObject(gridX, gridZ);
+                tempNode.isBaseArea = true;
+                PrecomputedData.SetGridNode(gridX, gridZ, tempNode);
+
                 buildableAreaList.Add(gridPos);
             }
         }
@@ -382,9 +375,10 @@ public class MapGridManager : MonoBehaviour
 
             if (!pathfindingAreaList.Contains(gridPos))
             {
-                // outside of buildable area place walls on circum
-                // add all squares to buildable area
-                mapGrid.GetGridObject(gridX, gridZ).isPathfindingArea = true;
+                GridNode tempNode = PrecomputedData.GetGridObject(gridX, gridZ);
+                tempNode.isPathfindingArea = true;
+                PrecomputedData.SetGridNode(gridX, gridZ, tempNode);
+
                 pathfindingAreaList.Add(gridPos);
             }
         }
@@ -401,21 +395,15 @@ public class MapGridManager : MonoBehaviour
 
     public void DestroyBuilding(int _x, int _z)
     {
-        GridObject gridObject = mapGrid.GetGridObject(_x, _z);
-        PlacedObject placedObject = gridObject.GetPlacedObject();
+        PlacedObject placedObject = PrecomputedData.GetPlacedObject(_x, _z);
+
         if (placedObject != null)
         {
-            placedObject.DestroySelf();
-
-
             List<Vector2Int> gridPosList = placedObject.GetGridPositionList();
 
             foreach (Vector2Int pos in gridPosList)
             {
-                GridObject tempObject = mapGrid.GetGridObject(pos.x, pos.y);
-                tempObject.isBuilding = false;
-                tempObject.ClearPlacedObject();
-
+                PrecomputedData.DestroyBuilding(pos.x, pos.y);
                 RemoveFromNativeList(buildingGridSquareList, new float3(pos.x, 0, pos.y));
             }
         }
@@ -516,7 +504,7 @@ public class MapGridManager : MonoBehaviour
         // if there is can build = false and break
         foreach (Vector2Int pos in gridPosList)
         {
-            if (mapGrid.GetGridObject(pos.x, pos.y).isBuilding)
+            if (PrecomputedData.GetGridObject(pos.x, pos.y).isBuilding)
             {
                 canBuild = false; break;
             }
@@ -537,8 +525,8 @@ public class MapGridManager : MonoBehaviour
 
             // when we rotate the game object there is an offset needed to keep the object at the origin
             Vector2Int rotationOffset = _placedObjectSO.GetRotationOffset(dir);
-            Vector3 placedObjectWorldPosition = mapGrid.GetWorldPosition(_x, _z) +
-                new Vector3(rotationOffset.x, 0, rotationOffset.y) * mapGrid.GetCellSize();
+            Vector3 placedObjectWorldPosition = PrecomputedData.GetWorldPosition(_x, _z) +
+                new Vector3(rotationOffset.x, 0, rotationOffset.y) * PrecomputedData.cellSize;
 
             // Instantiate our gameobject and store the transform
             //PlacedObject placedObject = PlacedObject.MoveGenerator(placedObjectWorldPosition, new Vector2Int(_x, _z), dir, _placedObjectSO, generator);
@@ -558,10 +546,10 @@ public class MapGridManager : MonoBehaviour
             // update our grid on these coordinates so that we can't build there anymore
             foreach (Vector2Int pos in gridPosList)
             {
-                GridObject tempObject = mapGrid.GetGridObject(pos.x, pos.y);
-                tempObject.isBuilding = true;
-                tempObject.SetPlacedObject(genPO);
-                tempObject.dCost += 20;
+                GridNode tempNode = PrecomputedData.GetGridObject(pos.x, pos.y);
+                tempNode.isBuilding = true;
+                PrecomputedData.SetGridNode(pos.x, pos.y, tempNode);
+                PrecomputedData.SetPlacedObject(pos.x, pos.y, genPO);
             }
         }
         else

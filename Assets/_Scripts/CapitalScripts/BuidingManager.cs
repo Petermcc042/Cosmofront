@@ -7,6 +7,7 @@ public class BuidingManager : MonoBehaviour
     [Header("World UI")]
     [SerializeField] LayerMask buildingLayerMask;
     [SerializeField] List<CapitalBuilding> capitalBuildings;
+    [SerializeField] List<GameObject> menuList;
 
     // Update is called once per frame
     void Update()
@@ -46,5 +47,20 @@ public class BuidingManager : MonoBehaviour
             return true;
         else
             return false;
+    }
+
+
+    public void CloseMenu()
+    {
+        for (int i = 0; i < menuList.Count; i++) {
+            menuList[i].SetActive(false);
+        }
+    }
+
+    public void UpgradePlayerAddition()
+    {
+        for (int i = 0; i < menuList.Count; i++) {
+            menuList[i].SetActive(false);
+        }
     }
 }

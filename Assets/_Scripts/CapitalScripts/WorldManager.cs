@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
-public class WorldInputManager : MonoBehaviour
+public class WorldManager : MonoBehaviour
 {
     [Header("World UI")]
     [SerializeField] LayerMask regionLayerMask;
@@ -18,16 +18,18 @@ public class WorldInputManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        CheckBuildingClick();
-
         if (Input.GetMouseButtonDown(0))// && !IsOverUI())
         {
-            LoadLevel();
+            CheckBuildingClick();
         }
     }
 
-    private void LoadLevel()
+    public void LoadLevel()
     {
+        PrecomputedData.Clear();
+        PrecomputedData.InitGrid(200);
+
+
         SceneManager.LoadScene(levelToLoad);
     }
 
@@ -45,10 +47,13 @@ public class WorldInputManager : MonoBehaviour
                 OpenMenu();
             }
         }
-        else
-        {
+        else {
+            if (IsOverUI()) { return; }
+            
             CloseMenu();
         }
+
+        
     }
 
     private void CloseMenu()

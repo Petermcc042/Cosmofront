@@ -37,15 +37,12 @@ public class TerrainGen : MonoBehaviour
         blockedCoords = ReturnBlockedCells();
         for (int i = 0; i < blockedCoords.Count; ++i)
         {
-            //Instantiate(tempSphere, tempList[i], Quaternion.identity);
-            MapGridManager.Instance.mapGrid.GetGridObject(blockedCoords[i]).isWalkable = false;
+            PrecomputedData.GetXZ(blockedCoords[i], out int _x, out int _z);
+            GridNode tempNode = PrecomputedData.GetGridObject(_x, _z);
+            tempNode.isWalkable = false;
+            PrecomputedData.SetGridNode(_x, _z, tempNode);
         }
         collisionManager.CreateTerrainArray(blockedCoords);
-    }
-
-    private void Update()
-    {
-        //if (Input.GetKeyDown(KeyCode.P)) { InitTerrain(); }
     }
 
     void GenerateVertices()
@@ -145,36 +142,6 @@ public class TerrainGen : MonoBehaviour
         }
     }
 
-    private List<Vector3> GroupAreas()
-    {
-        // Calculate number of vertices along x and z axes
-        int xSize = Mathf.RoundToInt(length / vertexSpacing);
-        int zSize = Mathf.RoundToInt(length / vertexSpacing);
-
-        List<Vector3> regionVertices = new();
-
-        for (int z = 0; z <= zSize; z++)
-        {
-            for (int x = 0; x <= xSize; x++)
-            {
-                if (vertexDouble[x, z].y > 0)
-                {
-                    List<Vector3> tempList = GetNeighboursList(x, z);
-                    foreach (var coord in tempList)
-                    {
-                        if (coord.y <= 0)
-                        {
-                            regionVertices.Add(vertexDouble[x, z]);
-                            break;
-                        }
-                    }
-                }
-
-            }
-        }
-
-        return regionVertices;
-    }
 
     private List<Vector3> ReturnBlockedCells()
     {
@@ -197,7 +164,6 @@ public class TerrainGen : MonoBehaviour
 
 
 
-    // Create a mesh for a specific quadrant
     // Create a mesh for a specific quadrant
     Mesh CreateMeshForQuadrant(int xStart, int xEnd, int zStart, int zEnd)
     {

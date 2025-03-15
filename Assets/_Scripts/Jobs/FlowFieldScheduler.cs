@@ -3,31 +3,27 @@ using Unity.Jobs;
 
 public class FlowFieldScheduler
 {
-    public void ScheduleFlowFieldJobs(
-        NativeArray<FlowGridNode> gridNodes, 
-        int gridLength, 
-        int endX, int endZ, 
-        bool runFullFlow)
+    public void ScheduleFlowFieldJobs(int gridLength, int endX, int endZ, bool runFullFlow)
     {
         // Job 1: Update movement cost
         var updateCostJob = new UpdateNodesMovementCost
         {
-            GridArray = gridNodes,
+            GridArray = PrecomputedData.gridArray,
             endX = endX,
             endZ = endZ,
             runFullGrid = runFullFlow
         };
-        JobHandle handle1 = updateCostJob.Schedule(gridNodes.Length, 64);
+        JobHandle handle1 = updateCostJob.Schedule(PrecomputedData.gridArray.Length, 64);
 
         // Create queue with TempJob allocator
-        var nodeQueue = new NativeQueue<FlowGridNode>(Allocator.TempJob);
+        var nodeQueue = new NativeQueue<GridNode>(Allocator.TempJob);
         
         try 
         {
             // Job 2: Update integration, scheduling after job1 finishes
             var updateIntegrationJob = new UpdateNodesIntegration
             {
-                GridArray = gridNodes,
+                GridArray = PrecomputedData.gridArray,
                 NodeQueue = nodeQueue,
                 endX = endX,
                 endZ = endZ,
@@ -39,7 +35,7 @@ public class FlowFieldScheduler
 
             WeightBuildingNodes flowJob3 = new WeightBuildingNodes
             {
-                GridArray = gridNodes,
+                GridArray = PrecomputedData.gridArray,
                 endX = endX,
                 endZ = endZ,
                 gridWidth = gridLength
@@ -50,7 +46,7 @@ public class FlowFieldScheduler
 
             UpdateGoToIndex flowJob4 = new UpdateGoToIndex
             {
-                GridArray = gridNodes,
+                GridArray = PrecomputedData.gridArray,
                 endX = endX,
                 endZ = endZ,
                 runFullGrid = runFullFlow,

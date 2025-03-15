@@ -8,23 +8,16 @@ using UnityEngine.UI;
 
 public class CollisionManager : MonoBehaviour
 {
-    public event EventHandler<TurretXPEventArgs> TurretXPEvent;
-    public class TurretXPEventArgs : EventArgs { public int turretID; public int xpAmount; }
-
     [SerializeField] public EnemyManager enemyManager;
     [SerializeField] public BulletManager bulletManager;
     [SerializeField] public MapGridManager mapGridManager;
     [SerializeField] public GameManager gameManager;
     [SerializeField] public Generator gen;
-    [SerializeField] public TerrainGen terrainGen;
-    [SerializeField] public ParticlePool particlePool;
-    [SerializeField] public NewPathfinding pathfinding;
     [SerializeField] public TurretManager turretManager;
 
     [SerializeField] private Slider genHealth;
     [SerializeField] private int explosionRadius;
     [SerializeField] private GameObject explosionPrefab;
-    [SerializeField] private GameObject lightningPrefab;
     [SerializeField] private Material lightningPrefabMaterial;
     [SerializeField] private Material lightningPrefabMaterialTwo;
 
@@ -36,11 +29,6 @@ public class CollisionManager : MonoBehaviour
     private NativeArray<float3> terrainDataArray;
 
     private int enemyXPAmount = 0;
-
-    public float shieldDamageAmount;
-
-    public GameObject damageTextPrefab;
-
     uint mySeed = 1;
 
     private List<(GameObject obj, float timer)> lightningVFX = new List<(GameObject obj, float timer)>();
@@ -61,8 +49,6 @@ public class CollisionManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        enemyDataList.Dispose();
-        bulletDataList.Dispose();
         terrainDataArray.Dispose();
     }
 
@@ -87,8 +73,9 @@ public class CollisionManager : MonoBehaviour
         float deltaTime = Time.deltaTime;
 
         MovementScheduler movementScheduler = new MovementScheduler();
-        movementScheduler.ScheduleMoveJobs(enemyDataList, bulletDataList, shieldPositions, obstructPathList, pathfinding.flowNodes, terrainDataArray, deltaTime, mySeed);
-
+        movementScheduler.ScheduleMoveJobs(enemyDataList, bulletDataList, shieldPositions, obstructPathList, terrainDataArray, deltaTime, mySeed);
+        
+        bulletManager.UpdateBulletPositions(deltaTime);
         CheckBulletCollisions();
         RemovalAndUpdate();
         DamageBuildings();
@@ -297,7 +284,7 @@ public class CollisionManager : MonoBehaviour
         JobHandle.CompleteAll(ref checkActiveEnemyJobHandle, ref checkActiveBulletJobHandle);
 
         enemyManager.UpdateEnemyPositions(enemyToRemove, enemyDataList);
-        bulletManager.UpdateBulletData(bulletToRemove, bulletDataList);
+        bulletManager.UpdateBulletData(bulletToRemove);
 
         enemyToRemove.Dispose();
         bulletToRemove.Dispose();
@@ -334,7 +321,7 @@ public class CollisionManager : MonoBehaviour
         for (int i = 0; i < buildingCollisionDataArray.Length; i++)
         {
             BuildingCollisionData tempData = buildingCollisionDataArray[i];
-            PlacedObject tempObject = mapGridManager.mapGrid.GetGridObject(tempData.GridPosition).GetPlacedObject();
+            PlacedObject tempObject = PrecomputedData.GetPlacedObject(tempData.GridPosition);
             if (tempObject != null)
             {
                 tempObject.DealDamage(tempData.Damage);
@@ -352,7 +339,7 @@ public class CollisionManager : MonoBehaviour
                         break;
                     }
 
-                    mapGridManager.mapGrid.GetXZ(tempData.GridPosition, out int _x, out int _z);
+                    PrecomputedData.GetXZ(tempData.GridPosition, out int _x, out int _z);
                     mapGridManager.DestroyBuilding(_x, _z);
                 }
             }

@@ -11,7 +11,6 @@ public class MovementScheduler
         NativeList<BulletData> bulletDataList,
         NativeList<float3> shieldPositions,
         NativeList<float3> obstructPathList,
-        NativeArray<FlowGridNode> flowNodes,
         NativeArray<float3> terrainDataArray,
         float deltaTime,
         uint seed)
@@ -33,7 +32,7 @@ public class MovementScheduler
                 EnemyData = enemyDataList.AsArray(),
                 TerrainDataArray = terrainDataArray,
                 EnemyDataOffset = enemyDataOffset,
-                FlowGridArray = flowNodes,
+                FlowGridArray = PrecomputedData.gridArray,
                 Seed = seed
             };
             JobHandle targetPosHandle = updateEnemyTargetJob.Schedule(enemyDataList.Length, 64);
@@ -46,18 +45,9 @@ public class MovementScheduler
                 ObstructedPositions = obstructPathList.AsArray(),
                 DeltaTime = deltaTime
             };
-            var bulletMoveJob = new UpdateBulletPosition
-            {
-                BulletList = bulletDataList.AsArray(),
-                DeltaTime = deltaTime
-            };
 
-            JobHandle combinedHandle = JobHandle.CombineDependencies(
-                moveEnemyJob.Schedule(enemyDataList.Length, 64),
-                bulletMoveJob.Schedule(bulletDataList.Length, 64)
-            );
-
-            combinedHandle.Complete();
+            JobHandle jobHandle = moveEnemyJob.Schedule(enemyDataList.Length, 64);
+            jobHandle.Complete();
         }
         finally
         {

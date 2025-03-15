@@ -19,6 +19,6 @@ public class CapitalBuilding : MonoBehaviour
 
     public void OpenWorldView()
     {
-        SceneManager.LoadScene("WorldView");
+        SceneManager.LoadScene("3_WorldView");
     }
 }

@@ -1,32 +1,56 @@
 using System.IO;
 using UnityEngine;
+using System.Collections.Generic;
 
-public class SaveSystem : MonoBehaviour
+[System.Serializable]
+public class SaveData
 {
-    private string saveFilePath;
+    public int playerLevel;
+    public float generatorHealthIncrease;
+    public int shieldHealthIncrease;
 
-    public void SaveGame(SaveData saveData)
+    public int turretDamageIncrease;
+    public Vector3 playerPosition;
+    public List<string> inventoryItems = new List<string>();
+}
+
+public static class SaveSystem
+{   
+    private static string saveFilePath;
+    public static SaveData playerData;
+
+    public static void SaveGame()
     {
         saveFilePath = Application.persistentDataPath + "/savefile.json";
-        string json = JsonUtility.ToJson(saveData, true);
+        string json = JsonUtility.ToJson(playerData, true);
         File.WriteAllText(saveFilePath, json);
-        Debug.Log("Game saved to " + saveFilePath);
+        Debug.Log("Game file saved to " + saveFilePath);
     }
 
-    public SaveData LoadGame()
+    public static void LoadGame()
     {
         saveFilePath = Application.persistentDataPath + "/savefile.json";
         if (File.Exists(saveFilePath))
         {
             string json = File.ReadAllText(saveFilePath);
             SaveData saveData = JsonUtility.FromJson<SaveData>(json);
-            Debug.Log("Game loaded from " + saveFilePath);
-            return saveData;
+            Debug.Log("loading file from " + saveFilePath);
+            playerData = saveData;
         }
         else
         {
             Debug.LogWarning("Save file not found!");
-            return null;
         }
+    }
+
+    public static void InitData() {
+        SaveData saveData = new SaveData
+        {
+            playerLevel = 0,
+            generatorHealthIncrease = 0f,
+            playerPosition = new Vector3(1, 2, 3),
+            inventoryItems = new List<string> { "Sword", "Shield" }
+        };
+        SaveSystem.SaveGame();
     }
 }

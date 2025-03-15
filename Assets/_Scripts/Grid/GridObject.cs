@@ -2,35 +2,22 @@ using UnityEngine;
 
 public class GridObject
 {
-    public GridXZ<GridObject> grid;
     public int x;
     public int z;
     private PlacedObject placedObject;
-
-    public int gCost;
-    public int fCost;
-    public int dCost;
-    public int hCost;
-
-    public GridObject cameFromNode;
     public bool isWalkable;
     public bool isBaseArea;
     public bool isPathfindingArea;
     public bool isBuilding;
     public bool isTraversable;
 
-    public GridObject(GridXZ<GridObject> grid, int x, int z)
+    public GridObject(int x, int z)
     {
-        this.grid = grid;
         this.x = x;
         this.z = z;
         isWalkable = true;
         isBaseArea = false;
         isBuilding = false;
-    }
-
-    public void CalculateFCost() {
-        fCost = gCost + hCost + dCost;
     }
 
     public void SetPlacedObject(PlacedObject _placedObject)

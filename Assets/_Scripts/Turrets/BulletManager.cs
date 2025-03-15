@@ -3,7 +3,6 @@ using Unity.Burst;
 using UnityEngine;
 using System.Collections.Generic;
 using Unity.Jobs;
-using System;
 using Unity.Mathematics;
 
 public struct BulletData
@@ -21,6 +20,7 @@ public struct BulletData
     // Fixed-length lists (specify element count)
     // FixedList<T, N>        // Where N is the capacity
 }
+
 
 
 
@@ -99,7 +99,19 @@ public class BulletManager : MonoBehaviour
         }
     }
 
-    public void UpdateBulletData(NativeList<int> _toRemove, NativeList<BulletData> _bulletDataList)
+    public void UpdateBulletPositions(float _deltaTime)
+    {
+        var bulletMoveJob = new UpdateBulletPosition
+            {
+                BulletList = bulletDataList.AsArray(),
+                DeltaTime = _deltaTime
+            };
+
+        var jobHandle2 = bulletMoveJob.Schedule(bulletDataList.Length, 64);
+        jobHandle2.Complete();
+    }
+
+    public void UpdateBulletData(NativeList<int> _toRemove)
     {
         for (int i = 0; i < _toRemove.Length; i++)
         {
@@ -109,7 +121,7 @@ public class BulletManager : MonoBehaviour
 
         for (int i = 0; i < bulletObjects.Count; i++)
         {
-            bulletObjects[i].transform.position = _bulletDataList[i].Position;
+            bulletObjects[i].transform.position = bulletDataList[i].Position;
         }
     }
 

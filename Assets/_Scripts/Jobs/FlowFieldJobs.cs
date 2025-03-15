@@ -4,19 +4,20 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 
-public struct FlowGridNode
+public struct GridNode
 {
     public float3 position;
     public int index;
     public int x;
     public int z;
-    public int cost;             // Movement cost (terrain difficulty)
-    public int integrationCost;  // Cumulative cost to reach the target
+    public int cost; // Movement cost (terrain difficulty)
+    public int integrationCost; // Cumulative cost to reach the target
     public int goToIndex; // Index of the parent node for path reconstruction
-    public bool isWalkable;
-    public bool isPathfindingArea;
-    public bool isBuilding;
-    public bool isTraversable;
+    public bool isWalkable; // is for enemy pathfinding
+    public bool isPathfindingArea; // is for reducing the number of squares updated in pathfinding runs
+    public bool isBuilding; // is for checking whether a node is a building or a general obstacle
+    public bool isTraversable; // is for checking whether pahtfinding can reach this point
+    public bool isBaseArea; // is for checking if a node is within the buildable area for a player
 }
 
 
@@ -24,13 +25,13 @@ public struct FlowGridNode
 [BurstCompile]
 public struct UpdateNodesMovementCost : IJobParallelFor
 {
-    public NativeArray<FlowGridNode> GridArray;
+    public NativeArray<GridNode> GridArray;
     [ReadOnly] public int endX, endZ;
     [ReadOnly] public bool runFullGrid;
 
     public void Execute(int index)
     {
-        FlowGridNode tempNode = GridArray[index];
+        GridNode tempNode = GridArray[index];
         if (!runFullGrid && !tempNode.isPathfindingArea) { return; }
         tempNode.integrationCost = int.MaxValue; // node max distance can be no further than 500
         tempNode.cost = CalculateDistanceCost(tempNode.x, tempNode.z, endX, endZ);
@@ -51,8 +52,8 @@ public struct UpdateNodesMovementCost : IJobParallelFor
 [BurstCompile]
 public struct UpdateNodesIntegration : IJob
 {
-    public NativeArray<FlowGridNode> GridArray;
-    public NativeQueue<FlowGridNode> NodeQueue;
+    public NativeArray<GridNode> GridArray;
+    public NativeQueue<GridNode> NodeQueue;
     [ReadOnly] public int endX, endZ;
     [ReadOnly] public int gridWidth;
     [ReadOnly] public bool runFullGrid;
@@ -61,7 +62,7 @@ public struct UpdateNodesIntegration : IJob
     {
         // Start from the target
         int targetIndex = GetIndex(endX, endZ);
-        FlowGridNode targetCell = GridArray[targetIndex];
+        GridNode targetCell = GridArray[targetIndex];
         targetCell.integrationCost = 0;
         GridArray[targetIndex] = targetCell;
 
@@ -71,7 +72,7 @@ public struct UpdateNodesIntegration : IJob
 
         while (NodeQueue.Count > 0)
         {
-            FlowGridNode currentCell = NodeQueue.Dequeue();
+            GridNode currentCell = NodeQueue.Dequeue();
             if (currentCell.x < 30 || currentCell.x >= 180 || currentCell.z < 30 || currentCell.z >= 180) { continue; }
 
             for (int offsetX = -1; offsetX <= 1; offsetX++)
@@ -86,7 +87,7 @@ public struct UpdateNodesIntegration : IJob
                     // Bounds check
                     if (neighborX >= 0 && neighborX < gridWidth && neighborZ >= 0 && neighborZ < gridWidth)
                     {
-                        FlowGridNode neighbour = GridArray[GetIndex(neighborX, neighborZ)];
+                        GridNode neighbour = GridArray[GetIndex(neighborX, neighborZ)];
                         if (!neighbour.isWalkable) continue; // Skip impassable cells
                         if (!runFullGrid && !neighbour.isPathfindingArea) { continue; } // Skip impassable cells
 
@@ -116,7 +117,7 @@ public struct UpdateNodesIntegration : IJob
 [BurstCompile]
 public struct WeightBuildingNodes : IJob
 {
-    public NativeArray<FlowGridNode> GridArray;
+    public NativeArray<GridNode> GridArray;
     [ReadOnly] public int gridWidth;
     [ReadOnly] public int endX, endZ;
 
@@ -124,7 +125,7 @@ public struct WeightBuildingNodes : IJob
     {
         for (int index = 0; index < GridArray.Length; index++)
         {
-            FlowGridNode tempNode = GridArray[index];
+            GridNode tempNode = GridArray[index];
 
             if (tempNode.isBuilding)
             {
@@ -161,7 +162,7 @@ public struct WeightBuildingNodes : IJob
         if (newX >= 0 && newX < gridWidth && newZ >= 0 && newZ < gridWidth)
         {
             int neighborIndex = GetIndex(newX, newZ);
-            FlowGridNode neighborNode = GridArray[neighborIndex];
+            GridNode neighborNode = GridArray[neighborIndex];
 
             if (!neighborNode.isBuilding && neighborNode.isWalkable && neighborNode.isTraversable)
             {
@@ -182,7 +183,7 @@ public struct WeightBuildingNodes : IJob
 [BurstCompile]
 public struct UpdateGoToIndex : IJob
 {
-    public NativeArray<FlowGridNode> GridArray;
+    public NativeArray<GridNode> GridArray;
     [ReadOnly] public int gridWidth;
     [ReadOnly] public int endX, endZ;
     [ReadOnly] public bool runFullGrid;
@@ -191,7 +192,7 @@ public struct UpdateGoToIndex : IJob
     {
         for(int index = 0; index < GridArray.Length; index++)
         {
-            FlowGridNode tempNode = GridArray[index];
+            GridNode tempNode = GridArray[index];
 
             int currentLowestIntegration = int.MaxValue;
             int currentLowestIndex = -1;
@@ -208,7 +209,7 @@ public struct UpdateGoToIndex : IJob
                     // Bounds check
                     if (neighborX >= 0 && neighborX < gridWidth && neighborZ >= 0 && neighborZ < gridWidth)
                     {
-                        FlowGridNode neighbour = GridArray[GetIndex(neighborX, neighborZ)];
+                        GridNode neighbour = GridArray[GetIndex(neighborX, neighborZ)];
                         if (neighbour.integrationCost < currentLowestIntegration)
                         {
                             currentLowestIntegration = neighbour.integrationCost;

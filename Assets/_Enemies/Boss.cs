@@ -24,7 +24,6 @@ public class Boss : MonoBehaviour, IEnemy
     void Start()
     {
         Transform centre = GameObject.Find("centre").transform;
-        pathVectorList = SetTargetPosition(centre.position, new List<Vector3>());
     }
 
     // Update is called once per frame
@@ -32,31 +31,6 @@ public class Boss : MonoBehaviour, IEnemy
     {
         if (pathVectorList.Count > 0) { UpdateEnemyPosition(); }
         
-    }
-
-    private List<Vector3> SetTargetPosition(Vector3 targetPosition, List<Vector3> _existingPath)
-    {
-        List<Vector3> pathList = Pathfinding.Instance.FindPath(transform.position, targetPosition);
-
-        if (showDebugLines)
-        {
-            if (pathList != null)
-            {
-                for (int i = 0; i < pathList.Count - 1; i++)
-                {
-                    //Debug.Log(path[i].x + ":" + path[i].z + " -> " + path[i+1].x + ":" + path[i+1].z);
-                    Debug.DrawLine(new Vector3(pathList[i].x, 1, pathList[i].z) + Vector3.one * 0.5f, new Vector3(pathList[i + 1].x, 1, pathList[i + 1].z) + Vector3.one * 0.5f, UnityEngine.Color.black, 100f);
-                }
-            }
-        }
-
-        if (pathList != null && pathList.Count > 1)
-        {
-            //pathList.RemoveAt(0);
-        }
-
-        // start spawning now that we have the path
-        return pathList;
     }
 
 

@@ -24,27 +24,18 @@ public struct EnemyData
     public float3 AttackPos;
 }
 
+
+
 public class EnemyManager : MonoBehaviour
 {
-    public event EventHandler<EnemyDamageEventArgs> EnemyDamaged;
-    public class EnemyDamageEventArgs : EventArgs { public int enemyObjectID; public int damagedAmount; }
-
-    public event EventHandler<EnemyDestroyedEventArgs> EnemyDestroyed;
-    public class EnemyDestroyedEventArgs : EventArgs { public int enemyObjectID; }
-
-    [SerializeField] private bool showDebugLines;
-    [SerializeField] private MapGridManager mapGridManager;
     [SerializeField] private GameManager gameManager;
-    [SerializeField] private WallManager wallManager;
     [SerializeField] private SkillManager skillManager;
-    [SerializeField] private CollisionManager collisionManager;
     [SerializeField] private Generator gen;
     [SerializeField] private GameObject generator;
     [SerializeField] private NewPathfinding pathfinding;
 
 
     [Header("Gameplay Variables")]
-    [SerializeField] private string csvPathString;
     [SerializeField] GameSettingsSO gameSettingsSO;
     public int enemyCount;
 
@@ -76,15 +67,10 @@ public class EnemyManager : MonoBehaviour
     // pathfinding lists
     private List<Vector3> spawnOriginVectorList;
     public List<List<Vector3>> pathLists;
-    //private NativeArray<Vector3> pathArray;
-    //private NativeArray<int> pathIndexArray;
-
-    private int activeEnemyCount;
 
     // lists of whether to logic to apply to enemies
     public NativeList<EnemyData> enemyDataList;
     private List<GameObject> enemyList;
-    private List<GameObject> damageEnemyList;
 
     private List<GameObject> enemyTargetList;
     [SerializeField] GameObject targetPosGO;
@@ -93,24 +79,17 @@ public class EnemyManager : MonoBehaviour
     // For the enemy entity
     [Header("Enemy Variables")]
     [SerializeField] GameObject enemyParent;
-    [SerializeField] GameObject enemyVisual;
-    [SerializeField] GameObject bossVisual;
-
-    [SerializeField] private int speed;
-
     public Transform centre;
 
 
     void Awake()
     {
-
         skillManager.OnSkillUnlocked += SkillManager_OnSkillUnlocked;
 
         enemyList = new List<GameObject>();
         enemyTargetList = new List<GameObject>();
         enemyDataList = new NativeList<EnemyData>(Allocator.Persistent);
 
-        damageEnemyList = new List<GameObject>();
         spawnOriginVectorList = new List<Vector3>();
         pathLists = new List<List<Vector3>>();
 
@@ -144,16 +123,15 @@ public class EnemyManager : MonoBehaviour
         centre = generator.transform; // set the target position for all the enemy pathfinding
 
         SetSpawnPositions(numberOfSpawns); // set the spawn positions
-        pathfinding.StartFlowField(centre.position, true); // create the flow field
+        pathfinding.RunFlowField(centre.position, true); // create the flow field
 
         gen.CheckShieldSquares(false);
 
+        // leave for debug testing 
         //CheckPaths();
-
 
         // increase timer to allow spawn loop to begin, then begin spawning
         spawnInterval = spawnCountdown;
-        //keepSpawning = true; 
     }
 
 
@@ -210,7 +188,7 @@ public class EnemyManager : MonoBehaviour
         stopwatch.Start();
 
         // The code we want to time:
-        pathfinding.RecalcFlowField(centre.position, false); // create the flow field
+        pathfinding.RunFlowField(centre.position, false); // create the flow field
 
         // Stop measuring time
         stopwatch.Stop();
@@ -219,8 +197,6 @@ public class EnemyManager : MonoBehaviour
 
     private void SetSpawnPositions(int numSpawnPositions)
     {
-        long totalTime = 0;
-
         for (int i = 0; i < numSpawnPositions; i++)
         {
             Vector3 spawnPos = GetSpawnPosition(i, numSpawnPositions);
@@ -291,9 +267,9 @@ public class EnemyManager : MonoBehaviour
             Damage = tempDamage,
             Position = spawnPoint,// take the overall list and based on the 
             Speed = 8,
-            Velocity = Vector3.zero,
+            Velocity = float3.zero,
             ToRemove = false,
-            TargetPos = Vector3.zero,
+            TargetPos = float3.zero,
             TargetNeeded = true,
             IsActive = true
         };
@@ -342,73 +318,34 @@ public class EnemyManager : MonoBehaviour
 
 
 
-    /// <summary>
-    /// Old Debug Code to place an item where each enemy target position should be
-    /// </summary>
-    private void CheckPaths()
-    {
-        Debug.Log("Checking paths");
+    // /// <summary>
+    // /// Old Debug Code to place an item where each enemy target position should be
+    // /// </summary>
+    // private void CheckPaths()
+    // {
+    //     Debug.Log("Checking paths");
 
-        int currentIndexPostition = Mathf.FloorToInt(spawnOriginVectorList[0].z) + Mathf.FloorToInt(spawnOriginVectorList[0].x) * 200;
-        Debug.Log(spawnOriginVectorList[0] + " : " + pathfinding.flowNodes[currentIndexPostition].position);
+    //     int currentIndexPostition = Mathf.FloorToInt(spawnOriginVectorList[0].z) + Mathf.FloorToInt(spawnOriginVectorList[0].x) * 200;
+    //     Debug.Log(spawnOriginVectorList[0] + " : " + pathfinding.flowNodes[currentIndexPostition].position);
 
-        for (int i = 0; i < 150; i++)
-        {
-            Instantiate(targetPosGO, pathfinding.flowNodes[currentIndexPostition].position, Quaternion.identity, gameObject.transform);
-            if (pathfinding.flowNodes[currentIndexPostition].goToIndex < 0)
-            {
-                // Move one square towards center if we hit a negative index
-                Vector3 currentPos = pathfinding.flowNodes[currentIndexPostition].position;
-                Vector3 towardsCenter = (centre.position - currentPos).normalized;
-                currentIndexPostition = Mathf.FloorToInt(currentPos.z + Mathf.Sign(towardsCenter.z)) +
-                                      Mathf.FloorToInt(currentPos.x + Mathf.Sign(towardsCenter.x)) * 200;
-            }
-            else
-            {
-                currentIndexPostition = pathfinding.flowNodes[currentIndexPostition].goToIndex;
-            }
+    //     for (int i = 0; i < 150; i++)
+    //     {
+    //         Instantiate(targetPosGO, pathfinding.flowNodes[currentIndexPostition].position, Quaternion.identity, gameObject.transform);
+    //         if (pathfinding.flowNodes[currentIndexPostition].goToIndex < 0)
+    //         {
+    //             // Move one square towards center if we hit a negative index
+    //             Vector3 currentPos = pathfinding.flowNodes[currentIndexPostition].position;
+    //             Vector3 towardsCenter = (centre.position - currentPos).normalized;
+    //             currentIndexPostition = Mathf.FloorToInt(currentPos.z + Mathf.Sign(towardsCenter.z)) +
+    //                                   Mathf.FloorToInt(currentPos.x + Mathf.Sign(towardsCenter.x)) * 200;
+    //         }
+    //         else
+    //         {
+    //             currentIndexPostition = pathfinding.flowNodes[currentIndexPostition].goToIndex;
+    //         }
 
-        }
-    }
-
-
-
-    // OLD CODE
-    public void DestroyEnemy(GameObject _enemy)
-    {
-        if (_enemy.GetComponent<GhostEnemy>() == null)
-        {
-            //InstantiateSpecificEnemyObject(_enemy.transform.position, )
-        }
-
-        EnemyDestroyed?.Invoke(this, new EnemyDestroyedEventArgs { enemyObjectID = _enemy.GetInstanceID() });
-
-        if (enemyList.Contains(_enemy)) { enemyList.Remove(_enemy); }
-        if (damageEnemyList.Contains(_enemy)) { damageEnemyList.Remove(_enemy); }
-        _enemy.tag = "Untagged";
-        _enemy.layer = 0;
-        _enemy.GetComponentInChildren<Animator>().Play("Die");
-
-        //_enemy.transform.position = Vector3.zero;
-        //_enemy.GetComponent<Enemy>().ResetEnemy();
-        //repurposeEnemyList.Add(_enemy);
-        StartCoroutine(DestroyGO(_enemy));
-        enemyCount--;
-    }
-
-    IEnumerator DestroyGO(GameObject _enemy)
-    {
-        yield return new WaitForSeconds(1f);
-        Destroy(_enemy);
-    }
-
-    public void CallWinGame()
-    {
-        gameManager.EndGame("You Win");
-    }
-
-
-
+    //     }
+    // }
 }
 
 

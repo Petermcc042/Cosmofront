@@ -1334,19 +1334,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   skillManagerGO: {fileID: 871068257}
   enemyManager: {fileID: 269101019}
-  gameManager: {fileID: 1677085573}
-  wallManager: {fileID: 249898429}
-  collisionManager: {fileID: 1829282140}
   buildableAreaMesh: {fileID: 1512581168}
   terrainGen: {fileID: 1198590197}
   generator: {fileID: 982423167}
-  groundGameObjects: {fileID: 1812297012}
-  groundObject: {fileID: 1896650759}
-  gridObjectTile: {fileID: 1896650759}
   circlePointsPath: Assets/_csv/full_circle.csv
   pathfindingCirclePointsPath: Assets/_csv/CircleData - pathfinding_circle.csv
-  circleDataCSV: {fileID: 4900000, guid: 8fa63828073456b41897a0642afa7195, type: 3}
-  debugLinesBool: 1
   gridLocations: []
 --- !u!1 &143318274
 GameObject:
@@ -1886,52 +1878,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &249898427
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 249898428}
-  - component: {fileID: 249898429}
-  m_Layer: 0
-  m_Name: WallManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &249898428
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 249898427}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &249898429
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 249898427}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2946ae69bd1cd9742ac257352181dee3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  wallList: []
-  wallGOList: []
 --- !u!1 &265775792
 GameObject:
   m_ObjectHideFlags: 0
@@ -6810,16 +6756,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1a723e313d7d3e4fb85ce2dc7bdeae6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  showDebugLines: 1
-  mapGridManager: {fileID: 134987664}
   gameManager: {fileID: 1677085573}
-  wallManager: {fileID: 249898429}
   skillManager: {fileID: 871068259}
-  collisionManager: {fileID: 1829282140}
   gen: {fileID: 982423168}
   generator: {fileID: 982423167}
   pathfinding: {fileID: 734098101}
-  csvPathString: Assets/_csv/level_3_data.csv
   gameSettingsSO: {fileID: 0}
   enemyCount: 0
   weightsOne: 0000000001000000000000000000000000000000
@@ -6831,11 +6772,6 @@ MonoBehaviour:
   targetPosGO: {fileID: 1631921842}
   enemyParent: {fileID: 4453126478350083815, guid: ddb88989631597747b8e5000292b41a2,
     type: 3}
-  enemyVisual: {fileID: 1162074717683033587, guid: b0e73db9a46b69c45a544483438a6c07,
-    type: 3}
-  bossVisual: {fileID: 2156180079196364993, guid: 024223902d20f194780cc8f69b46237d,
-    type: 3}
-  speed: 10
   centre: {fileID: 427440953}
 --- !u!114 &269101020
 MonoBehaviour:
@@ -16305,7 +16241,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f196f522434460e42b6ad60a5946c599, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridManager: {fileID: 134987664}
 --- !u!4 &734098102
 Transform:
   m_ObjectHideFlags: 0
@@ -19649,52 +19584,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1078166591}
   m_CullTransparentMesh: 1
---- !u!1 &1098251174
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1098251176}
-  - component: {fileID: 1098251175}
-  m_Layer: 0
-  m_Name: Pathfinding
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1098251175
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1098251174}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bf88ae02ea2c8f24c8a3d17c452ca0b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gridManager: {fileID: 134987664}
-  debugLinesBool: 1
---- !u!4 &1098251176
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1098251174}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1107700649
 GameObject:
   m_ObjectHideFlags: 0
@@ -30843,9 +30732,7 @@ MonoBehaviour:
     m_Bits: 256
   timerTMP: {fileID: 1638260149}
   phaseTMP: {fileID: 502871361}
-  phaseIntervals: 9600000083000000700000003600000023000000
   musicClip: {fileID: 8300000, guid: 39937d62ae60ef64f864979e223d9a4b, type: 3}
-  boss1: {fileID: 9122721044624068171, guid: ee91b0c9d872980498887c7dc2c6efd7, type: 3}
   endMenuUI: {fileID: 609816692}
   endTextUI: {fileID: 1709454650}
   skillMenuUI: {fileID: 1957649105}
@@ -32010,19 +31897,13 @@ MonoBehaviour:
   mapGridManager: {fileID: 134987664}
   gameManager: {fileID: 1677085573}
   gen: {fileID: 982423168}
-  terrainGen: {fileID: 1198590197}
-  particlePool: {fileID: 377535641}
-  pathfinding: {fileID: 734098101}
   turretManager: {fileID: 1547833866}
   genHealth: {fileID: 896661396}
   explosionRadius: 4
   explosionPrefab: {fileID: 1631921842}
-  lightningPrefab: {fileID: 352128907}
   lightningPrefabMaterial: {fileID: 2100000, guid: 83154145f0bcc4d4e8dd461594548b8a,
     type: 2}
   lightningPrefabMaterialTwo: {fileID: 0}
-  shieldDamageAmount: 0
-  damageTextPrefab: {fileID: 464875000}
 --- !u!1 &1834726413
 GameObject:
   m_ObjectHideFlags: 0
@@ -33044,7 +32925,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1913466157
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34608,9 +34489,7 @@ SceneRoots:
   - {fileID: 269101018}
   - {fileID: 377535640}
   - {fileID: 871068258}
-  - {fileID: 1098251176}
   - {fileID: 734098102}
-  - {fileID: 249898428}
   - {fileID: 1198590196}
   - {fileID: 1547833867}
   - {fileID: 465865787}

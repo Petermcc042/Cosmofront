@@ -27,7 +27,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private ResourceManager resourceManager;
     [SerializeField] private CollisionManager collisionManager;
     [SerializeField] private NewPathfinding pathfinder;
-    [SerializeField] private SaveSystem saveSystem;
     [SerializeField] private TurretManager turretManager;
     [SerializeField] private Generator generator;
 
@@ -50,8 +49,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timerTMP;
     [SerializeField] private TextMeshProUGUI phaseTMP;
     private float totalTime;
-    [SerializeField] private List<int> phaseIntervals;
-
 
 
     [SerializeField] private AudioClip musicClip;
@@ -60,9 +57,6 @@ public class GameManager : MonoBehaviour
 
     // Total time for the countdown
     private float remainingTime; // Time left
-
-    [Header("Enemy Manager")]
-    [SerializeField] private GameObject boss1;
    
 
     [Header("End Menu UI")]
@@ -90,8 +84,6 @@ public class GameManager : MonoBehaviour
     private bool gameRunning = true;
 
     // help for menu ui
-    private GameObject lastSelectedBuilding;
-    private int lastSelectedPath;
     private Vector3 lastSelectedCost;
 
     private SaveData playerData;
@@ -99,15 +91,17 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
+        // load all required data for the level
+        if (PrecomputedData.creationNeeded) { PrecomputedData.InitGrid(200); }
+
         gameRunning = false;
-        Time.timeScale = 1;
         totalTime = gameSettings.totalTime;
 
         CountAllCSLinesInScriptsFolder();
 
-        playerData = saveSystem.LoadGame();
+        SaveSystem.LoadGame();
 
-        if (playerData != null)
+        if (SaveSystem.playerData != null)
         {
             Debug.Log("Loaded Data");
         }
@@ -120,9 +114,9 @@ public class GameManager : MonoBehaviour
                 playerPosition = new Vector3(1, 2, 3),
                 inventoryItems = new List<string> { "Sword", "Shield" }
             };
-            saveSystem.SaveGame(saveData);
+            SaveSystem.SaveGame(saveData);
 
-            playerData = saveSystem.LoadGame();
+            SaveSystem.LoadGame();
         }
     }
 
@@ -191,7 +185,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        MapGridManager.Instance.mapGrid.GetXZ(GetMouseWorldPosition(), out int x, out int z);
+        PrecomputedData.GetXZ(GetMouseWorldPosition(), out int x, out int z);
         Vector3 gridPos = new Vector3(x, 0, z);
 
         if (MapGridManager.Instance.InBuildableArea(gridPos))
@@ -236,7 +230,7 @@ public class GameManager : MonoBehaviour
 
         if (Input.GetMouseButtonDown(1))
         {
-            MapGridManager.Instance.mapGrid.GetXZ(GetMouseWorldPosition(), out int _x, out int _z);
+            PrecomputedData.GetXZ(GetMouseWorldPosition(), out int _x, out int _z);
             MapGridManager.Instance.DestroyBuilding(_x,_z);
 
         }
@@ -251,7 +245,7 @@ public class GameManager : MonoBehaviour
         mapGridManager.RotateBuilding();
         tempObjectShowing.SetActive(true);
 
-        mapGridManager.mapGrid.GetXZ(GetMouseWorldPosition(), out int x, out int z);
+        PrecomputedData.GetXZ(GetMouseWorldPosition(), out int x, out int z);
         PlacedObjectSO.Dir direction = mapGridManager.GetPlacedBuildingDirection();
 
         tempObjectShowing.transform.rotation = Quaternion.Euler(
