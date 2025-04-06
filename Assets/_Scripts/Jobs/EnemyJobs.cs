@@ -32,11 +32,11 @@ public struct UpdateEnemyTargetPos : IJobParallelFor
 
         float3 separationForce = CalculateEnemySeparation(enemy);
 
-        float3 terrainSeparationForce = CalculateTerrainSeparation(enemy.Position);
+        float3 terrainSeparationForce = float3.zero;//CalculateTerrainSeparation(enemy.Position);
 
         float3 wanderForce = CalculateWanderForce(seed, index);
 
-        float3 desiredDirection = flowDir + (separationForce * 0.4f) + (wanderForce * 0.3f) + (terrainSeparationForce);
+        float3 desiredDirection = flowDir + (separationForce * 0.4f) + (wanderForce * 0.3f);// + (terrainSeparationForce);
 
         enemy.TargetPos = desiredDirection;
         EnemyData[index] = enemy;
@@ -100,19 +100,13 @@ public struct UpdateEnemyTargetPos : IJobParallelFor
     private float3 CalculateWanderForce(uint seed, int index)
     {
         Unity.Mathematics.Random random = new Unity.Mathematics.Random(seed + (uint)index);
-        return new float3(
-            random.NextFloat(-0.1f, 0.1f),
-            0,
-            random.NextFloat(-0.1f, 0.1f)
-        );
+        return new float3(random.NextFloat(-0.1f, 0.1f), 0, random.NextFloat(-0.1f, 0.1f));
     }
 
     // Converts a world position to a grid index.
     private int GetGridIndex(float3 pos)
     {
-        int x = (int)math.floor(pos.x);
-        int z = (int)math.floor(pos.z);
-        return z + x * 200;
+        return (int)math.floor(pos.z) + (int)math.floor(pos.x) * 200;
     }
 
     // Returns a simple step towards the center of the map.

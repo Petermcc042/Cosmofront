@@ -1,10 +1,6 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Unity.Collections;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 public struct TurretUpgrade
 {
@@ -149,6 +145,15 @@ public class TurretManager : MonoBehaviour
             {
                 turretUpgradeIDs.Add(_turretXP[i].TurretID);
             }
+        }
+    }
+
+    public void UpgradeAllTurrets()
+    { 
+        foreach (var turret in allTurrets)
+        {
+            MeteorShowerUpgrade temp = new MeteorShowerUpgrade();
+            temp.Apply(turret);
         }
     }
 }

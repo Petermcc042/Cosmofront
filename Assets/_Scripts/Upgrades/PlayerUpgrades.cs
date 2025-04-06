@@ -1,53 +1,22 @@
 using System;
 using System.Collections.Generic;
-using TMPro;
-using UnityEditor.Overlays;
 using UnityEngine;
+public enum PlayerUpgradesEnum
+{
+    PlayerLevel, GeneratorHealth, ShieldHealth, AttackSpeed, TurretDamage
+}
+
 
 public class PlayerUpgrades : MonoBehaviour
 {
-    private void Start()
-    {
-        // Example: Loading data
-        SaveSystem.LoadGame();
+    private int GenHealthChange = 10;
+    private int turretDamageChange = 5;
 
-        if (SaveSystem.playerData != null)
-        {
-            Debug.Log("Loaded Data");
-        }
-        else
-        {
-            SaveData saveData = new SaveData
-            {
-                playerLevel = 0,
-                generatorHealthIncrease = 0f,
-                playerPosition = new Vector3(1, 2, 3),
-                inventoryItems = new List<string> { "Sword", "Shield" }
-            };
-            SaveSystem.SaveGame(saveData);
 
-            SaveSystem.LoadGame();
-
-            if (SaveSystem.playerData == null)
-            {
-                Debug.Log("FAILED LOAD");
-            }
-        }
-    }
-
-    public enum PlayerUpgradesEnum
-    {
-        PlayerLevel, GeneratorHealth, ShieldHealth, AttackSpeed, TurretDamage
-    }
-
-    public void SaveChanges()
+    public void SavePlayerData()
     {
         SaveSystem.SaveGame();
     }
-
-
-    private int GenHealthChange = 10;
-    private int turretDamageChange = 5;
 
     public void UpgradePlayerAddition(string upgrade)
     {
@@ -60,7 +29,6 @@ public class PlayerUpgrades : MonoBehaviour
             {
                 case PlayerUpgradesEnum.GeneratorHealth:
                     SaveSystem.playerData.generatorHealthIncrease += GenHealthChange * direction;
-                    Debug.Log(SaveSystem.playerData.generatorHealthIncrease);
                     break;
                 case PlayerUpgradesEnum.TurretDamage:
                     SaveSystem.playerData.turretDamageIncrease += turretDamageChange * direction;

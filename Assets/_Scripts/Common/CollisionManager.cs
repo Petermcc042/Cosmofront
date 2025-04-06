@@ -8,12 +8,13 @@ using UnityEngine.UI;
 
 public class CollisionManager : MonoBehaviour
 {
-    [SerializeField] public EnemyManager enemyManager;
-    [SerializeField] public BulletManager bulletManager;
-    [SerializeField] public MapGridManager mapGridManager;
-    [SerializeField] public GameManager gameManager;
-    [SerializeField] public Generator gen;
-    [SerializeField] public TurretManager turretManager;
+    [SerializeField] private EnemyManager enemyManager;
+    [SerializeField] private BulletManager bulletManager;
+    [SerializeField] private MapGridManager mapGridManager;
+    [SerializeField] private GameManager gameManager;
+    [SerializeField] private Generator gen;
+    [SerializeField] private TurretManager turretManager;
+    [SerializeField] private TerrainGen terrainGen;
 
     [SerializeField] private Slider genHealth;
     [SerializeField] private int explosionRadius;
@@ -28,16 +29,10 @@ public class CollisionManager : MonoBehaviour
     private NativeList<BulletData> bulletDataList;
     private NativeArray<float3> terrainDataArray;
 
-    private int enemyXPAmount = 0;
     uint mySeed = 1;
 
     private List<(GameObject obj, float timer)> lightningVFX = new List<(GameObject obj, float timer)>();
     private const float LIGHTNING_DURATION = 0.1f;
-
-    void Awake()
-    {
-        terrainDataArray = new NativeArray<float3>(0, Allocator.Persistent);
-    }
 
     private void Start()
     {
@@ -52,20 +47,9 @@ public class CollisionManager : MonoBehaviour
         terrainDataArray.Dispose();
     }
 
-    public void InitCollisionManager(GameSettingsSO _gameSettings)
+    public void CreateTerrainArray()
     {
-        enemyXPAmount = _gameSettings.enemyXPList[0];
-    }
-
-    public void CreateTerrainArray(List<Vector3> _blockedCoords)
-    {
-        Debug.Log("reduce terrain data coords for collision from " + _blockedCoords.Count);
-        terrainDataArray = new(_blockedCoords.Count, Allocator.Persistent);
-
-        for (int i = 0; i < terrainDataArray.Length; i++)
-        {
-            terrainDataArray[i] = _blockedCoords[i];
-        }
+        terrainDataArray = terrainGen.blockedCoordsArray;
     }
 
     public void CallUpdate()

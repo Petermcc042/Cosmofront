@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Generic;
-using Unity.Burst;
 using Unity.Collections;
-using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,6 +20,7 @@ public class Generator : MonoBehaviour
     [SerializeField] private Slider shieldHealthUI;
 
     private float health = 10;
+    private float startingHealth = 10;
     private int shieldRadius = 5; // The radius of the shield in world units
     public float gridSize = 1; // The size of each grid square in world units
 
@@ -52,6 +50,12 @@ public class Generator : MonoBehaviour
         shieldGridSquareList.Dispose();
     }
 
+    public void UpdateShieldHealth(int _increase)
+    {
+        health += _increase;
+        startingHealth = health;
+    }
+
 
     public void CheckShieldSquares(bool _toRemove)
     {
@@ -72,7 +76,7 @@ public class Generator : MonoBehaviour
 
     public void DamageLoop(float _damage, float _deltaTime)
     {
-        shieldHealthUI.value = health / 10;
+        shieldHealthUI.value = health / startingHealth;
 
         // If the shield takes damage, reset the recharge timer
         if (_damage > 0)

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -8,6 +10,13 @@ public class BuidingManager : MonoBehaviour
     [SerializeField] LayerMask buildingLayerMask;
     [SerializeField] List<CapitalBuilding> capitalBuildings;
     [SerializeField] List<GameObject> menuList;
+    [SerializeField] TextMeshProUGUI upgradeDescription;
+    [SerializeField] GameObject descriptionObject;
+    [SerializeField] LayerMask upgradeLayer;
+
+    private int GenHealthChange = 10;
+    private int turretDamageChange = 5;
+    private int shieldHealthIncrease = 5;
 
     // Update is called once per frame
     void Update()
@@ -16,10 +25,29 @@ public class BuidingManager : MonoBehaviour
         {
             CheckBuildingClick();
         }
+
+        if (Input.GetKeyDown(KeyCode.Escape)) { CloseMenu(); }
+
+        if (descriptionObject.activeSelf)
+        {
+            CheckDescription();
+        }
+    }
+
+    private void CheckDescription()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+        if (Physics.Raycast(ray, out RaycastHit raycastHit, 999f, upgradeLayer))
+        {
+            Debug.Log("hit");
+        }
     }
 
     private void CheckBuildingClick()
     {
+        if (IsOverUI()) { return; }
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
         if (Physics.Raycast(ray, out RaycastHit raycastHit, 999f, buildingLayerMask))
@@ -32,8 +60,6 @@ public class BuidingManager : MonoBehaviour
         }
         else
         {
-            if (IsOverUI()) { return; }
-
             for (int i = 0; i < capitalBuildings.Count; i++)
             {
                 capitalBuildings[i].CloseMenu();
@@ -50,6 +76,9 @@ public class BuidingManager : MonoBehaviour
     }
 
 
+    #region Unity UI
+    
+
     public void CloseMenu()
     {
         for (int i = 0; i < menuList.Count; i++) {
@@ -57,10 +86,56 @@ public class BuidingManager : MonoBehaviour
         }
     }
 
-    public void UpgradePlayerAddition()
+    public void UpgradePlayerAddition(string upgrade)
     {
-        for (int i = 0; i < menuList.Count; i++) {
-            menuList[i].SetActive(false);
+        int direction = 1;
+
+        if (Enum.TryParse(upgrade, true, out PlayerUpgradesEnum upgradeType))
+        {
+            Debug.Log(upgradeType);
+            switch (upgradeType)
+            {
+                case PlayerUpgradesEnum.ShieldHealth:
+                    SaveSystem.playerData.shieldHealthIncrease += shieldHealthIncrease * direction;
+                    break;
+                case PlayerUpgradesEnum.TurretDamage:
+                    SaveSystem.playerData.turretDamageIncrease += turretDamageChange * direction;
+                    break;
+            }
+        }
+        else
+        {
+            Debug.LogError($"Invalid round type: {upgradeType}");
         }
     }
+
+    public void UpgradePlayerSubtraction(string upgrade)
+    {
+        int direction = -1;
+
+        if (Enum.TryParse(upgrade, true, out PlayerUpgradesEnum upgradeType))
+        {
+            Debug.Log(upgradeType);
+            switch (upgradeType)
+            {
+                case PlayerUpgradesEnum.ShieldHealth:
+                    SaveSystem.playerData.shieldHealthIncrease += shieldHealthIncrease * direction;
+                    break;
+                case PlayerUpgradesEnum.TurretDamage:
+                    SaveSystem.playerData.turretDamageIncrease += turretDamageChange * direction;
+                    break;
+            }
+        }
+        else
+        {
+            Debug.LogError($"Invalid round type: {upgradeType}");
+        }
+    }
+
+    public void SavePlayerData()
+    {
+        SaveSystem.SaveGame();
+    }
+
+    #endregion
 }

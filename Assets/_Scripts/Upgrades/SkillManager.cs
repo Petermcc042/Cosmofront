@@ -1,21 +1,16 @@
-using NUnit.Framework.Constraints;
-using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-public class SkillManager: MonoBehaviour 
-{
-    public event EventHandler<OnSkillUnlockedEventArgs> OnSkillUnlocked;
-
-    public class OnSkillUnlockedEventArgs : EventArgs { public SkillType skillType; public int buildingID; public int upgradePath; public bool global = false; }
-
+public class SkillManager: MonoBehaviour
+{ 
     public int updatedBuildingID;
     public string updatedSkillName;
     public int updatedBuildingPath;
 
     [SerializeField] private CollisionManager collisionManager;
     [SerializeField] private GameManager gameManager;
+    [SerializeField] private TurretManager turretManager;
 
     [SerializeField] private GameObject rightPanelUI;
     [SerializeField] private TextMeshProUGUI turretNameUI;
@@ -31,13 +26,6 @@ public class SkillManager: MonoBehaviour
     private static List<IUpgradeOption> optionUpgrades = new List<IUpgradeOption>();
     private Turret currentTurret;
     private int currentPosition;
-
-    public List<SkillType> unlockedSkillTypeList;
-
-    private SkillManager()
-    {
-        unlockedSkillTypeList = new List<SkillType>();
-    }
 
     private void Awake()
     {
@@ -218,86 +206,6 @@ public class SkillManager: MonoBehaviour
     {
         optionUpgrades[_num].Apply(currentTurret);
         gameManager.InvertGameState();
-    }
-
-    public void UnlockSkill(SkillType _skillType, bool _isGlobal)
-    {
-        if (!IsSkillUnlocked(_skillType))
-        {
-            unlockedSkillTypeList.Add(_skillType);
-            OnSkillUnlocked?.Invoke(this, 
-                new OnSkillUnlockedEventArgs { 
-                    skillType = _skillType,
-                    buildingID = updatedBuildingID,
-                    global = _isGlobal
-                });
-        }
-    }
-
-
-    public void UnlockSkill_UI()
-    {
-        Enum.TryParse(updatedSkillName, out SkillType skillType);
-        OnSkillUnlocked?.Invoke(this, new OnSkillUnlockedEventArgs { skillType = skillType, buildingID = updatedBuildingID, upgradePath = updatedBuildingPath, global = true });
-    }
-
-    public bool IsSkillUnlocked(SkillType skillType)
-    {
-        return unlockedSkillTypeList.Contains(skillType);
-    }
-
-    // is used by Unity UI with multiple different dev controls
-    public void UnlockSkillType(string roundType)
-    {
-        Debug.Log("unlocking round: " + roundType);
-
-        if (Enum.TryParse(roundType, true, out SkillType skillType))
-        {
-            // If parsing is successful, unlock the skill
-            UnlockSkill(skillType, true);
-        }
-        else
-        {
-            Debug.LogError($"Invalid round type: {roundType}");
-        }
-    }
-
-    public enum SkillType
-    {
-        None, MegaUpgrade,
-        ExplosiveRound, LightningRound, SlowRound, SpreadRound, RicochetRound, OverchargeRound, PiercingRound, // medium turret upgrades
-        OrbitalStrike, MeteorShower, Overclocked, Firestorm, TimewarpPayload, Timewarp,// large turret upgrades
-        // not actually used
-        BiggerDrill, // attanium building / imear / marcum
-        MorePower,
-        ExtractionEfficiency,
-        ImprovedScanner, // attanium building  /  imear / marcum
-        ExtraTooling,
-        DoubleDrill, // attanium building
-        TripleDrill, // marcum building
-        DiamondDrillBit, // Imear building
-        WallStrength,// BuildersBrigade
-        RoughenedConcrete,
-        AbundantResources,
-        SpikedWalls,
-        PathworkPoly,
-        MoonDust,
-        SelfRegeneration,
-        TirelessWorkers,
-        AdvanceIntel, // scanner
-        LongRangeScan,
-        OmegaThreat,
-        TurretFireRate, // generic turrets
-        TurretLockOn,
-        TurretDamage,
-        ResourceAttBoost,
-        ResourceEmerBoost,
-        ResourceWallRepairs,
-        ResourcesDouble,
-        WallHealth,
-        WallSuperHealth,
-        WallDamage,
-        WallHealing
     }
 }
 

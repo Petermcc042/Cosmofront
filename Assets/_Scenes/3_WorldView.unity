@@ -850,8 +850,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelLoad: 4_Ice_Level
   regionName: Icey
-  gridLength: 0
-  cellSize: 0
+  gridLength: 200
+  cellSize: 1
 --- !u!1 &1714733323
 GameObject:
   m_ObjectHideFlags: 0

@@ -77,7 +77,7 @@ public class Turret : MonoBehaviour
     public float meteorSearchRadius = 20f;
     public float meteorDamageRadius = 5f;
     public float meteorFireDelay = 0f;
-    private float meteorCountdown = 5f;
+    private float meteorCountdown = 2f;
     [SerializeField] private GameObject meteorRadiusGO;
     public bool allowMeteorShower = false;
 
@@ -127,7 +127,6 @@ public class Turret : MonoBehaviour
         collisionManager = GameObject.Find("CollisionManager").GetComponent<CollisionManager>();
         turretManager = GameObject.Find("TurretManager").GetComponent<TurretManager>();
 
-        skillManager.OnSkillUnlocked += SkillManager_OnSkillUnlocked;
 
         turretID = gameObject.GetInstanceID();
         turretManager.AddTurret(this);
@@ -139,7 +138,7 @@ public class Turret : MonoBehaviour
     private void OnDestroy()
     {
         turretManager.RemoveTurret(this);
-        skillManager.OnSkillUnlocked -= SkillManager_OnSkillUnlocked;
+
     }
 
     public void CallUpdate()
@@ -294,16 +293,26 @@ public class Turret : MonoBehaviour
     {
         if (meteorCountdown <= 0f)
         {
+            Debug.Log("Calling shower");
             Transform meteorTarget = UpdateTarget(meteorSearchRadius);
             if (meteorTarget != null)
             {
+                float meteorHeight = 100f; // Height above the target to spawn meteors
+
                 for (int i = 0; i < 3; i++)
                 {
-                    Vector3 spawnPos = meteorTarget.position + new Vector3(UnityEngine.Random.Range(-5f, 5f), 0, UnityEngine.Random.Range(-5f, 5f));
-                    BulletManager.Instance.SpawnBullet(spawnPos, Vector3.down, 80, turretID, 40, 0, BulletType.MeteorShower);
+                    // Calculate random offset for target position
+                    Vector3 targetPos = meteorTarget.position + new Vector3(UnityEngine.Random.Range(-5f, 5f), 0, UnityEngine.Random.Range(-5f, 5f));
+
+                    // Calculate spawn position above the target
+                    Vector3 spawnPos = new Vector3(targetPos.x, targetPos.y + meteorHeight, targetPos.z);
+
+                    // Spawn the meteor at the elevated position, targeting down toward the target position
+                    Vector3 direction = (targetPos - spawnPos).normalized;
+
+                    BulletManager.Instance.SpawnBullet(spawnPos, direction, 70, turretID, 40, 0, BulletType.MeteorShower);
                 }
             }
-
             meteorCountdown = meteorFireDelay;
         }
         meteorCountdown -= Time.deltaTime;
@@ -371,13 +380,5 @@ public class Turret : MonoBehaviour
         tempEnemyDistanceArray.Dispose();
 
         return nearestEnemy != null && shortestDistance <= range ? nearestEnemy.transform : null;
-    }
-
-    private void SkillManager_OnSkillUnlocked(object sender, SkillManager.OnSkillUnlockedEventArgs e)
-    {
-        if (!e.global)
-        {
-            if (e.buildingID != turretID) { return; }
-        }
     }
 }

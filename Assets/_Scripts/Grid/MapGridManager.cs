@@ -280,7 +280,7 @@ public class MapGridManager : MonoBehaviour
         }
 
         BuildingTraversal(_x, _z);
-        enemyManager.RecalcPaths();
+        PrecomputedData.RunFlowFieldJobs(99, 99, false);
 
         if (_placedObjectSO.nameString == "Habitat Light")
         {
@@ -408,7 +408,7 @@ public class MapGridManager : MonoBehaviour
             }
         }
 
-        enemyManager.RecalcPaths();
+        PrecomputedData.RunFlowFieldJobs(99,99,false);
     }
 
     public PlacedObjectSO.Dir GetPlacedBuildingDirection()

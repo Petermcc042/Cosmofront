@@ -14,6 +14,7 @@ public class WorldManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI regionNameUI;
     private string levelToLoad;
     private string regionName;
+    private int mapSize;
 
     // Update is called once per frame
     void Update()
@@ -24,11 +25,16 @@ public class WorldManager : MonoBehaviour
         }
     }
 
+    // ui method triggered
     public void LoadLevel()
     {
-        PrecomputedData.Clear();
-        PrecomputedData.InitGrid(200);
-
+        Debug.Log(mapSize);
+        if (mapSize != 0 )
+        {
+            PrecomputedData.Clear();
+            PrecomputedData.Init(mapSize);
+            PrecomputedData.InitGrid();
+        }
 
         SceneManager.LoadScene(levelToLoad);
     }
@@ -44,6 +50,7 @@ public class WorldManager : MonoBehaviour
             {
                 levelToLoad = region.levelLoad;
                 regionName = region.regionName;
+                mapSize = region.gridLength;
                 OpenMenu();
             }
         }

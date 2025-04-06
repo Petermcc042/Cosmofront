@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -69,10 +70,12 @@ public struct UpdateNodesIntegration : IJob
 
         // Breadth-first search (BFS) to calculate integration cost
         NodeQueue.Enqueue(targetCell);
+        int count = 0;
 
         while (NodeQueue.Count > 0)
         {
             GridNode currentCell = NodeQueue.Dequeue();
+            count++;
             if (currentCell.x < 30 || currentCell.x >= 180 || currentCell.z < 30 || currentCell.z >= 180) { continue; }
 
             for (int offsetX = -1; offsetX <= 1; offsetX++)
@@ -87,11 +90,12 @@ public struct UpdateNodesIntegration : IJob
                     // Bounds check
                     if (neighborX >= 0 && neighborX < gridWidth && neighborZ >= 0 && neighborZ < gridWidth)
                     {
+                        //UnityEngine.Debug.Log("running ahhhhh");
                         GridNode neighbour = GridArray[GetIndex(neighborX, neighborZ)];
                         if (!neighbour.isWalkable) continue; // Skip impassable cells
                         if (!runFullGrid && !neighbour.isPathfindingArea) { continue; } // Skip impassable cells
 
-                        // if zero + the direct movement cost < max int value se the integration cost to this new value
+                        // if zero + the direct movement cost < max int value set the integration cost to this new value
                         int newCost = currentCell.integrationCost + neighbour.cost;
                         if (newCost < neighbour.integrationCost)
                         {

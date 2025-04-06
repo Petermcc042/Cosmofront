@@ -15,21 +15,28 @@ public class SaveData
 }
 
 public static class SaveSystem
-{   
-    private static string saveFilePath;
+{
     public static SaveData playerData;
+
+    [RuntimeInitializeOnLoadMethod]
+    private static void Init()
+    {
+        playerData = new SaveData();
+        LoadGame();
+    }
 
     public static void SaveGame()
     {
-        saveFilePath = Application.persistentDataPath + "/savefile.json";
+        string saveFilePath = Application.persistentDataPath + "/savefile.json";
         string json = JsonUtility.ToJson(playerData, true);
         File.WriteAllText(saveFilePath, json);
         Debug.Log("Game file saved to " + saveFilePath);
+        Debug.Log(playerData.shieldHealthIncrease);
     }
 
     public static void LoadGame()
     {
-        saveFilePath = Application.persistentDataPath + "/savefile.json";
+        string saveFilePath = Application.persistentDataPath + "/savefile.json";
         if (File.Exists(saveFilePath))
         {
             string json = File.ReadAllText(saveFilePath);
@@ -39,18 +46,21 @@ public static class SaveSystem
         }
         else
         {
-            Debug.LogWarning("Save file not found!");
+            InitData();
+            Debug.LogWarning("Save file not found! Adding Data aaa");
         }
     }
 
     public static void InitData() {
+
         SaveData saveData = new SaveData
         {
             playerLevel = 0,
             generatorHealthIncrease = 0f,
+            shieldHealthIncrease = 10,
             playerPosition = new Vector3(1, 2, 3),
             inventoryItems = new List<string> { "Sword", "Shield" }
         };
-        SaveSystem.SaveGame();
+        playerData = saveData;
     }
 }

@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Collections;
 using TMPro;
 
 public class PhaseManager : MonoBehaviour
@@ -71,9 +70,15 @@ public class PhaseManager : MonoBehaviour
                 AdvancePhase();
             }
         }
+
         UpdateTimerUI();
 
-        if (tryEndGame && enemyManager.enemyCount <= 0) { gameManager.EndGame("You Win"); }
+        if (tryEndGame && enemyManager.enemyCount <= 0) 
+        {
+            ResourceManager.Instance.isRunning = false;
+
+            gameManager.EndGame("You Win"); 
+        }
     }
 
     private void UpdateTimerUI()

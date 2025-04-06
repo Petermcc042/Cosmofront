@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class TerrainGen : MonoBehaviour
@@ -15,112 +17,37 @@ public class TerrainGen : MonoBehaviour
     public Material groundMat;
     public GameObject tempSphere;
 
-    private List<GameObject> groundObjects = new List<GameObject>();
-    public List<Vector3> blockedCoords = new List<Vector3>();
-    
-    
+    public List<float3> blockedCoords = new List<float3>();
+    public NativeArray<float3> blockedCoordsArray;
 
-    private float randomOffsetX; // Random X offset for noise
-    private float randomOffsetZ; // Random Z offset for noise
 
     public void InitTerrain()
     {
-        // Generate random offsets for the Perlin noise
-        randomOffsetX = Random.Range(0f, 1000f);
-        randomOffsetZ = Random.Range(0f, 1000f);
+/*        // Generate random offsets for the Perlin noise
+        randomOffsetX = UnityEngine.Random.Range(0f, 1000f);
+        randomOffsetZ = UnityEngine.Random.Range(0f, 1000f);
 
         GenerateVertices();
         LowerVerticesAtCentre();
-        LowerVerticesAtEdges();
+        LowerVerticesAtEdges();*/
+
         SplitTerrainIntoQuadrants(4);
 
-        blockedCoords = ReturnBlockedCells();
-        for (int i = 0; i < blockedCoords.Count; ++i)
+        blockedCoordsArray = new NativeArray<float3>(PrecomputedData.terrainCoords.Count, Allocator.Persistent);
+
+
+        for (int i = 0; i < PrecomputedData.terrainCoords.Count; ++i)
         {
-            PrecomputedData.GetXZ(blockedCoords[i], out int _x, out int _z);
-            GridNode tempNode = PrecomputedData.GetGridObject(_x, _z);
-            tempNode.isWalkable = false;
-            PrecomputedData.SetGridNode(_x, _z, tempNode);
+            blockedCoordsArray[i] = PrecomputedData.terrainCoords[i];
         }
-        collisionManager.CreateTerrainArray(blockedCoords);
-    }
 
-    void GenerateVertices()
-    {
-        // Calculate the number of vertices along x and z axes based on vertex spacing
-        int vertCount = Mathf.RoundToInt(length / vertexSpacing);
-
-        vertexDouble = new Vector3[vertCount + 1, vertCount + 1];
-
-        for (int x = 0; x <= vertCount; x++)
-        {
-            for (int z = 0; z <= vertCount; z++)
-            {
-                // Ensure vertices cover the entire length (200 units), regardless of vertex spacing
-                float xPos = ((float)x / vertCount) * length;
-                float zPos = ((float)z / vertCount) * length;
-
-                // Generate height using Perlin noise with random offsets
-                float yPos = Mathf.PerlinNoise((xPos * noiseScale) + randomOffsetX, (zPos * noiseScale) + randomOffsetZ) * heightScale;
-
-                if (yPos / heightScale < heightThreshold)
-                {
-                    yPos = 0;
-                }
-
-                vertexDouble[x, z] = new Vector3(xPos, yPos, zPos);
-            }
-        }
-    }
-
-    private void LowerVerticesAtCentre()
-    {
-        int radius = 8;
-        int center = length / 2;
-
-        for (int i = -radius; i <= radius; i++)
-        {
-            for (int j = -radius; j <= radius; j++)
-            {
-                if (i * i + j * j <= radius * radius)
-                {
-                    int gridPosX = center + i;
-                    int gridPosJ = center + j;
-
-                    vertexDouble[gridPosX,     gridPosJ    ].y = 0;
-                    vertexDouble[gridPosX + 1, gridPosJ    ].y = 0;
-                    vertexDouble[gridPosX,     gridPosJ + 1].y = 0;
-                    vertexDouble[gridPosX + 1, gridPosJ + 1].y = 0;
-                }
-            }
-        }
-    }
-    private void LowerVerticesAtEdges()
-    {
-        for (int x = 0; x < length+1; x++)
-        {
-            for (int z = 0; z < length+1; z++)
-            {
-                int innerLen = 30;
-                int outerLen = length - innerLen;
-                if (x < innerLen || x >= outerLen || z < innerLen || z >= outerLen)
-                {
-                    // Set the y position to 0 for vertices within this range
-                    vertexDouble[x, z].y = 0f;
-                }
-            }
-        }
+        collisionManager.CreateTerrainArray();
     }
 
     void SplitTerrainIntoQuadrants(int iterations)
     {
         int gridSize = (int)Mathf.Pow(2, iterations);  // Number of divisions in each axis (e.g., 2x2, 4x4, etc.)
         int quadrantSize = length / gridSize;          // Size of each quadrant
-
-        for (int i = 0; i < groundObjects.Count; i++)
-        {
-            Destroy(groundObjects[i]);
-        }
 
         for (int i = 0; i < gridSize; i++)
         {
@@ -143,25 +70,6 @@ public class TerrainGen : MonoBehaviour
     }
 
 
-    private List<Vector3> ReturnBlockedCells()
-    {
-        List<Vector3> regionVertices = new();
-
-        for (int x = 0; x < length; x++)
-        {
-            for (int z = 0; z < length; z++)
-            {
-                if (vertexDouble[x, z].y > 0 || vertexDouble[x + 1, z].y > 0 ||
-                    vertexDouble[x, z + 1].y > 0 || vertexDouble[x + 1, z + 1].y > 0)
-                {
-                    regionVertices.Add(new Vector3(x,0,z));
-                }
-            }
-        }
-
-        return regionVertices;
-    }
-
 
 
     // Create a mesh for a specific quadrant
@@ -177,7 +85,7 @@ public class TerrainGen : MonoBehaviour
         {
             for (int x = xStart; x <= xEnd; x++)
             {
-                Vector3 vertex = vertexDouble[x, z];
+                Vector3 vertex = PrecomputedData.vertexDouble[x, z];
                 vertices.Add(vertex);
 
                 // Calculate UVs based on position in the quadrant
@@ -238,7 +146,6 @@ public class TerrainGen : MonoBehaviour
     void CreateMeshObject(Mesh mesh, string name)
     {
         GameObject meshObject = new GameObject(name);
-        groundObjects.Add(meshObject);
         MeshFilter meshFilter = meshObject.AddComponent<MeshFilter>();
         MeshRenderer meshRenderer = meshObject.AddComponent<MeshRenderer>();
 
@@ -249,35 +156,5 @@ public class TerrainGen : MonoBehaviour
 
         // Optionally, set the position of the object (if needed)
         meshObject.transform.position += new Vector3(0, -0.01f, 0);
-    }
-
-    private List<Vector3> GetNeighboursList(int _x, int _z)
-    {
-        List<Vector3> neighbourList = new List<Vector3>();
-
-        if (_x - 1 >= 0)
-        {
-            //Left
-            neighbourList.Add(vertexDouble[_x - 1, _z]);
-            // Left Down
-            if (_z - 1 >= 0) neighbourList.Add(vertexDouble[_x - 1, _z - 1]);
-            // Left Up 
-            if (_z + 1 < length) neighbourList.Add(vertexDouble[_x - 1, _z + 1]);
-        }
-        if (_x + 1 < length)
-        {
-            // Right
-            neighbourList.Add(vertexDouble[_x + 1, _z]);
-            // Left Down
-            if (_z - 1 >= 0) neighbourList.Add(vertexDouble[_x + 1, _z - 1]);
-            // Left Up 
-            if (_z + 1 < length) neighbourList.Add(vertexDouble[_x + 1, _z + 1]);
-        }
-        // Down
-        if (_z - 1 >= 0) neighbourList.Add(vertexDouble[_x, _z - 1]);
-        // Up
-        if (_z + 1 < length) neighbourList.Add(vertexDouble[_x, _z + 1]);
-
-        return neighbourList;
     }
 }

@@ -1,12 +1,9 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -14,6 +11,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private bool costsRemoved;
     [SerializeField] public bool autoUpgrade;
     [SerializeField] public bool invincible;
+    [SerializeField] public bool buildMap;
 
     [Header("Level Settings")]
     [SerializeField] private GameSettingsSO gameSettings;
@@ -26,7 +24,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private PhaseManager phaseManager;
     [SerializeField] private ResourceManager resourceManager;
     [SerializeField] private CollisionManager collisionManager;
-    [SerializeField] private NewPathfinding pathfinder;
     [SerializeField] private TurretManager turretManager;
     [SerializeField] private Generator generator;
 
@@ -53,10 +50,6 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private AudioClip musicClip;
     private AudioSource music;
-
-
-    // Total time for the countdown
-    private float remainingTime; // Time left
    
 
     [Header("End Menu UI")]
@@ -83,41 +76,35 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject escapeMenuUI;
     private bool gameRunning = true;
 
-    // help for menu ui
-    private Vector3 lastSelectedCost;
-
-    private SaveData playerData;
+    [Header("Debug Menu UI")]
+    [SerializeField] private GameObject debugInfoUI;
+    [SerializeField] private TextMeshProUGUI genHealthText;
+    [SerializeField] private TextMeshProUGUI shieldHealthText;
+    [SerializeField] private TextMeshProUGUI attaniumTotalText;
+    [SerializeField] private TextMeshProUGUI marcumTotalText;
+    [SerializeField] private TextMeshProUGUI imearTotalText;
+    [SerializeField] private TextMeshProUGUI attaniumPerSecText;
+    [SerializeField] private TextMeshProUGUI marcumPerSecText;
+    [SerializeField] private TextMeshProUGUI imearPerSecText;
 
 
     private void Awake()
     {
         // load all required data for the level
-        if (PrecomputedData.creationNeeded) { PrecomputedData.InitGrid(200); }
-
+        if (buildMap)
+        {
+            PrecomputedData.Clear();
+            PrecomputedData.Init(200);
+            PrecomputedData.InitGrid();
+        }
+        
         gameRunning = false;
         totalTime = gameSettings.totalTime;
 
         CountAllCSLinesInScriptsFolder();
 
         SaveSystem.LoadGame();
-
-        if (SaveSystem.playerData != null)
-        {
-            Debug.Log("Loaded Data");
-        }
-        else
-        {
-            SaveData saveData = new SaveData
-            {
-                playerLevel = 0,
-                generatorHealthIncrease = 0f,
-                playerPosition = new Vector3(1, 2, 3),
-                inventoryItems = new List<string> { "Sword", "Shield" }
-            };
-            SaveSystem.SaveGame(saveData);
-
-            SaveSystem.LoadGame();
-        }
+        generator.UpdateShieldHealth(SaveSystem.playerData.shieldHealthIncrease);
     }
 
     void Start()
@@ -129,11 +116,8 @@ public class GameManager : MonoBehaviour
         
         // Begin all other script processes
         MapGridManager.Instance.InitGrid(gameSettings, buildingsList);
-        collisionManager.InitCollisionManager(gameSettings);
         enemyManager.InitEnemyManager(gameSettings);
         phaseManager.InitPhaseManager(gameSettings);
-
-        remainingTime = totalTime;
 
         currentSO = buildingsList.WallSO;
 
@@ -149,6 +133,7 @@ public class GameManager : MonoBehaviour
         HandleInput();
         UpdateBuildingUI();
         UpdateRotation();
+        ShowDebugInfo();
 
         if (!gameRunning) { return; }
 
@@ -166,15 +151,30 @@ public class GameManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.P)) { InvertGameState(); }
 
+        if (Input.GetKeyDown(KeyCode.I)) { debugInfoUI.SetActive(!debugInfoUI.activeSelf); }
+
         if (Input.GetKeyDown(KeyCode.B)) { ToggleBuilding(); }
 
         if (Input.GetKeyDown(KeyCode.Escape)) { PauseGame(); }
 
         if (Input.GetKeyDown(KeyCode.Q)) { skillMenuUI.SetActive(!skillMenuUI.activeSelf); }
 
-        if (Input.GetKeyDown(KeyCode.E)) { skillManager.IsSkillUnlocked(SkillManager.SkillType.TurretFireRate); }
+        if (Input.GetKeyDown(KeyCode.E)) { turretManager.UpgradeAllTurrets(); }
 
         if (Input.GetKeyDown(KeyCode.J)) { generator.UpdateShieldSize(10); }
+    }
+
+    private void ShowDebugInfo()
+    {
+        if (!debugInfoUI.activeSelf) { return; }
+        genHealthText.text = "Gen Health: " + SaveSystem.playerData.generatorHealthIncrease.ToString();
+        shieldHealthText.text = "Shield Health: " + SaveSystem.playerData.shieldHealthIncrease.ToString();
+        attaniumTotalText.text = "Attanium Total: " + resourceManager.attaniumTotal.ToString();
+        marcumTotalText.text = "Marcum Total: " + resourceManager.marcumTotal.ToString();
+        imearTotalText.text = "Imear Total: " + resourceManager.imearTotal.ToString();
+        attaniumPerSecText.text = "Attanium Per Second: " + resourceManager.attPerSec.ToString();
+        marcumPerSecText.text = "Marcum Per Second: " + resourceManager.marcPerSec.ToString();
+        imearPerSecText.text = "Imear Per Second: " + resourceManager.imearPerSec.ToString();
     }
 
     private void UpdateBuildingUI()
@@ -262,13 +262,11 @@ public class GameManager : MonoBehaviour
     {
         if (gameRunning == true)
         {
-            Time.timeScale = 0;
             escapeMenuUI.SetActive(true);
             gameRunning = false;
         } 
         else
         {
-            Time.timeScale = 1;
             escapeMenuUI.SetActive(false);
             gameRunning = true;
         }
@@ -349,15 +347,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-
-    public void TryUpgradeBuilding()
-    {
-        if (CheckCost(lastSelectedCost))
-        {
-            skillManager.UnlockSkill_UI();
-        }
-    }
-
     public void UpdatePhase(int phase)
     {
         //timerTMP.text = "Time Remaining: " + remainingTime.ToString();
@@ -370,21 +359,27 @@ public class GameManager : MonoBehaviour
         phaseTMP.text = "Phase " + phase;
     }
 
-    public void TimeIsUp()
-    {
-        ResourceManager.Instance.TimeUp();
-        timerTMP.text = string.Empty;
-    }
+
+    private bool hasRun = false;
 
     public void EndGame(string _endText)
     {
+        if (hasRun) return;
+        hasRun = true;
+
+        ResourceData resourceData = FindFirstObjectByType<ResourceData>();
+        resourceData.CommitSessionResources(
+            resourceManager.attaniumTotal,
+            resourceManager.marcumTotal,
+            resourceManager.imearTotal);
+
         endMenuUI.SetActive(true);
         endTextUI.text = _endText;
     }
 
     public void ReturnToMenu()
     {
-        SceneManager.LoadScene("Menu");
+        SceneManager.LoadScene("1_Menu");
     }
 
     public static Vector3 GetMouseWorldPosition()

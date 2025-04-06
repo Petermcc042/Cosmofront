@@ -32,7 +32,6 @@ public class EnemyManager : MonoBehaviour
     [SerializeField] private SkillManager skillManager;
     [SerializeField] private Generator gen;
     [SerializeField] private GameObject generator;
-    [SerializeField] private NewPathfinding pathfinding;
 
 
     [Header("Gameplay Variables")]
@@ -84,8 +83,6 @@ public class EnemyManager : MonoBehaviour
 
     void Awake()
     {
-        skillManager.OnSkillUnlocked += SkillManager_OnSkillUnlocked;
-
         enemyList = new List<GameObject>();
         enemyTargetList = new List<GameObject>();
         enemyDataList = new NativeList<EnemyData>(Allocator.Persistent);
@@ -103,11 +100,6 @@ public class EnemyManager : MonoBehaviour
         };
     }
 
-    private void OnDestroy()
-    {
-        skillManager.OnSkillUnlocked -= SkillManager_OnSkillUnlocked;
-    }
-
     public void InitEnemyManager(GameSettingsSO _gameSettings)
     {
         // use game settings file in inspector to dictate most game attributes
@@ -123,7 +115,6 @@ public class EnemyManager : MonoBehaviour
         centre = generator.transform; // set the target position for all the enemy pathfinding
 
         SetSpawnPositions(numberOfSpawns); // set the spawn positions
-        pathfinding.RunFlowField(centre.position, true); // create the flow field
 
         gen.CheckShieldSquares(false);
 
@@ -188,11 +179,11 @@ public class EnemyManager : MonoBehaviour
         stopwatch.Start();
 
         // The code we want to time:
-        pathfinding.RunFlowField(centre.position, false); // create the flow field
+        PrecomputedData.RunFlowFieldJobs(99, 99, false);
 
         // Stop measuring time
         stopwatch.Stop();
-        Debug.Log($"Flow field recalculation took: {stopwatch.ElapsedMilliseconds} ms");
+        //Debug.Log($"Flow field recalculation took: {stopwatch.ElapsedMilliseconds} ms");
     }
 
     private void SetSpawnPositions(int numSpawnPositions)
@@ -306,46 +297,34 @@ public class EnemyManager : MonoBehaviour
         return enemyList; 
     }
 
-    private void SkillManager_OnSkillUnlocked(object sender, SkillManager.OnSkillUnlockedEventArgs e)
-    {
-        switch (e.skillType)
-        {
-            case SkillManager.SkillType.SpikedWalls:
-                break;
-        }
+
+
+
+     /// <summary>
+     /// Old Debug Code to place an item where each enemy target position should be
+     /// </summary>
+     private void CheckPaths()
+     {
+        Debug.Log("Checking paths");
+
+
+        // this is taking the first spawn position and getting the spawn position
+        int currentIndexPostition = Mathf.FloorToInt(spawnOriginVectorList[0].z) + Mathf.FloorToInt(spawnOriginVectorList[0].x) * 200;
+        Debug.Log(spawnOriginVectorList[0] + " : " + PrecomputedData.gridArray[currentIndexPostition].position);
+        Instantiate(targetPosGO, PrecomputedData.gridArray[currentIndexPostition].position, Quaternion.identity, gameObject.transform);
+
+
+        Debug.Log("go to index: " + PrecomputedData.gridArray[currentIndexPostition].goToIndex);
+        Vector3 currentPos = PrecomputedData.gridArray[currentIndexPostition].position;
+        Vector3 towardsCenter = (centre.position - currentPos).normalized;
+        int newIndexPostition = Mathf.FloorToInt(currentPos.z + Mathf.Sign(towardsCenter.z)) +
+                            Mathf.FloorToInt(currentPos.x + Mathf.Sign(towardsCenter.x)) * 200;
+        Debug.Log("current position: " + currentPos + " - centre position: " + centre.position);
+        Debug.Log("current index: " + currentIndexPostition + " - new index: " + newIndexPostition);
+        Debug.Log("current index: " + PrecomputedData.gridArray[currentIndexPostition].position + " - new index: " + PrecomputedData.gridArray[newIndexPostition].position);
+        Debug.Log("current index: " + PrecomputedData.gridArray[2000].position + " - new index: " + PrecomputedData.gridArray[4000].position);
+        Instantiate(targetPosGO, PrecomputedData.gridArray[newIndexPostition].position, Quaternion.identity, gameObject.transform);
     }
-
-
-
-
-    // /// <summary>
-    // /// Old Debug Code to place an item where each enemy target position should be
-    // /// </summary>
-    // private void CheckPaths()
-    // {
-    //     Debug.Log("Checking paths");
-
-    //     int currentIndexPostition = Mathf.FloorToInt(spawnOriginVectorList[0].z) + Mathf.FloorToInt(spawnOriginVectorList[0].x) * 200;
-    //     Debug.Log(spawnOriginVectorList[0] + " : " + pathfinding.flowNodes[currentIndexPostition].position);
-
-    //     for (int i = 0; i < 150; i++)
-    //     {
-    //         Instantiate(targetPosGO, pathfinding.flowNodes[currentIndexPostition].position, Quaternion.identity, gameObject.transform);
-    //         if (pathfinding.flowNodes[currentIndexPostition].goToIndex < 0)
-    //         {
-    //             // Move one square towards center if we hit a negative index
-    //             Vector3 currentPos = pathfinding.flowNodes[currentIndexPostition].position;
-    //             Vector3 towardsCenter = (centre.position - currentPos).normalized;
-    //             currentIndexPostition = Mathf.FloorToInt(currentPos.z + Mathf.Sign(towardsCenter.z)) +
-    //                                   Mathf.FloorToInt(currentPos.x + Mathf.Sign(towardsCenter.x)) * 200;
-    //         }
-    //         else
-    //         {
-    //             currentIndexPostition = pathfinding.flowNodes[currentIndexPostition].goToIndex;
-    //         }
-
-    //     }
-    // }
 }
 
 
