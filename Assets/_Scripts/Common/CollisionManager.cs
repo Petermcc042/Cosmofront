@@ -15,6 +15,7 @@ public class CollisionManager : MonoBehaviour
     [SerializeField] private Generator gen;
     [SerializeField] private TurretManager turretManager;
     [SerializeField] private TerrainGen terrainGen;
+    [SerializeField] private EnemyGPURenderer gpuRender;
 
     [SerializeField] private Slider genHealth;
     [SerializeField] private int explosionRadius;
@@ -22,7 +23,7 @@ public class CollisionManager : MonoBehaviour
     [SerializeField] private Material lightningPrefabMaterial;
     [SerializeField] private Material lightningPrefabMaterialTwo;
 
-    private NativeList<float3> obstructPathList;
+    private NativeList<float3> buildingPositionList;
     private NativeList<float3> shieldPositions;
 
     private NativeList<EnemyData> enemyDataList;
@@ -36,7 +37,7 @@ public class CollisionManager : MonoBehaviour
 
     private void Start()
     {
-        obstructPathList = mapGridManager.buildingGridSquareList;
+        buildingPositionList = mapGridManager.buildingGridSquareList;
         shieldPositions = gen.shieldGridSquareList;
         enemyDataList = enemyManager.enemyDataList;
         bulletDataList = bulletManager.bulletDataList;
@@ -57,7 +58,7 @@ public class CollisionManager : MonoBehaviour
         float deltaTime = Time.deltaTime;
 
         MovementScheduler movementScheduler = new MovementScheduler();
-        movementScheduler.ScheduleMoveJobs(enemyDataList, bulletDataList, shieldPositions, obstructPathList, terrainDataArray, deltaTime, mySeed);
+        movementScheduler.ScheduleMoveJobs(enemyDataList, bulletDataList, shieldPositions, buildingPositionList, terrainDataArray, deltaTime, mySeed);
         
         bulletManager.UpdateBulletPositions(deltaTime);
         CheckBulletCollisions();
@@ -267,7 +268,7 @@ public class CollisionManager : MonoBehaviour
         JobHandle checkActiveBulletJobHandle = checkActiveBulletJob.Schedule();
         JobHandle.CompleteAll(ref checkActiveEnemyJobHandle, ref checkActiveBulletJobHandle);
 
-        enemyManager.UpdateEnemyPositions(enemyToRemove, enemyDataList);
+        enemyManager.UpdateEnemyPositions(enemyToRemove);
         bulletManager.UpdateBulletData(bulletToRemove);
 
         enemyToRemove.Dispose();
@@ -335,14 +336,5 @@ public class CollisionManager : MonoBehaviour
         gen.DamageLoop(_tempShieldDamage[0], Time.deltaTime);
 
         _tempShieldDamage.Dispose();  // Dispose of the NativeArray to avoid memory leaks
-    }
-
-    public NativeList<EnemyData> ReturnEnemyDataList() { return enemyDataList; }
-
-    public void AddEnemyData(EnemyData _enemyData) { enemyDataList.Add(_enemyData); }
-
-    public void AddBulletData(BulletData _bulletData)
-    {
-        bulletDataList.Add(_bulletData);
     }
 }

@@ -17,13 +17,14 @@ public struct EnemyData
     public float Health; //EnemyHealth = 1
     public int Armour; //EnemyArmour = 1
     public int Damage;
-    public bool ToRemove;
+    public bool IsDead;
     public bool TargetNeeded;
-    public bool IsActive;
+    public bool IsAttacking; // swtich bool
     public bool IsAtShield;
     public float3 AttackPos;
-}
 
+    public float AnimationFrame;
+}
 
 
 public class EnemyManager : MonoBehaviour
@@ -142,16 +143,17 @@ public class EnemyManager : MonoBehaviour
         }
     }
 
-    public void UpdateEnemyPositions(NativeList<int> indexToRemove, NativeList<EnemyData> enemyDataList)
+    public void UpdateEnemyPositions(NativeList<int> indexToRemove)
     {
+        Debug.Log($"Enemy Objects: {enemyList.Count} - enemy data: {enemyDataList.Length}");
         for (int i = 0; i < indexToRemove.Length; i++)
         {
             Destroy(enemyList[indexToRemove[i]]);
             enemyList.RemoveAt(indexToRemove[i]);
             enemyCount--;
 
-            Destroy(enemyTargetList[indexToRemove[i]]);
-            enemyTargetList.RemoveAt(indexToRemove[i]);
+            //Destroy(enemyTargetList[indexToRemove[i]]);
+            //enemyTargetList.RemoveAt(indexToRemove[i]);
         }
 
         // finally updating the game object positions as can't in jobs
@@ -159,7 +161,7 @@ public class EnemyManager : MonoBehaviour
         {
             enemyList[i].transform.position = enemyDataList[i].Position;// + new Vector3(0.5f, 0, 0.5f);
             enemyList[i].transform.rotation = enemyDataList[i].Rotation;
-            enemyTargetList[i].transform.position = enemyDataList[i].TargetPos;
+            //enemyTargetList[i].transform.position = enemyDataList[i].TargetPos;
         }
     }
 
@@ -237,15 +239,22 @@ public class EnemyManager : MonoBehaviour
 
         GameObject enemy = Instantiate(enemyParent, spawnPoint, Quaternion.identity, gameObject.transform);
 
-        // select a random number to refer to a random enemy instantiate that enemy under the parent
         int randomValue = Mathf.RoundToInt(UnityEngine.Random.Range(0, enemyWeightSum + 1));
         int enemyIndex = FindIndexInCumulativeSum(enemyWeightList, randomValue);
-        Instantiate(gameSettingsSO.enemyPrefabList[enemyIndex], spawnPoint, Quaternion.identity, enemy.transform);
+
+        // select a random number to refer to a random enemy instantiate that enemy under the parent
+        if (gameManager.renderGameObjects)
+        {   
+            Instantiate(gameSettingsSO.enemyPrefabList[enemyIndex], spawnPoint, gameSettingsSO.enemyPrefabList[enemyIndex].transform.rotation, enemy.transform);
+        }
+        
 
         enemyList.Add(enemy);
 
-        GameObject targetPos = Instantiate(targetPosGO, spawnPoint, Quaternion.identity, enemy.transform);
-        enemyTargetList.Add(targetPos);
+        
+        // DEBUG:can be used to show target position of enemy
+        //GameObject targetPos = Instantiate(targetPosGO, spawnPoint, Quaternion.identity, enemy.transform);
+        //enemyTargetList.Add(targetPos);
 
         int tempDamage = (gameManager.invincible) ? 0 : 2;
 
@@ -256,16 +265,16 @@ public class EnemyManager : MonoBehaviour
             Health = gameSettingsSO.enemyHealthList[enemyIndex],
             Armour = 1,
             Damage = tempDamage,
-            Position = spawnPoint,// take the overall list and based on the 
+            Position = spawnPoint,
             Speed = 8,
             Velocity = float3.zero,
-            ToRemove = false,
+            IsDead = false,
             TargetPos = float3.zero,
             TargetNeeded = true,
-            IsActive = true
+            IsAttacking = false,
+            IsAtShield = false
         };
 
-        //collisionManager.AddEnemyData(eData);
         enemyDataList.Add(eData);
 
         spawnIndexCount++;

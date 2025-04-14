@@ -1,0 +1,42 @@
+// VertexInterpolator.compute
+
+#pragma kernel InterpolateVertices
+
+// Input Buffers (Read-Only is fine conceptually, but RWStructuredBuffer works too)
+StructuredBuffer<float3> Frame0Vertices; // Vertex positions for the first keyframe
+StructuredBuffer<float3> Frame1Vertices; // Vertex positions for the second keyframe
+
+// Output Buffer (Must be Read/Write)
+RWStructuredBuffer<float3> OutputVertices; // Buffer to store the calculated interpolated vertices
+
+// Uniform variables set from C#
+float AnimTime; // Current time within the animation cycle
+float AnimDuration; // Total duration of the animation between frame 0 and 1
+
+// Using 64 threads per group is common for GPUs
+[numthreads(64, 1, 1)]
+void InterpolateVertices(uint3 id : SV_DispatchThreadID)
+{
+    // id.x represents the vertex index
+
+    // Optional: Bounds check (good practice if dispatch size might exceed vertex count)
+    // uint vertexCount; // Needs total vertex count passed from C# if checking
+    // Frame0Vertices.GetDimensions(vertexCount); // Get buffer size
+    // if (id.x >= vertexCount) {
+    //     return;
+    // }
+
+    // Read the vertex position from both keyframes for this specific vertex index
+    float3 pos0 = Frame0Vertices[id.x];
+    float3 pos1 = Frame1Vertices[id.x];
+
+    // Calculate the interpolation factor 't' (0.0 to 1.0)
+    // Use frac to make the animation loop smoothly between frame 0 and 1
+    float t = frac(AnimTime / AnimDuration);
+
+    // Perform linear interpolation (lerp)
+    float3 interpolatedPos = lerp(pos0, pos1, t);
+
+    // Write the result to the output buffer at the same index
+    OutputVertices[id.x] = interpolatedPos;
+}

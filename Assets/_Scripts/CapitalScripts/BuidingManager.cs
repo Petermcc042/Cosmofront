@@ -14,7 +14,7 @@ public class BuidingManager : MonoBehaviour
     [SerializeField] GameObject descriptionObject;
     [SerializeField] LayerMask upgradeLayer;
 
-    private int GenHealthChange = 10;
+   // private int GenHealthChange = 10;
     private int turretDamageChange = 5;
     private int shieldHealthIncrease = 5;
 

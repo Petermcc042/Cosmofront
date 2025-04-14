@@ -42,7 +42,7 @@ public class MovementScheduler
             {
                 EnemyData = enemyDataList.AsArray(),
                 ShieldPositions = shieldPositions.AsArray(),
-                ObstructedPositions = obstructPathList.AsArray(),
+                BuildingPositions = obstructPathList.AsArray(),
                 DeltaTime = deltaTime
             };
 

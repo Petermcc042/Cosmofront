@@ -1,0 +1,57 @@
+// MultiFrameInterpolator.compute
+
+#pragma kernel InterpolateMultiFrame
+
+// Input Buffer containing ALL vertex positions for ALL frames sequentially
+// [frame0_vert0, frame0_vert1, ..., frame1_vert0, frame1_vert1, ..., frameN_vert0, ...]
+StructuredBuffer<float3> AllFramesVertexBuffer;
+
+// Output Buffer
+RWStructuredBuffer<float3> OutputVertexBuffer; // Renamed for clarity
+
+// Uniform variables set from C#
+float AnimTime; // Current time within the animation cycle
+float FramesPerSecond; // Speed of animation playback
+int FrameCount; // Total number of keyframes baked
+int VertexCountPerFrame; // Number of vertices in a single frame/mesh
+
+[numthreads(64, 1, 1)]
+void InterpolateMultiFrame(uint3 id : SV_DispatchThreadID)
+{
+    // id.x represents the vertex index within a single frame (0 to VertexCountPerFrame - 1)
+    uint vertexIndex = id.x;
+
+    // Bounds check (ensure we don't process more threads than vertices per frame)
+    if (vertexIndex >= (uint) VertexCountPerFrame)
+    {
+        return;
+    }
+
+    // Calculate the exact 'frame' number based on time (can be fractional)
+    float currentFrameFloat = AnimTime * FramesPerSecond;
+
+    // Determine the indices of the two frames to interpolate between
+    int frameIndex1 = floor(currentFrameFloat);
+    // Use modulo to loop the animation frame indices
+    frameIndex1 = frameIndex1 % FrameCount; // Wrap around using total frame count
+
+    int frameIndex2 = (frameIndex1 + 1) % FrameCount; // Get the next frame, wrapping around
+
+    // Calculate the interpolation factor 't' (how far between frame1 and frame2 we are)
+    float t = frac(currentFrameFloat);
+
+    // Calculate the indices within the *large* buffer for the specific vertex in each frame
+    // Index = (FrameIndex * VerticesPerFrame) + VertexIndex
+    int bufferIndex1 = (frameIndex1 * VertexCountPerFrame) + vertexIndex;
+    int bufferIndex2 = (frameIndex2 * VertexCountPerFrame) + vertexIndex;
+
+    // Read the vertex positions from the large buffer
+    float3 pos1 = AllFramesVertexBuffer[bufferIndex1];
+    float3 pos2 = AllFramesVertexBuffer[bufferIndex2];
+
+    // Perform linear interpolation
+    float3 interpolatedPos = lerp(pos1, pos2, t);
+
+    // Write the result to the output buffer at the correct vertex index
+    OutputVertexBuffer[vertexIndex] = interpolatedPos;
+}

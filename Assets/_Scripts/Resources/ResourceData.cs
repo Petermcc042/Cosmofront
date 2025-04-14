@@ -3,7 +3,9 @@ using UnityEngine;
 
 public class ResourceData : MonoBehaviour
 {
+#pragma warning disable UDR0001 // Domain Reload Analyzer
     private static ResourceData instance;
+#pragma warning restore UDR0001 // Domain Reload Analyzer
 
     public int totalAttanium;
     public int totalMarcum;

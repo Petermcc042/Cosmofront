@@ -20,12 +20,15 @@ public class SkillManager: MonoBehaviour
     [SerializeField] private TextMeshProUGUI turretLevelUI;
     [SerializeField] private List<TextMeshProUGUI> buttonsText;
 
+#pragma warning disable UDR0001 // Domain Reload Analyzer
     private static List<IUpgradeOption> smallUpgrades = new List<IUpgradeOption>();
     private static List<IUpgradeOption> mediumUpgrades = new List<IUpgradeOption>();
     private static List<IUpgradeOption> largeUpgrades = new List<IUpgradeOption>();
     private static List<IUpgradeOption> optionUpgrades = new List<IUpgradeOption>();
     private Turret currentTurret;
     private int currentPosition;
+
+#pragma warning restore UDR0001 // Domain Reload Analyzer
 
     private void Awake()
     {
@@ -56,12 +59,6 @@ public class SkillManager: MonoBehaviour
         }
     }
 
-    private IUpgradeOption GetRandomUpgrade(List<IUpgradeOption> _upgradeList)
-    {
-        int randomIndex = UnityEngine.Random.Range(0, _upgradeList.Count);
-        return _upgradeList[randomIndex];
-    }
-
     private List<IUpgradeOption> GetRandomUpgradeOptions(int count, List<IUpgradeOption> _upgradeList)
     {
         List<IUpgradeOption> selectedUpgrades = new List<IUpgradeOption>();
@@ -70,6 +67,12 @@ public class SkillManager: MonoBehaviour
             selectedUpgrades.Add(GetRandomUpgrade(_upgradeList));
         }
         return selectedUpgrades;
+    }
+
+    private IUpgradeOption GetRandomUpgrade(List<IUpgradeOption> _upgradeList)
+    {
+        int randomIndex = UnityEngine.Random.Range(0, _upgradeList.Count);
+        return _upgradeList[randomIndex];
     }
 
     public void GetAutoUpgradeOptions(Turret _turret)

@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -32,7 +33,7 @@ public struct UpdateEnemyTargetPos : IJobParallelFor
 
         float3 separationForce = CalculateEnemySeparation(enemy);
 
-        float3 terrainSeparationForce = float3.zero;//CalculateTerrainSeparation(enemy.Position);
+        //float3 terrainSeparationForce = CalculateTerrainSeparation(enemy.Position);
 
         float3 wanderForce = CalculateWanderForce(seed, index);
 
@@ -100,7 +101,7 @@ public struct UpdateEnemyTargetPos : IJobParallelFor
     private float3 CalculateWanderForce(uint seed, int index)
     {
         Unity.Mathematics.Random random = new Unity.Mathematics.Random(seed + (uint)index);
-        return new float3(random.NextFloat(-0.1f, 0.1f), 0, random.NextFloat(-0.1f, 0.1f));
+        return new float3(random.NextFloat(-0.5f, 0.5f), 0, random.NextFloat(-0.5f, 0.5f));
     }
 
     // Converts a world position to a grid index.
@@ -125,7 +126,7 @@ public struct UpdateEnemyPosition : IJobParallelFor
 {
     public NativeArray<EnemyData> EnemyData;
 
-    [ReadOnly] public NativeArray<float3> ObstructedPositions;
+    [ReadOnly] public NativeArray<float3> BuildingPositions;
     [ReadOnly] public NativeArray<float3> ShieldPositions;
     [ReadOnly] public float DeltaTime;
 
@@ -134,26 +135,28 @@ public struct UpdateEnemyPosition : IJobParallelFor
         EnemyData enemy = EnemyData[index];
 
         bool isAtShield = false;
-        bool isObstructed = false;
+        bool isAttacking = false;
 
+        // check shield first so they damage it not a building poking out
         for (int j = 0; j < ShieldPositions.Length; j++)
         {
             if (math.distance(enemy.Position, ShieldPositions[j]) <= 0.2f)
             {
                 isAtShield = true;
-                isObstructed = true;
+                isAttacking = true;
                 break;
             }
         }
 
-        if (!isAtShield) // so that enemies always damage the shield first not a building poking out
+        // if we aren't at the shield check if there are other buildings obstructing
+        if (!isAtShield)
         {
-            for (int j = 0; j < ObstructedPositions.Length; j++)
+            for (int j = 0; j < BuildingPositions.Length; j++)
             {
-                if (math.distance(enemy.Position, ObstructedPositions[j]) <= 0.2f)
+                if (math.distance(enemy.Position, BuildingPositions[j]) <= 0.2f)
                 {
-                    enemy.AttackPos = ObstructedPositions[j];
-                    isObstructed = true;
+                    enemy.AttackPos = BuildingPositions[j];
+                    isAttacking = true;
                     break;
                 }
                 else
@@ -165,9 +168,9 @@ public struct UpdateEnemyPosition : IJobParallelFor
 
 
         enemy.IsAtShield = isAtShield;
-        enemy.IsActive = !isObstructed;
+        enemy.IsAttacking = isAttacking;
 
-        if (!enemy.ToRemove && enemy.IsActive)
+        if (!enemy.IsDead && !enemy.IsAttacking)
         {
             if (math.distance(enemy.Position, enemy.TargetPos) > 0.1f)
             {
@@ -222,7 +225,7 @@ public struct EnemyCollisionData : IJob
 
             if (tempEnemy.Health <= 0)
             {
-                tempEnemy.ToRemove = true;
+                tempEnemy.IsDead = true;
                 TurretUpgradeData tempUpgrade = new()
                 {
                     XPAmount = 10,
@@ -249,23 +252,23 @@ public struct BuildingCollisionData
 public struct BuildingCollision : IJobParallelFor
 {
     [ReadOnly] public NativeArray<EnemyData> EnemyDataArray;
-    public NativeArray<BuildingCollisionData> BuildingCollisionDataArray;
     [ReadOnly] public float DeltaTime;
+
+    public NativeArray<BuildingCollisionData> BuildingCollisionDataArray;
 
     public void Execute(int index)
     {
         EnemyData eData = EnemyDataArray[index];
 
-        if (!eData.IsActive)
-        {
-            BuildingCollisionData bData = new()
-            {
-                Damage = eData.Damage * DeltaTime,
-                GridPosition = eData.AttackPos
-            };
+        if (!eData.IsAttacking && !eData.IsAtShield) { return; }
 
-            BuildingCollisionDataArray[index] = bData;
-        }
+        BuildingCollisionData bData = new()
+        {
+            Damage = eData.Damage * DeltaTime,
+            GridPosition = eData.AttackPos
+        };
+
+        BuildingCollisionDataArray[index] = bData;
     }
 }
 
@@ -305,7 +308,7 @@ public struct CheckActiveEnemies : IJob
     {
         for (int i = 0; i < EnemyData.Length; i++)
         {
-            if (EnemyData[i].ToRemove)
+            if (EnemyData[i].IsDead)
             {
                 EnemyData.RemoveAt(i);
                 IndexToRemove.Add(i);

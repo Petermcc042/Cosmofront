@@ -12,6 +12,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] public bool autoUpgrade;
     [SerializeField] public bool invincible;
     [SerializeField] public bool buildMap;
+    [SerializeField] public bool renderGameObjects;
 
     [Header("Level Settings")]
     [SerializeField] private GameSettingsSO gameSettings;

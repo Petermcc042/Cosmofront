@@ -1,0 +1,27 @@
+// SimpleMultiplier.compute
+
+#pragma kernel MultiplyByTwo // Defines the function (kernel) we will call from C#
+
+// Define a buffer that C# can read from and write to.
+// 'float' means it holds floating-point numbers.
+// 'ResultBuffer' is the name we'll use in C# to refer to this buffer.
+RWStructuredBuffer<float> ResultBuffer;
+
+// Define how many threads will run in a group.
+// For this simple 1D example, we'll use 8 threads in the X dimension.
+// The GPU runs many of these groups in parallel.
+[numthreads(8, 1, 1)]
+void MultiplyByTwo(uint3 id : SV_DispatchThreadID)
+{
+    // 'id.x' gives us the unique index of this specific thread within the overall dispatch.
+    // It corresponds to the index in our data array/buffer.
+
+    // Read the original value from the buffer at this thread's index
+    float value = ResultBuffer[id.x];
+
+    // Perform the calculation
+    value = value * 2.0f;
+
+    // Write the new value back to the same position in the buffer
+    ResultBuffer[id.x] = value;
+}

@@ -132,7 +132,7 @@ public class Turret : MonoBehaviour
         turretManager.AddTurret(this);
 
         unlockedUpgradeList = new List<IUpgradeOption>();
-        enemyDataList = collisionManager.ReturnEnemyDataList();
+        enemyDataList = enemyManager.enemyDataList;
     }
 
     private void OnDestroy()

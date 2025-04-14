@@ -10,8 +10,9 @@ using System.Reflection;
 [InitializeOnLoad]
 public class ReadmeEditor : Editor
 {
+#pragma warning disable UDR0001 // Domain Reload Analyzer
     static string s_ShowedReadmeSessionStateName = "ReadmeEditor.showedReadme";
-    
+
     static string s_ReadmeSourceDirectory = "Assets/TutorialInfo";
 
     const float k_Space = 16f;
@@ -20,6 +21,8 @@ public class ReadmeEditor : Editor
     {
         EditorApplication.delayCall += SelectReadmeAutomatically;
     }
+
+#pragma warning restore UDR0001 // Domain Reload Analyzer
 
     static void RemoveTutorial()
     {

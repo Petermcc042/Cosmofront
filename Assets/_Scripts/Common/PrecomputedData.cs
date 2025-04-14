@@ -17,6 +17,7 @@ public static class PrecomputedData
         if (gridArray.IsCreated) gridArray.Dispose();
     }
 
+#pragma warning disable UDR0001 // Domain Reload Analyzer
     public static bool creationNeeded;
     public static int length;
     public static float cellSize;
@@ -34,6 +35,7 @@ public static class PrecomputedData
     private static float heightThreshold = 0.6f; // Threshold for flattening (between 0 and 1)
     public static Vector3[,] vertexDouble;
     public static List<float3> terrainCoords;
+#pragma warning restore UDR0001 // Domain Reload Analyzer
 
     //[RuntimeInitializeOnLoadMethod]
     public static void Init(int _length) 

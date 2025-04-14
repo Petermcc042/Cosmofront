@@ -41,7 +41,7 @@ public static class SaveSystem
         {
             string json = File.ReadAllText(saveFilePath);
             SaveData saveData = JsonUtility.FromJson<SaveData>(json);
-            Debug.Log("loading file from " + saveFilePath);
+            //Debug.Log("loading file from " + saveFilePath);
             playerData = saveData;
         }
         else
