@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: fc2008bf47fc6c64fb6fc15f89259fa9
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 279172
+  packageName: Simple tree diagrams
+  packageVersion: 1.0.0
+  assetPath: Assets/SimpleTreeDiagrams/Prefabs/DefaultComponents/DefaultLastConnector.prefab
+  uploadId: 649389

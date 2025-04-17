@@ -3,12 +3,68 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 
-public class PlasmaOverload : IUpgradeOption
+public class SuperMonkeyUpgrade : IUpgradeOption
+{
+    public float fireRateIncrease = 3;
+    public int bulletDamage = 2;
+    public float targetingRate = 0.5f;
+
+    public void Apply(Turret turret)
+    {
+        turret.highlightBox.SetActive(false);
+        turret.fireRate += fireRateIncrease;
+        turret.bulletDamage += bulletDamage;
+        turret.targetingRate *= targetingRate;
+        turret.unlockedUpgradeList.Add(this);
+    }
+
+    public int GetTextSize() { return 20; }
+
+    public string GetDescription()
+    {
+        return $"Greatly increases fire rate, with a small damage boost";
+    }
+
+    public int GetLevel() { return 3; }
+    public int GetProbability() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
+}
+
+public class ElectricSkyUpgrade : IUpgradeOption
+{
+    public float fireRateIncrease = 3;
+    public int bulletDamage = 2;
+    public float targetingRate = 0.5f;
+
+    public void Apply(Turret turret)
+    {
+        turret.highlightBox.SetActive(false);
+        turret.fireRate += fireRateIncrease;
+        turret.bulletDamage += bulletDamage;
+        turret.targetingRate *= targetingRate;
+        turret.unlockedUpgradeList.Add(this);
+    }
+
+    public int GetTextSize() { return 20; }
+
+    public string GetDescription()
+    {
+        return $"Drones upgrade to lightning rounds";
+    }
+
+    public int GetLevel() { return 3; }
+    public int GetProbability() { return 2; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
+}
+
+public class PlasmaOverloadUpgrade : IUpgradeOption
 {
     public void Apply(Turret turret)
     {
         turret.highlightBox.SetActive(false);
-        turret.bulletType = BulletType.ChainLightningTwo;
+        turret.bulletType = BulletType.PlasmaOverload;
         turret.unlockedUpgradeList.Add(this);
     }
 
@@ -20,6 +76,30 @@ public class PlasmaOverload : IUpgradeOption
     }
 
     public int GetLevel() { return 3; }
+    public int GetProbability() { return 3; }
+
+    public IUpgradeOption[] NextUpgradeOption() { return null; }
+}
+
+
+public class Circlerer : IUpgradeOption
+{
+    public void Apply(Turret turret)
+    {
+        turret.highlightBox.SetActive(false);
+        turret.bulletType = BulletType.SpreadCircles;
+        turret.unlockedUpgradeList.Add(this);
+    }
+
+    public int GetTextSize() { return 17; }
+
+    public string GetDescription()
+    {
+        return $"The bullets that split also split bullets";
+    }
+
+    public int GetLevel() { return 3; }
+    public int GetProbability() { return 3; }
 
     public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
@@ -42,6 +122,7 @@ public class OrbitalStrikeUpgrade : IUpgradeOption
     }
 
     public int GetLevel() { return 3; }
+    public int GetProbability() { return 3; }
 
     public IUpgradeOption[] NextUpgradeOption() { return null; }
 
@@ -65,6 +146,7 @@ public class MeteorShowerUpgrade : IUpgradeOption
     }
 
     public int GetLevel() { return 3; }
+    public int GetProbability() { return 3; }
 
     public IUpgradeOption[] NextUpgradeOption() { return null; }
 
@@ -87,6 +169,7 @@ public class FirestormUpgrade : IUpgradeOption
     }
 
     public int GetLevel() { return 3; }
+    public int GetProbability() { return 3; }
 
     public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
@@ -109,27 +192,7 @@ public class TimewarpUpgrade : IUpgradeOption
     }
 
     public int GetLevel() { return 3; }
-
-    public IUpgradeOption[] NextUpgradeOption() { return null; }
-}
-
-public class SpreadCircles : IUpgradeOption
-{
-    public void Apply(Turret turret)
-    {
-        turret.highlightBox.SetActive(false);
-        turret.bulletType = BulletType.SpreadCircles;
-        turret.unlockedUpgradeList.Add(this);
-    }
-
-    public int GetTextSize() { return 17; }
-
-    public string GetDescription()
-    {
-        return $"The bullets that split also split bullets";
-    }
-
-    public int GetLevel() { return 3; }
+    public int GetProbability() { return 3; }
 
     public IUpgradeOption[] NextUpgradeOption() { return null; }
 }

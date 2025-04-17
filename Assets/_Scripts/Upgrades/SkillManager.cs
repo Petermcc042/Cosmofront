@@ -47,7 +47,7 @@ public class SkillManager: MonoBehaviour
             mediumUpgrades.Add(new ExplosiveRoundsUpgrade());
             mediumUpgrades.Add(new SpreadRoundsUpgrade());
             mediumUpgrades.Add(new PiercingRoundsUpgrade());
-            mediumUpgrades.Add(new MegaUpgrade());
+            mediumUpgrades.Add(new OverclockedUpgrade());
         }
 
         for (int i = 0; i < 4; i++)
@@ -59,29 +59,6 @@ public class SkillManager: MonoBehaviour
         }
     }
 
-    private List<IUpgradeOption> GetRandomUpgradeOptions(int count, List<IUpgradeOption> _upgradeList)
-    {
-        List<IUpgradeOption> selectedUpgrades = new List<IUpgradeOption>();
-        for (int i = 0; i < count; i++)
-        {
-            selectedUpgrades.Add(GetRandomUpgrade(_upgradeList));
-        }
-        return selectedUpgrades;
-    }
-
-    private IUpgradeOption GetRandomUpgrade(List<IUpgradeOption> _upgradeList)
-    {
-        int randomIndex = UnityEngine.Random.Range(0, _upgradeList.Count);
-        return _upgradeList[randomIndex];
-    }
-
-    public void GetAutoUpgradeOptions(Turret _turret)
-    {
-        currentTurret = _turret;
-
-        optionUpgrades = GetRandomUpgradeOptions(3, smallUpgrades);
-        optionUpgrades[1].Apply(currentTurret);
-    }
 
     public void GetSmallUpgradeOptions(Turret _turret)
     {
@@ -120,20 +97,13 @@ public class SkillManager: MonoBehaviour
 
         List<IUpgradeOption> availableUpgrades = new List<IUpgradeOption>();
 
-        if (_firstTime)
+        foreach (IUpgradeOption e in _turret.unlockedUpgradeList)
         {
-            availableUpgrades = mediumUpgrades;
-        } 
-        else
-        {
-            foreach (IUpgradeOption e in _turret.unlockedUpgradeList)
-            {
-                if (e.NextUpgradeOption() == null || e.GetLevel() != 2) { continue; }
+            if (e.NextUpgradeOption() == null || e.GetLevel() != 2) { continue; }
 
-                foreach (var upgrade in e.NextUpgradeOption())
-                {
-                    availableUpgrades.Add(upgrade);
-                }
+            foreach (var upgrade in e.NextUpgradeOption())
+            {
+                availableUpgrades.Add(upgrade);
             }
         }
 
@@ -209,6 +179,22 @@ public class SkillManager: MonoBehaviour
     {
         optionUpgrades[_num].Apply(currentTurret);
         gameManager.InvertGameState();
+    }
+
+    private List<IUpgradeOption> GetRandomUpgradeOptions(int count, List<IUpgradeOption> _upgradeList)
+    {
+        List<IUpgradeOption> selectedUpgrades = new List<IUpgradeOption>();
+        for (int i = 0; i < count; i++)
+        {
+            selectedUpgrades.Add(GetRandomUpgrade(_upgradeList));
+        }
+        return selectedUpgrades;
+    }
+
+    private IUpgradeOption GetRandomUpgrade(List<IUpgradeOption> _upgradeList)
+    {
+        int randomIndex = UnityEngine.Random.Range(0, _upgradeList.Count);
+        return _upgradeList[randomIndex];
     }
 }
 

@@ -115,7 +115,7 @@ public struct BulletCollision : IJobParallelFor
                     LightingCalc(bullet, index, i, 3, 3, 0.8f);
                 }
 
-                if (bullet.Type == BulletType.ChainLightningTwo)
+                if (bullet.Type == BulletType.ArcLightning)
                 {
                     LightingCalc(bullet, index, i, 10, 10, 0.8f);
                 }

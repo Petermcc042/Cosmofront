@@ -12,27 +12,15 @@ public class SaveData
     public int turretDamageIncrease;
     public Vector3 playerPosition;
     public List<string> inventoryItems = new List<string>();
+    public List<string> unlockedUpgradeNames = new List<string>();
 }
 
 public static class SaveSystem
 {
+#pragma warning disable UDR0001 // Domain Reload Analyzer
     public static SaveData playerData;
+#pragma warning restore UDR0001 // Domain Reload Analyzer
 
-    [RuntimeInitializeOnLoadMethod]
-    private static void Init()
-    {
-        playerData = new SaveData();
-        LoadGame();
-    }
-
-    public static void SaveGame()
-    {
-        string saveFilePath = Application.persistentDataPath + "/savefile.json";
-        string json = JsonUtility.ToJson(playerData, true);
-        File.WriteAllText(saveFilePath, json);
-        Debug.Log("Game file saved to " + saveFilePath);
-        Debug.Log(playerData.shieldHealthIncrease);
-    }
 
     public static void LoadGame()
     {
@@ -41,7 +29,7 @@ public static class SaveSystem
         {
             string json = File.ReadAllText(saveFilePath);
             SaveData saveData = JsonUtility.FromJson<SaveData>(json);
-            //Debug.Log("loading file from " + saveFilePath);
+            Debug.Log("loading file from " + saveFilePath);
             playerData = saveData;
         }
         else
@@ -49,6 +37,14 @@ public static class SaveSystem
             InitData();
             Debug.LogWarning("Save file not found! Adding Data aaa");
         }
+    }
+
+    public static void SaveGame()
+    {
+        string saveFilePath = Application.persistentDataPath + "/savefile.json";
+        string json = JsonUtility.ToJson(playerData, true);
+        File.WriteAllText(saveFilePath, json);
+        Debug.Log("Game file saved to " + saveFilePath);
     }
 
     public static void InitData() {
@@ -59,7 +55,8 @@ public static class SaveSystem
             generatorHealthIncrease = 0f,
             shieldHealthIncrease = 10,
             playerPosition = new Vector3(1, 2, 3),
-            inventoryItems = new List<string> { "Sword", "Shield" }
+            inventoryItems = new List<string> { "Sword", "Shield" },
+            unlockedUpgradeNames = new List<string> { "Damage", "Targeting range", "Targeting Rate", "Fire Rate" }
         };
         playerData = saveData;
     }

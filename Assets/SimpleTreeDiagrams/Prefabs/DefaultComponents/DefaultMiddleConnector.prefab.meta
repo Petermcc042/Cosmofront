@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: dfdb132e2cb01c0438d7492315821bba
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 279172
+  packageName: Simple tree diagrams
+  packageVersion: 1.0.0
+  assetPath: Assets/SimpleTreeDiagrams/Prefabs/DefaultComponents/DefaultMiddleConnector.prefab
+  uploadId: 649389

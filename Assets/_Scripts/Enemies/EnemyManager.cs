@@ -145,7 +145,7 @@ public class EnemyManager : MonoBehaviour
 
     public void UpdateEnemyPositions(NativeList<int> indexToRemove)
     {
-        Debug.Log($"Enemy Objects: {enemyList.Count} - enemy data: {enemyDataList.Length}");
+        //Debug.Log($"Enemy Objects: {enemyList.Count} - enemy data: {enemyDataList.Length}");
         for (int i = 0; i < indexToRemove.Length; i++)
         {
             Destroy(enemyList[indexToRemove[i]]);

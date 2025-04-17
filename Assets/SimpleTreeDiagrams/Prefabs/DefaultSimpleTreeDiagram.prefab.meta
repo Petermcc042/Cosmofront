@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: abb9b963d467aea4a9a24c8e819d53af
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 279172
+  packageName: Simple tree diagrams
+  packageVersion: 1.0.0
+  assetPath: Assets/SimpleTreeDiagrams/Prefabs/DefaultSimpleTreeDiagram.prefab
+  uploadId: 649389

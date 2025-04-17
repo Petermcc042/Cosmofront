@@ -26,7 +26,7 @@ public enum BulletType
     Explosive, Piercing, 
     Spread, Circler, SpreadCircles,
     Slow, Ricochet, Overcharge,
-    ChainLightning, ChainLightningTwo,
+    ChainLightning, ArcLightning, PlasmaOverload,
     OrbitalStrike, MeteorShower, Overclocked, FirestormPayload, Firestorm, TimewarpPayload, Timewarp
 }
 
@@ -106,6 +106,10 @@ public class Turret : MonoBehaviour
     public int turretLevel;
     public UpgradeType upgradeType;
     public BulletType bulletType;
+    public int fireRateUpgrades = 0;
+    public int targetingRateUpgrades  = 0;
+    public int targetingRangeUpgrades = 0;
+    public int damageUpgrades = 0;
 
     [Header("Unity Setup")]
     public Transform partToRotate;

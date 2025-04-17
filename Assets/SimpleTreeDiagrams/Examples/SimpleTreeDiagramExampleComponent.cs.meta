@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 94f1dabc4c4c1164aac1d2f5060a3d8b
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 279172
+  packageName: Simple tree diagrams
+  packageVersion: 1.0.0
+  assetPath: Assets/SimpleTreeDiagrams/Examples/SimpleTreeDiagramExampleComponent.cs
+  uploadId: 649389

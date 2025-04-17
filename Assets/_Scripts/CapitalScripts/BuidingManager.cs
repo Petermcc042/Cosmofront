@@ -14,7 +14,9 @@ public class BuidingManager : MonoBehaviour
     [SerializeField] GameObject descriptionObject;
     [SerializeField] LayerMask upgradeLayer;
 
-   // private int GenHealthChange = 10;
+    [SerializeField] GameObject turretSingleUpgradeMenu;
+
+    // private int GenHealthChange = 10;
     private int turretDamageChange = 5;
     private int shieldHealthIncrease = 5;
 
@@ -81,8 +83,16 @@ public class BuidingManager : MonoBehaviour
 
     public void CloseMenu()
     {
-        for (int i = 0; i < menuList.Count; i++) {
-            menuList[i].SetActive(false);
+        if (!turretSingleUpgradeMenu.activeSelf)
+        {
+            for (int i = 0; i < menuList.Count; i++)
+            {
+                menuList[i].SetActive(false);
+            }
+        }
+        else
+        {
+            turretSingleUpgradeMenu.SetActive(false);
         }
     }
 

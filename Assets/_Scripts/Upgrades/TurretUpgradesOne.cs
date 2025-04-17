@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using UnityEngine.Rendering.PostProcessing;
 
 public interface IUpgradeOption
 {
@@ -9,6 +10,7 @@ public interface IUpgradeOption
     string GetDescription();  // For UI purposes
     int GetTextSize();
     int GetLevel();
+    int GetProbability();
     IUpgradeOption[] NextUpgradeOption();
     
 }
@@ -46,9 +48,11 @@ public class FireRateUpgrade : IUpgradeOption
         turret.highlightBox.SetActive(false);
         turret.fireRate += fireRateIncrease;
         turret.unlockedUpgradeList.Add(this);
+        turret.fireRateUpgrades += 1;
     }
 
     public int GetTextSize() { return 20; }
+    public int GetProbability() { return 20; }
 
     public string GetDescription()
     {
@@ -57,7 +61,18 @@ public class FireRateUpgrade : IUpgradeOption
 
     public int GetLevel() { return 1; }
 
-    public IUpgradeOption[] NextUpgradeOption() { return null; }
+    public IUpgradeOption[] NextUpgradeOption()
+    {
+
+        IUpgradeOption[] tempArray =
+        {
+            new RapidFireUpgrade(),
+            new BurstFireUpgrade(),
+            new DualBarrelUpgrade()
+        };
+
+        return tempArray;
+    }
 }
 
 public class TargetingRateUpgrade : IUpgradeOption
@@ -74,6 +89,7 @@ public class TargetingRateUpgrade : IUpgradeOption
         turret.highlightBox.SetActive(false);
         turret.targetingRate -= targetRate;
         turret.unlockedUpgradeList.Add(this);
+        turret.targetingRateUpgrades += 1;
     }
 
     public int GetTextSize() { return 20; }
@@ -85,7 +101,20 @@ public class TargetingRateUpgrade : IUpgradeOption
 
     public int GetLevel() { return 1; }
 
-    public IUpgradeOption[] NextUpgradeOption() { return null; }
+    public int GetProbability() { return 20; }
+
+    public IUpgradeOption[] NextUpgradeOption()
+    {
+
+        IUpgradeOption[] tempArray =
+        {
+            new DualBarrelUpgrade(),
+            new AI_Targeting(),
+            new LightningRoundsUpgrade()
+        };
+
+        return tempArray;
+    }
 }
 
 public class TargetRangeUpgrade : IUpgradeOption
@@ -102,6 +131,7 @@ public class TargetRangeUpgrade : IUpgradeOption
         turret.highlightBox.SetActive(false);
         turret.range += targetRange;
         turret.unlockedUpgradeList.Add(this);
+        turret.targetingRangeUpgrades += 1;
     }
 
     public int GetTextSize() { return 18; }
@@ -113,7 +143,21 @@ public class TargetRangeUpgrade : IUpgradeOption
 
     public int GetLevel() { return 1; }
 
-    public IUpgradeOption[] NextUpgradeOption() { return null; }
+    public int GetProbability() { return 20; }
+
+    public IUpgradeOption[] NextUpgradeOption()
+    {
+
+        IUpgradeOption[] tempArray =
+        {
+            new LightningRoundsUpgrade(),
+            new OverchargeRoundsUpgrade(),
+            new SpreadRoundsUpgrade(),
+            new PiercingRoundsUpgrade()
+        };
+
+        return tempArray;
+    }
 }
 
 
@@ -131,6 +175,7 @@ public class DamageUpgrade : IUpgradeOption
         turret.highlightBox.SetActive(false);
         turret.bulletDamage += damageIncrease;
         turret.unlockedUpgradeList.Add(this);
+        turret.damageUpgrades += 1;
     }
 
     public int GetTextSize() { return 20; }
@@ -142,5 +187,19 @@ public class DamageUpgrade : IUpgradeOption
 
     public int GetLevel() { return 1; }
 
-    public IUpgradeOption[] NextUpgradeOption() { return null; }
+    public int GetProbability() { return 20; }
+
+    public IUpgradeOption[] NextUpgradeOption()
+    {
+
+        IUpgradeOption[] tempArray =
+        {
+            new PiercingRoundsUpgrade(),
+            new SlowRoundsUpgrade(),
+            new ExplosiveRoundsUpgrade(),
+            new HollowPointRoundsUpgrade()
+        };
+
+        return tempArray;
+    }
 }

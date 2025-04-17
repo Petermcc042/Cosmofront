@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: a4a9b6424c39d6c43aa6371c2e2fb807
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 279172
+  packageName: Simple tree diagrams
+  packageVersion: 1.0.0
+  assetPath: Assets/SimpleTreeDiagrams/Examples/ExampleSimpleTreeDiagramScene.unity
+  uploadId: 649389

@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using TMPro;
 using UnityEngine;
@@ -91,6 +90,7 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
+
         // load all required data for the level
         if (buildMap)
         {
@@ -104,7 +104,6 @@ public class GameManager : MonoBehaviour
 
         CountAllCSLinesInScriptsFolder();
 
-        SaveSystem.LoadGame();
         generator.UpdateShieldHealth(SaveSystem.playerData.shieldHealthIncrease);
     }
 
@@ -151,6 +150,8 @@ public class GameManager : MonoBehaviour
     private void HandleInput()
     {
         if (Input.GetKeyDown(KeyCode.P)) { InvertGameState(); }
+
+        if (Input.GetKeyDown(KeyCode.R)) { EndGame("You Ended It"); }
 
         if (Input.GetKeyDown(KeyCode.I)) { debugInfoUI.SetActive(!debugInfoUI.activeSelf); }
 

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: cfeea12371332f748a6717d31f8faa30
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 279172
+  packageName: Simple tree diagrams
+  packageVersion: 1.0.0
+  assetPath: Assets/SimpleTreeDiagrams/README.md
+  uploadId: 649389

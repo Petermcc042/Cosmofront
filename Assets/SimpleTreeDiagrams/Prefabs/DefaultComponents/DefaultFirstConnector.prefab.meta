@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 789e1cd54b2e3a24f8198ba0987396f0
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 279172
+  packageName: Simple tree diagrams
+  packageVersion: 1.0.0
+  assetPath: Assets/SimpleTreeDiagrams/Prefabs/DefaultComponents/DefaultFirstConnector.prefab
+  uploadId: 649389
