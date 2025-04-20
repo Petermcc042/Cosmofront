@@ -9,7 +9,7 @@ using UnityEngine;
 public struct EnemyData
 {
     public int EnemyID;
-    public float3 Position; //Position = pathArray[pathIndexArray[_spawnIndexCount]]
+    public float3 Position;
     public float3 TargetPos;
     public float3 Velocity;
     public Quaternion Rotation;

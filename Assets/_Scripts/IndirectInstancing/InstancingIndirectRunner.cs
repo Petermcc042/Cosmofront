@@ -24,16 +24,15 @@ public class InstancingIndirectRunner : MonoBehaviour
 {
     [SerializeField] private EnemyManager enemyManager;
 
-    [Header("Animation Data")]
+    [Header("Enemy Generals")]
+    private quaternion fixedXRotation; // meshes are hopefully uniformly rotated need to be rotated -90 on the x axis
+
+    [Header("Animation Idle Data")]
     public BakedDataReference dataRef;
-    public float playbackFramesPerSecond = 30.0f; // <<< Added back: Desired playback speed
-    private quaternion _fixedXRotation;
-
-
-    // --- Animation Compute Shader Variables ---
     private Vector3[][] loadedFrames;
-    private int _vertexCountPerFrame = 0;
-    private int _frameCountActual = 0;
+    private int frameCountActual = 0;
+    private float playbackFramesPerSecond = 30.0f; // <<< Added back: Desired playback speed
+    private bool animationIsIdle;
 
     [Header("Instancing Settings")]
     public Mesh mesh;
@@ -67,9 +66,9 @@ public class InstancingIndirectRunner : MonoBehaviour
 
 
         //LoadAndPrepareFrameData();
-        loadedFrames = LoadData();
-        _frameCountActual = loadedFrames.Length;
-        _vertexCountPerFrame = loadedFrames[0].Length;
+        loadedFrames = LoadData(dataRef);
+        frameCountActual = loadedFrames.Length;
+        animationIsIdle = dataRef.clipName=="Idle";
 
         InitializeCPUData();
         InitializeGpuBuffers(); // Combined buffer init
@@ -84,7 +83,7 @@ public class InstancingIndirectRunner : MonoBehaviour
         // Define the drawing bounds (needs to encompass all instances)
         // For simplicity, use a large fixed bounds. In a real game, calculate this more tightly.
         _bounds = new Bounds(new Vector3(99,0,99), Vector3.one * 100f);
-        _fixedXRotation = quaternion.Euler(math.radians(-90.0f), 0f, 0f);
+        fixedXRotation = quaternion.Euler(math.radians(-90.0f), 0f, 0f);
     }
 
     void InitializeCPUData()
@@ -99,11 +98,9 @@ public class InstancingIndirectRunner : MonoBehaviour
             float3 scale = new float3(1, 1, 1);
             float startFrame = 0f; // Start at frame 0
 
-            _fixedXRotation = quaternion.Euler(math.radians(-90.0f), 0f, 0f);
-
             instanceDataArray[i] = new InstanceDataGpu
             {
-                Matrix = float4x4.TRS(position, _fixedXRotation, scale), // Use the combined finalRotation
+                Matrix = float4x4.TRS(position, fixedXRotation, scale), // Use the combined finalRotation
                 AnimationFrame = startFrame
             };
         }
@@ -150,10 +147,11 @@ public class InstancingIndirectRunner : MonoBehaviour
         {
             deltaTime = Time.deltaTime,
             playbackFramesPerSecond = playbackFramesPerSecond, // Use the public variable
-            numFrames = _frameCountActual,
+            numFrames = frameCountActual,
             enemyDataList = enemyDataList,
             instanceData = instanceDataArray,
-            fixedXRotation = _fixedXRotation
+            fixedXRotation = fixedXRotation,
+            animationIsIdle = animationIsIdle
         };
 
         JobHandle handle = moveJob.Schedule(instanceCount, 32);
@@ -197,6 +195,7 @@ public class InstancingIndirectRunner : MonoBehaviour
         [ReadOnly] public int numFrames; // Total frame count for looping
         [ReadOnly] public NativeList<EnemyData> enemyDataList;
         [ReadOnly] public quaternion fixedXRotation;
+        [ReadOnly] public bool animationIsIdle;
 
         public NativeArray<InstanceDataGpu> instanceData;
 
@@ -207,8 +206,19 @@ public class InstancingIndirectRunner : MonoBehaviour
 
             if (i < enemyDataList.Length)
             {
-                position = enemyDataList[i].Position;
-                rotation = enemyDataList[i].Rotation;
+                EnemyData tempEnemy = enemyDataList[i];
+
+                if (tempEnemy.IsAttacking && !animationIsIdle)
+                {
+                    position = tempEnemy.Position;
+                    rotation = tempEnemy.Rotation;
+                }
+
+                if (!tempEnemy.IsAttacking && animationIsIdle)
+                {
+                    position = tempEnemy.Position;
+                    rotation = tempEnemy.Rotation;
+                }
             }
 
 
@@ -264,12 +274,12 @@ public class InstancingIndirectRunner : MonoBehaviour
 
     }
 
-    private Vector3[][] LoadData()
+    private Vector3[][] LoadData(BakedDataReference _dataRef)
     {
-        if (dataRef == null) { Debug.LogError("Data Reference (SO) is not assigned!"); return null; }
+        if (_dataRef == null) { Debug.LogError("Data Reference (SO) is not assigned!"); return null; }
 
         // Construct the full path using StreamingAssets
-        string fullPath = Path.Combine(Application.streamingAssetsPath, dataRef.binaryDataPath);
+        string fullPath = Path.Combine(Application.streamingAssetsPath, _dataRef.binaryDataPath);
 
         if (!File.Exists(fullPath))
         {
@@ -278,7 +288,7 @@ public class InstancingIndirectRunner : MonoBehaviour
         }
 
         // Pre-allocate the outer array based on expected frame count
-        Vector3[][] tempLoadedFrames = new Vector3[dataRef.frameCount][];
+        Vector3[][] tempLoadedFrames = new Vector3[_dataRef.frameCount][];
 
         try
         {
@@ -291,17 +301,17 @@ public class InstancingIndirectRunner : MonoBehaviour
                 int fileFrameRate = reader.ReadInt32(); // Read frame rate even if not directly used here
 
                 // Validate against ScriptableObject metadata
-                if (fileVertexCount != dataRef.vertexCount || fileFrameCount != dataRef.frameCount /*|| fileFrameRate != dataRef.frameRate*/) // Optional: Validate framerate too
+                if (fileVertexCount != _dataRef.vertexCount || fileFrameCount != _dataRef.frameCount /*|| fileFrameRate != dataRef.frameRate*/) // Optional: Validate framerate too
                 {
-                    Debug.LogError($"Metadata mismatch between file header ({fileVertexCount} verts, {fileFrameCount} frames) and ScriptableObject ({dataRef.vertexCount} verts, {dataRef.frameCount} frames)! Halting load.");
+                    Debug.LogError($"Metadata mismatch between file header ({fileVertexCount} verts, {fileFrameCount} frames) and ScriptableObject ({_dataRef.vertexCount} verts, {_dataRef.frameCount} frames)! Halting load.");
                     return null;
                 }
 
                 // Read vertex data frame by frame
-                for (int f = 0; f < dataRef.frameCount; f++)
+                for (int f = 0; f < _dataRef.frameCount; f++)
                 {
-                    Vector3[] vertices = new Vector3[dataRef.vertexCount];
-                    for (int v = 0; v < dataRef.vertexCount; v++)
+                    Vector3[] vertices = new Vector3[_dataRef.vertexCount];
+                    for (int v = 0; v < _dataRef.vertexCount; v++)
                     {
                         // Read X, Y, Z for each vertex
                         vertices[v] = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
