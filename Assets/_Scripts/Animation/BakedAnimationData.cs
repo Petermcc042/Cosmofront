@@ -14,4 +14,9 @@ public class BakedDataReference : ScriptableObject
     [Header("Data Location")]
     // Path to the binary file, RELATIVE to the StreamingAssets folder.
     public string binaryDataPath;
+
+    [Header("Unique Enemy Data")]
+    public Mesh mesh;
+    public Material material;
+    public int instanceCount = 4000;
 }

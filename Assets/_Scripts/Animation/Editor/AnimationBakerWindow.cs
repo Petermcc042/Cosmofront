@@ -1,11 +1,9 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
-using System.IO; // Required for Path and IO operations
+using System.IO; 
 using System;
 
-// This class is still useful during baking to hold data in memory
-// But it no longer needs to be [System.Serializable] as it's not saved directly
 public class BakedClipDataRuntime // Renamed slightly to avoid confusion
 {
     public string clipName;

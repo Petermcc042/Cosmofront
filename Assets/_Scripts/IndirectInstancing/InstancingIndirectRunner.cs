@@ -24,20 +24,19 @@ public class InstancingIndirectRunner : MonoBehaviour
 {
     [SerializeField] private EnemyManager enemyManager;
 
-    [Header("Enemy Generals")]
-    private quaternion fixedXRotation; // meshes are hopefully uniformly rotated need to be rotated -90 on the x axis
-
     [Header("Animation Idle Data")]
     public BakedDataReference dataRef;
+
+    // --- All of this is calculated from the dataRef ---
     private Vector3[][] loadedFrames;
     private int frameCountActual = 0;
-    private float playbackFramesPerSecond = 30.0f; // <<< Added back: Desired playback speed
+    private float playbackFramesPerSecond = 30.0f;
     private bool animationIsIdle;
 
-    [Header("Instancing Settings")]
-    public Mesh mesh;
-    public Material material; // Assign a Material using the custom shader below
-    public int instanceCount = 100;
+    private quaternion fixedXRotation; // meshes are hopefully uniformly rotated need to be rotated -90 on the x axis
+    private Mesh mesh;
+    private Material material; 
+    private int instanceCount = 100;
 
     // --- CPU Data (for Job) ---
     public NativeList<EnemyData> enemyDataList;
@@ -61,6 +60,12 @@ public class InstancingIndirectRunner : MonoBehaviour
 
     void Start()
     {
+        mesh = dataRef.mesh;
+        material = dataRef.material;
+        instanceCount = dataRef.instanceCount;
+
+        animationIsIdle = dataRef.clipName == "Idle";
+
         if (!ValidateSetup()) return; // quick check for inspector assignments
         enemyDataList = enemyManager.enemyDataList;
 
@@ -68,7 +73,6 @@ public class InstancingIndirectRunner : MonoBehaviour
         //LoadAndPrepareFrameData();
         loadedFrames = LoadData(dataRef);
         frameCountActual = loadedFrames.Length;
-        animationIsIdle = dataRef.clipName=="Idle";
 
         InitializeCPUData();
         InitializeGpuBuffers(); // Combined buffer init

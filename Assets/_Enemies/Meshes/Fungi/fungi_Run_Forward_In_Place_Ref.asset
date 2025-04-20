@@ -12,8 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e6eb0782056d0c43baed9342d96f137, type: 3}
   m_Name: fungi_Run_Forward_In_Place_Ref
   m_EditorClassIdentifier: 
-  clipName: Run Forward In Place
+  clipName: Idle
   vertexCount: 810
   frameCount: 20
   frameRate: 30
   binaryDataPath: fungi_Run_Forward_In_Place_Data\vertexData.bin
+  mesh: {fileID: 4300000, guid: 4e1b183418b741c4fa19de2b413b5e75, type: 2}
+  material: {fileID: 2100000, guid: 7ac0671b9dbbb8f488b1c23a8d0a27cb, type: 2}
+  instanceCount: 4000

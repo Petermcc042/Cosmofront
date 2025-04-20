@@ -15748,10 +15748,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyManager: {fileID: 269101019}
-  dataRef: {fileID: 11400000, guid: 85b4da8e1630a7f4d88dbc2f67def353, type: 2}
-  mesh: {fileID: 4300000, guid: db13331a9ade1df46a30c1179d2f4539, type: 3}
-  material: {fileID: 2100000, guid: 654027b431e45fb40bf8cac1531bcf35, type: 2}
-  instanceCount: 10000
+  dataRef: {fileID: 11400000, guid: fac17bdbe8c3022448688ae7f3149e6a, type: 2}
+  mesh: {fileID: 4300000, guid: 4e1b183418b741c4fa19de2b413b5e75, type: 2}
+  material: {fileID: 2100000, guid: c86418e13fea41d49baa065c231397cd, type: 2}
+  instanceCount: 4000
 --- !u!114 &630643978
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15765,10 +15765,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyManager: {fileID: 269101019}
-  dataRef: {fileID: 11400000, guid: 7463e05a6ea919b4c87103949446248e, type: 2}
-  mesh: {fileID: 4300000, guid: db13331a9ade1df46a30c1179d2f4539, type: 3}
-  material: {fileID: 2100000, guid: 08a6ffbfb5d56ca4bb30168421eb6bc4, type: 2}
-  instanceCount: 10000
+  dataRef: {fileID: 11400000, guid: 4970a70ab7a97424e9670cb7a712c476, type: 2}
+  mesh: {fileID: 4300000, guid: 4e1b183418b741c4fa19de2b413b5e75, type: 2}
+  material: {fileID: 2100000, guid: 7ac0671b9dbbb8f488b1c23a8d0a27cb, type: 2}
+  instanceCount: 4000
 --- !u!1 &633418036
 GameObject:
   m_ObjectHideFlags: 0
