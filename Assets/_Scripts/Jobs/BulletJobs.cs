@@ -17,16 +17,10 @@ public struct UpdateBulletPosition : IJobParallelFor
     public void Execute(int index)
     {
         BulletData bullet = BulletList[index];
-        //bullet.Position += bullet.Velocity * DeltaTime * bullet.Speed;
-        bullet.Position += ReturnPosition(bullet.Velocity, bullet.Speed);
+        bullet.Position += bullet.Velocity * DeltaTime * bullet.Speed;
         bullet.Lifetime += DeltaTime;
         if (bullet.Lifetime > 3f) { bullet.ToRemove = true; }
         BulletList[index] = bullet;
-    }
-
-    public float3 ReturnPosition(float3 _velocity, float _speed)
-    {
-        return _velocity * _speed * DeltaTime;
     }
 }
 

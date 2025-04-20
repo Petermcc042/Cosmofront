@@ -16,6 +16,8 @@ public class RapidFireUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 20; }
 
+    public string GetName() { return "Rapid Fire"; }
+
     public string GetDescription()
     {
         return $"Increases fire rate";
@@ -51,6 +53,8 @@ public class BurstFireUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 20; }
 
+    public string GetName() { return "Burst Fire"; }
+
     public string GetDescription()
     {
         return $"Fires a burst of three bullets";
@@ -83,6 +87,8 @@ public class DualBarrelUpgrade : IUpgradeOption
     }
 
     public int GetTextSize() { return 20; }
+
+    public string GetName() { return "Dual Barrel"; }
 
     public string GetDescription()
     {
@@ -120,6 +126,8 @@ public class AI_Targeting : IUpgradeOption
 
     public int GetTextSize() { return 20; }
 
+    public string GetName() { return "A.I. Targeting"; }
+
     public string GetDescription()
     {
         return $"AI increases faster targeting";
@@ -149,6 +157,8 @@ public class LightningRoundsUpgrade : IUpgradeOption
     }
 
     public int GetTextSize() { return 17; }
+
+    public string GetName() { return "Lightning Rounds"; }
 
     public string GetDescription()
     {
@@ -181,6 +191,8 @@ public class OverchargeRoundsUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 17; }
 
+    public string GetName() { return "Overcharge Rounds"; }
+
     public string GetDescription()
     {
         return $"Bullets charge up damage between shots";
@@ -203,6 +215,8 @@ public class SpreadRoundsUpgrade : IUpgradeOption
     }
 
     public int GetTextSize() { return 17; }
+
+    public string GetName() { return "Spread Rounds"; }
 
     public string GetDescription()
     {
@@ -237,6 +251,8 @@ public class PiercingRoundsUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 17; }
 
+    public string GetName() { return "Piercing Rounds"; }
+
     public string GetDescription()
     {
         return $"Hardened bullets can pass through 1 enemies";
@@ -269,6 +285,8 @@ public class SlowRoundsUpgrade : IUpgradeOption
 
 
     public int GetTextSize() { return 17; }
+
+    public string GetName() { return "Slow Rounds"; }
 
     public string GetDescription()
     {
@@ -305,6 +323,8 @@ public class ExplosiveRoundsUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 17; }
 
+    public string GetName() { return "Explosive Rounds"; }
+
 
     public string GetDescription()
     {
@@ -339,6 +359,8 @@ public class HollowPointRoundsUpgrade : IUpgradeOption
     }
 
     public int GetTextSize() { return 17; }
+
+    public string GetName() { return "Hollow Point"; }
 
 
     public string GetDescription()

@@ -70,6 +70,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI killCountUI;
     [SerializeField] private TextMeshProUGUI fireRateUI;
     [SerializeField] private TextMeshProUGUI turretLevelUI;
+    [SerializeField] private TextMeshProUGUI fireRateUpgradeLevel;
+    [SerializeField] private TextMeshProUGUI damageUpgradeLevel;
+    [SerializeField] private TextMeshProUGUI targetRateUpgradeLevel;
+    [SerializeField] private TextMeshProUGUI targetRangeUpgradeLevel;
+    
 
 
     [Header("Escape Menu UI")]
@@ -97,6 +102,8 @@ public class GameManager : MonoBehaviour
             PrecomputedData.Clear();
             PrecomputedData.Init(200);
             PrecomputedData.InitGrid();
+
+            SaveSystem.LoadGame();
         }
         
         gameRunning = false;
@@ -104,6 +111,7 @@ public class GameManager : MonoBehaviour
 
         CountAllCSLinesInScriptsFolder();
 
+        
         generator.UpdateShieldHealth(SaveSystem.playerData.shieldHealthIncrease);
     }
 
@@ -338,6 +346,10 @@ public class GameManager : MonoBehaviour
             fireRateUI.text = $"Fire Rate: {_turret.fireRate}";
             killCountUI.text = $"Kill Count: {_turret.killCount}";
             turretLevelUI.text = $"Level: {_turret.turretLevel}";
+            fireRateUpgradeLevel.text = _turret.fireRateUpgrades.ToString();
+            damageUpgradeLevel.text = _turret.damageUpgrades.ToString();
+            targetRateUpgradeLevel.text = _turret.targetingRateUpgrades.ToString();
+            targetRangeUpgradeLevel.text = _turret.targetingRangeUpgrades.ToString();
         }
         else
         {
@@ -369,7 +381,7 @@ public class GameManager : MonoBehaviour
         if (hasRun) return;
         hasRun = true;
 
-        ResourceData resourceData = FindFirstObjectByType<ResourceData>();
+        ResourceData resourceData = GameObject.Find("GlobalResources").GetComponent<ResourceData>();
         resourceData.CommitSessionResources(
             resourceManager.attaniumTotal,
             resourceManager.marcumTotal,
@@ -381,7 +393,7 @@ public class GameManager : MonoBehaviour
 
     public void ReturnToMenu()
     {
-        SceneManager.LoadScene("1_Menu");
+        SceneManager.LoadScene("2_Capital");
     }
 
     public static Vector3 GetMouseWorldPosition()

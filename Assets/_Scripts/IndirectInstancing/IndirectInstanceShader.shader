@@ -20,7 +20,8 @@ Shader "Custom/IndirectInstancedShaderURP" // Renamed for clarity
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile_instancing // Enable instancing
+            #pragma multi_compile_instancing
+            #pragma target 5.0 // <<< ADD THIS LINE
 
             // --- Includes ---
             // Include the URP Core library. This defines necessary functions and types.

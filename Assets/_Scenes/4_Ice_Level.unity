@@ -6824,7 +6824,7 @@ GameObject:
   - component: {fileID: 306611217}
   - component: {fileID: 306611216}
   m_Layer: 0
-  m_Name: KillCountText (4)
+  m_Name: TargetRateLevel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -17288,7 +17288,7 @@ GameObject:
   - component: {fileID: 760229513}
   - component: {fileID: 760229512}
   m_Layer: 0
-  m_Name: KillCountText (3)
+  m_Name: TargetRangeLevel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -18385,6 +18385,10 @@ MonoBehaviour:
   killCountUI: {fileID: 104570132}
   fireRateUI: {fileID: 1683010864}
   turretLevelUI: {fileID: 85416465}
+  fireRateUpgradeLevel: {fileID: 1944638106}
+  damageUpgradeLevel: {fileID: 1938275869}
+  targetRateUpgradeLevel: {fileID: 306611216}
+  targetRangeUpgradeLevel: {fileID: 760229512}
   buttonsText:
   - {fileID: 1502707396}
   - {fileID: 1169097674}
@@ -31526,7 +31530,7 @@ MonoBehaviour:
   costsRemoved: 0
   autoUpgrade: 0
   invincible: 1
-  buildMap: 0
+  buildMap: 1
   renderGameObjects: 0
   gameSettings: {fileID: 11400000, guid: e38f55fe86a74314db66ae42a3f2e21c, type: 2}
   buildingsList: {fileID: 11400000, guid: 512f1a6ef67b9bf4d9f2efa25328505f, type: 2}
@@ -31564,6 +31568,10 @@ MonoBehaviour:
   killCountUI: {fileID: 104570132}
   fireRateUI: {fileID: 1683010864}
   turretLevelUI: {fileID: 85416465}
+  fireRateUpgradeLevel: {fileID: 1944638106}
+  damageUpgradeLevel: {fileID: 1938275869}
+  targetRateUpgradeLevel: {fileID: 306611216}
+  targetRangeUpgradeLevel: {fileID: 760229512}
   escapeMenuUI: {fileID: 325882679}
   debugInfoUI: {fileID: 1683117829}
   genHealthText: {fileID: 1113934137}
@@ -34185,7 +34193,7 @@ GameObject:
   - component: {fileID: 1938275870}
   - component: {fileID: 1938275869}
   m_Layer: 0
-  m_Name: KillCountText (1)
+  m_Name: DamageLevel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -34366,7 +34374,7 @@ GameObject:
   - component: {fileID: 1944638107}
   - component: {fileID: 1944638106}
   m_Layer: 0
-  m_Name: KillCountText (2)
+  m_Name: FireRateLevel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

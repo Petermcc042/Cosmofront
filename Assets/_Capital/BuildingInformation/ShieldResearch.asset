@@ -12,4 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da5f372f336a7ae4bad19871cd713656, type: 3}
   m_Name: ShieldResearch
   m_EditorClassIdentifier: 
-  nameString: Shield Research Facility
+  buildingName: Shield Research
+  buildingDescription: The building that upgrades the shield
+  purchaseCost: {x: 5, y: 0, z: 0}
+  cameraPosition: {x: 48, y: 65, z: -152}

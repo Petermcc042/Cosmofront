@@ -5,6 +5,7 @@ using Unity.Burst;
 using Unity.Mathematics;
 using UnityEngine.Rendering; // Required for ComputeBufferType
 using System.IO;
+using System;
 
 [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)] // Ensure layout matches HLSL
 public struct InstanceDataGpu
@@ -42,7 +43,6 @@ public class InstancingIndirectRunner : MonoBehaviour
     // --- CPU Data (for Job) ---
     public NativeList<EnemyData> enemyDataList;
     private NativeArray<InstanceDataGpu> instanceDataArray;
-    private NativeArray<int> activeEnemyCountResult;
 
     // --- GPU Buffers ---
     private ComputeBuffer _InstanceDataBuffer;      // Holds InstanceDataGpu per instance
@@ -66,7 +66,11 @@ public class InstancingIndirectRunner : MonoBehaviour
         enemyDataList = enemyManager.enemyDataList;
 
 
-        LoadAndPrepareFrameData();
+        //LoadAndPrepareFrameData();
+        loadedFrames = LoadData();
+        _frameCountActual = loadedFrames.Length;
+        _vertexCountPerFrame = loadedFrames[0].Length;
+
         InitializeCPUData();
         InitializeGpuBuffers(); // Combined buffer init
         SetupDrawArguments();
@@ -80,30 +84,26 @@ public class InstancingIndirectRunner : MonoBehaviour
         // Define the drawing bounds (needs to encompass all instances)
         // For simplicity, use a large fixed bounds. In a real game, calculate this more tightly.
         _bounds = new Bounds(new Vector3(99,0,99), Vector3.one * 100f);
-        _fixedXRotation = quaternion.Euler(math.radians(-180.0f), 0f, 0f);
+        _fixedXRotation = quaternion.Euler(math.radians(-90.0f), 0f, 0f);
     }
 
     void InitializeCPUData()
     {
         instanceDataArray = new NativeArray<InstanceDataGpu>(instanceCount, Allocator.Persistent);
-        Unity.Mathematics.Random random = new Unity.Mathematics.Random((uint)System.DateTime.Now.Ticks); // Use Unity.Mathematics.Random
-
+        Unity.Mathematics.Random random = new Unity.Mathematics.Random((uint)System.DateTime.Now.Ticks); 
 
         for (int i = 0; i < instanceCount; i++)
         {
             float3 position = random.NextFloat3(-5f, 5f);
 
-            // --- Define the random rotation around Y-axis ---
-            float yAngleRad = random.NextFloat(0f, 2f * math.PI);
-            quaternion randomYRotation = quaternion.Euler(0f, yAngleRad, 0f);
-            quaternion finalRotation = math.mul(randomYRotation, _fixedXRotation);
-
             float3 scale = new float3(1, 1, 1);
             float startFrame = 0f; // Start at frame 0
 
+            _fixedXRotation = quaternion.Euler(math.radians(-90.0f), 0f, 0f);
+
             instanceDataArray[i] = new InstanceDataGpu
             {
-                Matrix = float4x4.TRS(position, finalRotation, scale), // Use the combined finalRotation
+                Matrix = float4x4.TRS(position, _fixedXRotation, scale), // Use the combined finalRotation
                 AnimationFrame = startFrame
             };
         }
@@ -149,10 +149,11 @@ public class InstancingIndirectRunner : MonoBehaviour
         MoveInstancesJob moveJob = new MoveInstancesJob
         {
             deltaTime = Time.deltaTime,
-            playbackFramesPerSecond = this.playbackFramesPerSecond, // Use the public variable
-            numFrames = this._frameCountActual,
-            enemyDataList = this.enemyDataList,
-            instanceData = instanceDataArray
+            playbackFramesPerSecond = playbackFramesPerSecond, // Use the public variable
+            numFrames = _frameCountActual,
+            enemyDataList = enemyDataList,
+            instanceData = instanceDataArray,
+            fixedXRotation = _fixedXRotation
         };
 
         JobHandle handle = moveJob.Schedule(instanceCount, 32);
@@ -195,46 +196,33 @@ public class InstancingIndirectRunner : MonoBehaviour
         [ReadOnly] public float playbackFramesPerSecond;
         [ReadOnly] public int numFrames; // Total frame count for looping
         [ReadOnly] public NativeList<EnemyData> enemyDataList;
+        [ReadOnly] public quaternion fixedXRotation;
 
         public NativeArray<InstanceDataGpu> instanceData;
 
         public void Execute(int i)
         {
-            // Get the current matrix from the instance data
-            float4x4 matrix = instanceData[i].Matrix;
+            float3 position = float3.zero;
+            Quaternion rotation = Quaternion.identity;
 
-            // Extract current position (which is in the 4th column)
-            float3 currentPos = new float3(
-                matrix.c3.x,
-                matrix.c3.y,
-                matrix.c3.z
-            );
-
-            // Update the Y position
-            currentPos.y += math.sin(deltaTime * 2f + i) * 0.0005f;
-
-            // Create a new instance data that preserves everything but updates the position
-            InstanceDataGpu newData = instanceData[i];
-
-            // Update only the position elements in the matrix (column 3)
             if (i < enemyDataList.Length)
             {
-                newData.Matrix.c3.x = enemyDataList[i].Position.x;
-                newData.Matrix.c3.y = enemyDataList[i].Position.y + 0.5f;
-                newData.Matrix.c3.z = enemyDataList[i].Position.z;
+                position = enemyDataList[i].Position;
+                rotation = enemyDataList[i].Rotation;
             }
-            else
-            {
-                newData.Matrix.c3.x = currentPos.x;
-                newData.Matrix.c3.y = currentPos.y;
-                newData.Matrix.c3.z = currentPos.z;
-            }
-            
 
-            // --- Animation Update (Simplified: Increment frame by 1) ---
+
+            float3 scale = new float3(1, 1, 1);
+
+            quaternion finalRotation = math.mul(rotation, fixedXRotation);
+
+
+
+            InstanceDataGpu oldData = instanceData[i];
+
             // Calculate frame increment based on speed and time
             float frameIncrement = playbackFramesPerSecond * deltaTime;
-            float newFrame = newData.AnimationFrame + frameIncrement;
+            float newFrame = oldData.AnimationFrame + frameIncrement;
 
             // Loop animation frame number
             if (numFrames > 0)
@@ -246,10 +234,12 @@ public class InstancingIndirectRunner : MonoBehaviour
             {
                 newFrame = 0; // Default to frame 0 if no frames exist
             }
-            newData.AnimationFrame = newFrame; // Store updated frame
 
-            // Write back the updated instance data
-            instanceData[i] = newData;
+            instanceData[i] = new InstanceDataGpu
+            {
+                Matrix = float4x4.TRS(position, finalRotation, scale), // Use the combined finalRotation
+                AnimationFrame = newFrame
+            };
         }
     }
 
@@ -274,47 +264,9 @@ public class InstancingIndirectRunner : MonoBehaviour
 
     }
 
-    void LoadAndPrepareFrameData()
+    private Vector3[][] LoadData()
     {
-        LoadData(); // Load from binary file based on dataRef
-
-        // Validate and store counts after loading
-        if (loadedFrames != null && loadedFrames.Length > 0)
-        {
-            _frameCountActual = loadedFrames.Length;
-            if (loadedFrames[0] != null && loadedFrames[0].Length > 0)
-            {
-                _vertexCountPerFrame = loadedFrames[0].Length;
-                // Basic validation: Ensure all frames have the same vertex count
-                for (int i = 1; i < _frameCountActual; i++)
-                {
-                    if (loadedFrames[i] == null || loadedFrames[i].Length != _vertexCountPerFrame)
-                    {
-                        Debug.LogError($"Frame {i} has different vertex count ({loadedFrames[i]?.Length ?? -1}) or is null! Expected {_vertexCountPerFrame}.");
-                        _frameCountActual = 0; _vertexCountPerFrame = 0; // Invalidate data
-                        loadedFrames = null; // Clear invalid data
-                        return;
-                    }
-                }
-                Debug.Log($"Loaded {_frameCountActual} frames with {_vertexCountPerFrame} vertices per frame.");
-            }
-            else
-            {
-                Debug.LogError("First frame of loaded animation data is null or empty!");
-                _frameCountActual = 0; _vertexCountPerFrame = 0;
-                loadedFrames = null;
-            }
-        }
-        else
-        {
-            Debug.LogWarning("loadedFrames is null or empty after LoadData attempt.");
-            _frameCountActual = 0; _vertexCountPerFrame = 0;
-        }
-    }
-
-    void LoadData()
-    {
-        if (dataRef == null) { Debug.LogError("Data Reference (SO) is not assigned!"); return; }
+        if (dataRef == null) { Debug.LogError("Data Reference (SO) is not assigned!"); return null; }
 
         // Construct the full path using StreamingAssets
         string fullPath = Path.Combine(Application.streamingAssetsPath, dataRef.binaryDataPath);
@@ -322,12 +274,11 @@ public class InstancingIndirectRunner : MonoBehaviour
         if (!File.Exists(fullPath))
         {
             Debug.LogError($"Binary data file not found at: {fullPath}");
-            loadedFrames = null; // Ensure loadedFrames is null if file doesn't exist
-            return;
+            return null;
         }
 
         // Pre-allocate the outer array based on expected frame count
-        loadedFrames = new Vector3[dataRef.frameCount][];
+        Vector3[][] tempLoadedFrames = new Vector3[dataRef.frameCount][];
 
         try
         {
@@ -343,8 +294,7 @@ public class InstancingIndirectRunner : MonoBehaviour
                 if (fileVertexCount != dataRef.vertexCount || fileFrameCount != dataRef.frameCount /*|| fileFrameRate != dataRef.frameRate*/) // Optional: Validate framerate too
                 {
                     Debug.LogError($"Metadata mismatch between file header ({fileVertexCount} verts, {fileFrameCount} frames) and ScriptableObject ({dataRef.vertexCount} verts, {dataRef.frameCount} frames)! Halting load.");
-                    loadedFrames = null; // Discard potentially mismatched data
-                    return;
+                    return null;
                 }
 
                 // Read vertex data frame by frame
@@ -356,21 +306,23 @@ public class InstancingIndirectRunner : MonoBehaviour
                         // Read X, Y, Z for each vertex
                         vertices[v] = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
                     }
-                    loadedFrames[f] = vertices; // Assign the loaded vertex array to the correct frame index
+                    tempLoadedFrames[f] = vertices; // Assign the loaded vertex array to the correct frame index
                 }
             }
-            Debug.Log($"Successfully loaded animation data from: {fullPath}");
+            //Debug.Log($"Successfully loaded animation data from: {fullPath}");
         }
         catch (EndOfStreamException eof)
         {
             Debug.LogError($"Failed to read binary data: Reached end of stream prematurely. Is the file corrupted or metadata incorrect? {eof.Message}");
-            loadedFrames = null; // Clear partial data on error
+            tempLoadedFrames = null; // Clear partial data on error
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Failed to read binary data: {e.Message}");
-            loadedFrames = null; // Clear partial data on error
+            tempLoadedFrames = null; // Clear partial data on error
         }
+
+        return tempLoadedFrames;
     }
 
     Vector3[] FlattenFrames(Vector3[][] frames)

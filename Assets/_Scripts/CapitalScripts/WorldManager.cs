@@ -28,7 +28,6 @@ public class WorldManager : MonoBehaviour
     // ui method triggered
     public void LoadLevel()
     {
-        Debug.Log(mapSize);
         if (mapSize != 0 )
         {
             PrecomputedData.Clear();

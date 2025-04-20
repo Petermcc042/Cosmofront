@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using TMPro;
+using Unity.Mathematics.Geometry;
 using UnityEngine;
 
 public class SkillManager: MonoBehaviour
@@ -18,11 +19,16 @@ public class SkillManager: MonoBehaviour
     [SerializeField] private TextMeshProUGUI killCountUI;
     [SerializeField] private TextMeshProUGUI fireRateUI;
     [SerializeField] private TextMeshProUGUI turretLevelUI;
+    [SerializeField] private TextMeshProUGUI fireRateUpgradeLevel;
+    [SerializeField] private TextMeshProUGUI damageUpgradeLevel;
+    [SerializeField] private TextMeshProUGUI targetRateUpgradeLevel;
+    [SerializeField] private TextMeshProUGUI targetRangeUpgradeLevel;
     [SerializeField] private List<TextMeshProUGUI> buttonsText;
+
+    private List<string> unlockedUpgradeNames;
 
 #pragma warning disable UDR0001 // Domain Reload Analyzer
     private static List<IUpgradeOption> smallUpgrades = new List<IUpgradeOption>();
-    private static List<IUpgradeOption> mediumUpgrades = new List<IUpgradeOption>();
     private static List<IUpgradeOption> largeUpgrades = new List<IUpgradeOption>();
     private static List<IUpgradeOption> optionUpgrades = new List<IUpgradeOption>();
     private Turret currentTurret;
@@ -38,16 +44,6 @@ public class SkillManager: MonoBehaviour
             smallUpgrades.Add(new TargetRangeUpgrade(i));
             smallUpgrades.Add(new DamageUpgrade(i));
             smallUpgrades.Add(new TargetingRateUpgrade(i / 10));
-        }
-
-        for (int i = 0; i < 4; i++)
-        {
-            mediumUpgrades.Add(new LightningRoundsUpgrade());
-            mediumUpgrades.Add(new SlowRoundsUpgrade());
-            mediumUpgrades.Add(new ExplosiveRoundsUpgrade());
-            mediumUpgrades.Add(new SpreadRoundsUpgrade());
-            mediumUpgrades.Add(new PiercingRoundsUpgrade());
-            mediumUpgrades.Add(new OverclockedUpgrade());
         }
 
         for (int i = 0; i < 4; i++)
@@ -74,37 +70,36 @@ public class SkillManager: MonoBehaviour
             return;
         }
 
-        rightPanelUI.SetActive(true);
-
-        turretNameUI.text = $"{_turret.GetInstanceID()}";
-        bulletDamageUI.text = $"Damage: {_turret.bulletDamage}";
-        fireRateUI.text = $"Fire Rate: {_turret.fireRate}";
-        killCountUI.text = $"Kill Count: {_turret.killCount}";
-        turretLevelUI.text = $"Level: {_turret.turretLevel}";
-
-        
-        for (int i = 0; i < buttonsText.Count; i++)
-        {
-            buttonsText[i].text = optionUpgrades[i].GetDescription();
-            buttonsText[i].fontSize = optionUpgrades[i].GetTextSize();
-        }
+        OpenRightPanel(_turret);
     }
 
-    public void GetMediumUpgradeOptions(Turret _turret, bool _firstTime)
+    public void GetFirstUpgradeOptions(Turret _turret)
     {
         gameManager.InvertGameState();
         currentTurret = _turret;
 
         List<IUpgradeOption> availableUpgrades = new List<IUpgradeOption>();
 
-        foreach (IUpgradeOption e in _turret.unlockedUpgradeList)
-        {
-            if (e.NextUpgradeOption() == null || e.GetLevel() != 2) { continue; }
+        IUpgradeOption[] tempFireRate = new FireRateUpgrade(0.3f).NextUpgradeOption();
+        CheckUpgrade(tempFireRate, tempFireRate.Length, availableUpgrades);
 
-            foreach (var upgrade in e.NextUpgradeOption())
-            {
-                availableUpgrades.Add(upgrade);
-            }
+        IUpgradeOption[] tempDamage = new DamageUpgrade(1).NextUpgradeOption();
+        CheckUpgrade(tempDamage, tempDamage.Length, availableUpgrades);
+
+        IUpgradeOption[] tempRange = new TargetRangeUpgrade(1).NextUpgradeOption();
+        CheckUpgrade(tempRange, tempRange.Length, availableUpgrades);
+
+        IUpgradeOption[] tempRate = new TargetRangeUpgrade(1).NextUpgradeOption();
+        CheckUpgrade(tempRate, tempRate.Length, availableUpgrades);
+
+        foreach (var upgradeOption in availableUpgrades)
+        {
+            Debug.Log(upgradeOption.GetName());
+        }
+
+        for (int i = 0;i < 20;i++)
+        {
+            availableUpgrades.Add(smallUpgrades[UnityEngine.Random.Range(0, smallUpgrades.Count)]);
         }
 
 
@@ -117,20 +112,78 @@ public class SkillManager: MonoBehaviour
             return;
         }
 
-        rightPanelUI.SetActive(true);
+        OpenRightPanel(_turret);
+    }
 
-        turretNameUI.text = $"{_turret.GetInstanceID()}";
-        bulletDamageUI.text = $"Damage: {_turret.bulletDamage}";
-        fireRateUI.text = $"Fire Rate: {_turret.fireRate}";
-        killCountUI.text = $"Kill Count: {_turret.killCount}";
-        turretLevelUI.text = $"Level: {_turret.turretLevel}";
+    public void CheckUpgrade(IUpgradeOption[] _options, int _upgradeLevel, List<IUpgradeOption> _availableUpgrades)
+    {
+        IUpgradeOption[] tempArray = _options;
+        List<IUpgradeOption> actualUpgrades = new List<IUpgradeOption>();
 
-        
-        for (int i = 0; i < buttonsText.Count; i++)
+        foreach (var upgradeOption in tempArray)
         {
-            buttonsText[i].text = optionUpgrades[i].GetDescription();
-            buttonsText[i].fontSize = optionUpgrades[i].GetTextSize();
+            if (SaveSystem.playerData.unlockedUpgradeNames.Contains(upgradeOption.GetName()))
+            {
+                actualUpgrades.Add(upgradeOption);
+            }
         }
+
+        if (actualUpgrades.Count > 0)
+        {
+            for (int i = 0; i < _upgradeLevel; i++)
+            {
+                IUpgradeOption tempUpgrade = actualUpgrades[UnityEngine.Random.Range(0, actualUpgrades.Count)];
+                _availableUpgrades.Add(tempUpgrade);
+            }
+        }        
+    }
+
+    public void GetSecondUpgradeOptions(Turret _turret)
+    {
+        gameManager.InvertGameState();
+        currentTurret = _turret;
+
+        List<IUpgradeOption> availableUpgrades = new List<IUpgradeOption>();
+
+        foreach (IUpgradeOption upgrade in _turret.unlockedUpgradeList)
+        {
+            if (upgrade.GetLevel() <= 1) { continue; }
+
+            IUpgradeOption[] tempUpgrades = upgrade.NextUpgradeOption();
+            foreach (IUpgradeOption nextUpgrade in tempUpgrades)
+            {
+                if (SaveSystem.playerData.unlockedUpgradeNames.Contains(nextUpgrade.GetName()))
+                {
+                    availableUpgrades.Add(nextUpgrade);
+                }
+            }
+        }
+
+        if (availableUpgrades.Count == 0)
+        {
+            IUpgradeOption[] tempFireRate = new FireRateUpgrade(0.3f).NextUpgradeOption();
+            CheckUpgrade(tempFireRate, tempFireRate.Length, availableUpgrades);
+
+            IUpgradeOption[] tempDamage = new DamageUpgrade(1).NextUpgradeOption();
+            CheckUpgrade(tempDamage, tempDamage.Length, availableUpgrades);
+
+            IUpgradeOption[] tempRange = new TargetRangeUpgrade(1).NextUpgradeOption();
+            CheckUpgrade(tempRange, tempRange.Length, availableUpgrades);
+
+            IUpgradeOption[] tempRate = new TargetRangeUpgrade(1).NextUpgradeOption();
+            CheckUpgrade(tempRate, tempRate.Length, availableUpgrades);
+        }
+
+        // Select 3 random upgrades from the filtered list
+        optionUpgrades = GetRandomUpgradeOptions(3, availableUpgrades);
+
+        if (gameManager.autoUpgrade)
+        {
+            UpgradeOptions(0);
+            return;
+        }
+
+        OpenRightPanel(_turret);
     }
 
     public void GetLargeUpgradeOptions(Turret _turret)
@@ -140,13 +193,14 @@ public class SkillManager: MonoBehaviour
 
         List<IUpgradeOption> availableUpgrades = largeUpgrades;
 
-        foreach (IUpgradeOption e in _turret.unlockedUpgradeList)
+        foreach (IUpgradeOption upgrade in _turret.unlockedUpgradeList)
         {
-            if (e.NextUpgradeOption() == null || e.GetLevel() != 3) { continue; }
+            if (upgrade.GetLevel() <= 2) { continue; }
 
-            foreach (var upgrade in e.NextUpgradeOption())
+            IUpgradeOption[] tempUpgrades = upgrade.NextUpgradeOption();
+            foreach (IUpgradeOption nextUpgrade in tempUpgrades)
             {
-                availableUpgrades.Add(upgrade);
+                availableUpgrades.Add(nextUpgrade);
             }
         }
 
@@ -160,6 +214,11 @@ public class SkillManager: MonoBehaviour
             return;
         }
 
+        OpenRightPanel(_turret);
+    }
+
+    private void OpenRightPanel(Turret _turret)
+    {
         rightPanelUI.SetActive(true);
 
         turretNameUI.text = $"{_turret.GetInstanceID()}";
@@ -167,6 +226,11 @@ public class SkillManager: MonoBehaviour
         fireRateUI.text = $"Fire Rate: {_turret.fireRate}";
         killCountUI.text = $"Kill Count: {_turret.killCount}";
         turretLevelUI.text = $"Level: {_turret.turretLevel}";
+        fireRateUpgradeLevel.text = _turret.fireRateUpgrades.ToString();
+        damageUpgradeLevel.text = _turret.damageUpgrades.ToString();
+        targetRateUpgradeLevel.text = _turret.targetingRateUpgrades.ToString();
+        targetRangeUpgradeLevel.text = _turret.targetingRangeUpgrades.ToString();
+
 
         for (int i = 0; i < buttonsText.Count; i++)
         {

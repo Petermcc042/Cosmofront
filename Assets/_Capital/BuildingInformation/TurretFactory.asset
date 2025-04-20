@@ -12,4 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da5f372f336a7ae4bad19871cd713656, type: 3}
   m_Name: TurretFactory
   m_EditorClassIdentifier: 
-  nameString: Turret Factory
+  buildingName: Turret Factory
+  buildingDescription: Work on new upgrades to the turrets
+  purchaseCost: {x: 10, y: 5, z: 0}
+  cameraPosition: {x: 94, y: 65, z: -139}

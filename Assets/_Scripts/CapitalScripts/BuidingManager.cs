@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class BuidingManager : MonoBehaviour
 {
@@ -15,6 +16,9 @@ public class BuidingManager : MonoBehaviour
     [SerializeField] LayerMask upgradeLayer;
 
     [SerializeField] GameObject turretSingleUpgradeMenu;
+
+    [Header("Purchase Menu")]
+    [SerializeField] CapitalBuilding previousCapitalBuilding;
 
     // private int GenHealthChange = 10;
     private int turretDamageChange = 5;
@@ -57,15 +61,15 @@ public class BuidingManager : MonoBehaviour
             CapitalBuilding building = raycastHit.collider.GetComponent<CapitalBuilding>();
             if (building != null)
             {
+                CloseMenu();
+                if (previousCapitalBuilding != null) { previousCapitalBuilding.StopMovement(); }
+                previousCapitalBuilding = building; 
                 building.OpenMenu();
             }
         }
         else
         {
-            for (int i = 0; i < capitalBuildings.Count; i++)
-            {
-                capitalBuildings[i].CloseMenu();
-            }
+            CloseMenu();
         }
     }
 

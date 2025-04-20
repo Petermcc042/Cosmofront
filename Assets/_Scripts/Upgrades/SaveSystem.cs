@@ -13,6 +13,7 @@ public class SaveData
     public Vector3 playerPosition;
     public List<string> inventoryItems = new List<string>();
     public List<string> unlockedUpgradeNames = new List<string>();
+    public List<string> unlockedBuildingNames = new List<string>();
 }
 
 public static class SaveSystem
@@ -56,7 +57,8 @@ public static class SaveSystem
             shieldHealthIncrease = 10,
             playerPosition = new Vector3(1, 2, 3),
             inventoryItems = new List<string> { "Sword", "Shield" },
-            unlockedUpgradeNames = new List<string> { "Damage", "Targeting range", "Targeting Rate", "Fire Rate" }
+            unlockedUpgradeNames = new List<string> { "Damage", "Targeting range", "Targeting Rate", "Fire Rate" },
+            unlockedBuildingNames = new List<string> { "Command Centre" }
         };
         playerData = saveData;
     }

@@ -11,6 +11,7 @@ public interface IUpgradeOption
     int GetTextSize();
     int GetLevel();
     int GetProbability();
+    string GetName();
     IUpgradeOption[] NextUpgradeOption();
     
 }
@@ -54,6 +55,8 @@ public class FireRateUpgrade : IUpgradeOption
     public int GetTextSize() { return 20; }
     public int GetProbability() { return 20; }
 
+    public string GetName() { return "Fire Rate"; }
+
     public string GetDescription()
     {
         return $"Increases fire rate by {fireRateIncrease}";
@@ -94,6 +97,7 @@ public class TargetingRateUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 20; }
 
+    public string GetName() { return "Targeting Rate"; }
     public string GetDescription()
     {
         return $"Increases targeting rate by {targetRate}";
@@ -135,6 +139,8 @@ public class TargetRangeUpgrade : IUpgradeOption
     }
 
     public int GetTextSize() { return 18; }
+
+    public string GetName() { return "Targeting Range"; }
 
     public string GetDescription()
     {
@@ -179,6 +185,8 @@ public class DamageUpgrade : IUpgradeOption
     }
 
     public int GetTextSize() { return 20; }
+
+    public string GetName() { return "Damage"; }
 
     public string GetDescription()
     {

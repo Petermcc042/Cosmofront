@@ -20,6 +20,8 @@ public class OverclockedUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 20; }
 
+    public string GetName() { return "Overclocked"; }
+
     public string GetDescription()
     {
         return $"Greatly increases fire rate, with a small damage boost";
@@ -55,6 +57,8 @@ public class QuadBarrel : IUpgradeOption
 
     public int GetTextSize() { return 20; }
 
+    public string GetName() { return "Quad Barrel"; }
+
     public string GetDescription()
     {
         return $"Turret increases two 4 barrels";
@@ -89,6 +93,8 @@ public class DroneSupport : IUpgradeOption
     }
 
     public int GetTextSize() { return 20; }
+
+    public string GetName() { return "Drone Support"; }
 
     public string GetDescription()
     {
@@ -126,6 +132,8 @@ public class SpecialisedRounds : IUpgradeOption
 
     public int GetTextSize() { return 20; }
 
+    public string GetName() { return "Specialised Rounds"; }
+
     public string GetDescription()
     {
         return $"Turret dynamically switches rounds to better match enemies";
@@ -147,6 +155,8 @@ public class ArcLightning : IUpgradeOption
     }
 
     public int GetTextSize() { return 15; }
+
+    public string GetName() { return "Arc Lightning"; }
 
     public string GetDescription()
     {
@@ -180,6 +190,8 @@ public class ChargedStorm : IUpgradeOption
 
     public int GetTextSize() { return 15; }
 
+    public string GetName() { return "Charged Storm"; }
+
     public string GetDescription()
     {
         return $"Each hit builds energy increasing damage";
@@ -210,6 +222,8 @@ public class CirclerUpgrade : IUpgradeOption
     }
 
     public int GetTextSize() { return 17; }
+
+    public string GetName() { return "Circler"; }
 
     public string GetDescription()
     {
@@ -245,6 +259,8 @@ public class RailgunUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 17; }
 
+    public string GetName() { return "Railgun"; }
+
     public string GetDescription()
     {
         return $"Drastically increases piercing power but reduces fire rate";
@@ -272,6 +288,8 @@ public class SonicPenetratorUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 17; }
 
+    public string GetName() { return "Sonic Penetrator"; }
+
     public string GetDescription()
     {
         return $"Piercing shots emit shockwaves";
@@ -298,6 +316,8 @@ public class DiamondTipUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 17; }
 
+    public string GetName() { return "Diamond Tip"; }
+
     public string GetDescription()
     {
         return $"Hardened bullets can pass through 3 enemies";
@@ -320,6 +340,8 @@ public class CryoRoundsUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 17; }
 
+    public string GetName() { return "Cryo Rounds"; }
+
     public string GetDescription()
     {
         return $"Freezes or slows enemies temporarily";
@@ -341,6 +363,8 @@ public class StickyRoundsUpgrade : IUpgradeOption
     }
 
     public int GetTextSize() { return 17; }
+
+    public string GetName() { return "Sticky Rounds"; }
 
     public string GetDescription()
     {
@@ -365,6 +389,7 @@ public class ClusterBombUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 17; }
 
+    public string GetName() { return "Cluster Bomb"; }
 
     public string GetDescription()
     {
@@ -388,6 +413,8 @@ public class ShockwaveUpgrade : IUpgradeOption
     }
 
     public int GetTextSize() { return 17; }
+
+    public string GetName() { return "Shockwave"; }
 
 
     public string GetDescription()
@@ -413,6 +440,7 @@ public class SchwererCanonUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 17; }
 
+    public string GetName() { return "Schwerer Canon"; }
 
     public string GetDescription()
     {

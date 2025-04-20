@@ -20,6 +20,8 @@ public class SuperMonkeyUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 20; }
 
+    public string GetName() { return "Super Monkey"; }
+
     public string GetDescription()
     {
         return $"Greatly increases fire rate, with a small damage boost";
@@ -48,6 +50,8 @@ public class ElectricSkyUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 20; }
 
+    public string GetName() { return "Electric Sky"; }
+
     public string GetDescription()
     {
         return $"Drones upgrade to lightning rounds";
@@ -69,6 +73,8 @@ public class PlasmaOverloadUpgrade : IUpgradeOption
     }
 
     public int GetTextSize() { return 15; }
+
+    public string GetName() { return "Plasma Overload"; }
 
     public string GetDescription()
     {
@@ -93,6 +99,8 @@ public class Circlerer : IUpgradeOption
 
     public int GetTextSize() { return 17; }
 
+    public string GetName() { return "Circlerer"; }
+
     public string GetDescription()
     {
         return $"The bullets that split also split bullets";
@@ -115,6 +123,8 @@ public class OrbitalStrikeUpgrade : IUpgradeOption
     }
 
     public int GetTextSize() { return 17; }
+
+    public string GetName() { return "Orbital Strike"; }
 
     public string GetDescription()
     {
@@ -140,6 +150,8 @@ public class MeteorShowerUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 17; }
 
+    public string GetName() { return "Meteor Shower"; }
+
     public string GetDescription()
     {
         return $"Every few seconds nudge a few asteroids on a collision course with your enemies";
@@ -163,6 +175,8 @@ public class FirestormUpgrade : IUpgradeOption
 
     public int GetTextSize() { return 17; }
 
+    public string GetName() { return "Firestorm Upgrade"; }
+
     public string GetDescription()
     {
         return $"Every 5 seconds triggers a payload to fall from above coating the area in fire that deals damage over time";
@@ -185,6 +199,8 @@ public class TimewarpUpgrade : IUpgradeOption
     }
 
     public int GetTextSize() { return 16; }
+
+    public string GetName() { return "Timewarp Upgrade"; }
 
     public string GetDescription()
     {
