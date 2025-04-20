@@ -19,4 +19,5 @@ public class BakedDataReference : ScriptableObject
     public Mesh mesh;
     public Material material;
     public int instanceCount = 4000;
+    public uint enemyType = 0;
 }

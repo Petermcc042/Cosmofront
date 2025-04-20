@@ -22,7 +22,7 @@ public struct EnemyData
     public bool IsAttacking; // swtich bool
     public bool IsAtShield;
     public float3 AttackPos;
-
+    public uint enemyType;
     public float AnimationFrame;
 }
 
@@ -272,7 +272,8 @@ public class EnemyManager : MonoBehaviour
             TargetPos = float3.zero,
             TargetNeeded = true,
             IsAttacking = false,
-            IsAtShield = false
+            IsAtShield = false,
+            enemyType = (uint)UnityEngine.Random.Range(1, 4)
         };
 
         enemyDataList.Add(eData);

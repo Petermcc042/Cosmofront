@@ -17,3 +17,7 @@ MonoBehaviour:
   frameCount: 25
   frameRate: 30
   binaryDataPath: ghost_Attack_Data\vertexData.bin
+  mesh: {fileID: 4300000, guid: a2f7f3a01e9e38a4b9b538ee3a86ee00, type: 2}
+  material: {fileID: 2100000, guid: 654027b431e45fb40bf8cac1531bcf35, type: 2}
+  instanceCount: 4000
+  enemyType: 2

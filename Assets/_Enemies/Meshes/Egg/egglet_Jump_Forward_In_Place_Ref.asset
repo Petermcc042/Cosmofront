@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0e6eb0782056d0c43baed9342d96f137, type: 3}
-  m_Name: ghost_Idle_Ref
+  m_Name: egglet_Jump_Forward_In_Place_Ref
   m_EditorClassIdentifier: 
   clipName: Idle
-  vertexCount: 366
-  frameCount: 35
+  vertexCount: 753
+  frameCount: 20
   frameRate: 30
-  binaryDataPath: ghost_Idle_Data\vertexData.bin
-  mesh: {fileID: 4300000, guid: a2f7f3a01e9e38a4b9b538ee3a86ee00, type: 2}
-  material: {fileID: 2100000, guid: 08a6ffbfb5d56ca4bb30168421eb6bc4, type: 2}
+  binaryDataPath: egglet_Jump_Forward_In_Place_Data\vertexData.bin
+  mesh: {fileID: 4300000, guid: d38088cf070b9c647989a9efe165b567, type: 2}
+  material: {fileID: 2100000, guid: 353a1609b61582748b4c65ad66c8c469, type: 2}
   instanceCount: 4000
-  enemyType: 2
+  enemyType: 3

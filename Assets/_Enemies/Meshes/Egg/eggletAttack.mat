@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ghostIdle
+  m_Name: eggletAttack
   m_Shader: {fileID: 4800000, guid: 9e16ac55d4465eb4c86791aeb00d5e8d, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -62,7 +62,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 32e62ee7567a48f4f8803ecce20631c0, type: 3}
+        m_Texture: {fileID: 2800000, guid: 1d96d6bc04e047244b03b90afebf52ff, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:

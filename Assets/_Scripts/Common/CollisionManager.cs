@@ -15,7 +15,6 @@ public class CollisionManager : MonoBehaviour
     [SerializeField] private Generator gen;
     [SerializeField] private TurretManager turretManager;
     [SerializeField] private TerrainGen terrainGen;
-    [SerializeField] private EnemyGPURenderer gpuRender;
 
     [SerializeField] private Slider genHealth;
     [SerializeField] private int explosionRadius;

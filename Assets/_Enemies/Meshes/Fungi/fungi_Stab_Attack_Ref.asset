@@ -20,3 +20,4 @@ MonoBehaviour:
   mesh: {fileID: 4300000, guid: 4e1b183418b741c4fa19de2b413b5e75, type: 2}
   material: {fileID: 2100000, guid: c86418e13fea41d49baa065c231397cd, type: 2}
   instanceCount: 4000
+  enemyType: 1
