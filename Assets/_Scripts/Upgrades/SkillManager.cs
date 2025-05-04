@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using Unity.Mathematics.Geometry;
 using UnityEngine;
@@ -11,7 +12,6 @@ public class SkillManager: MonoBehaviour
 
     [SerializeField] private CollisionManager collisionManager;
     [SerializeField] private GameManager gameManager;
-    [SerializeField] private TurretManager turretManager;
 
     [SerializeField] private GameObject rightPanelUI;
     [SerializeField] private TextMeshProUGUI turretNameUI;
@@ -73,35 +73,53 @@ public class SkillManager: MonoBehaviour
         OpenRightPanel(_turret);
     }
 
+    // Define upgrade types for better code readability
+    public enum UpgradeType
+    {
+        First,
+        Second,
+        Large
+    }
+
+    // Legacy methods for backward compatibility if needed
     public void GetFirstUpgradeOptions(Turret _turret)
+    {
+        GetUpgradeOptions(_turret, UpgradeType.First);
+    }
+
+    public void GetSecondUpgradeOptions(Turret _turret)
+    {
+        GetUpgradeOptions(_turret, UpgradeType.Second);
+    }
+
+    public void GetLargeUpgradeOptions(Turret _turret)
+    {
+        GetUpgradeOptions(_turret, UpgradeType.Large);
+    }
+
+    public void GetUpgradeOptions(Turret _turret, UpgradeType upgradeType = UpgradeType.First)
     {
         gameManager.InvertGameState();
         currentTurret = _turret;
 
         List<IUpgradeOption> availableUpgrades = new List<IUpgradeOption>();
 
-        IUpgradeOption[] tempFireRate = new FireRateUpgrade(0.3f).NextUpgradeOption();
-        CheckUpgrade(tempFireRate, tempFireRate.Length, availableUpgrades);
-
-        IUpgradeOption[] tempDamage = new DamageUpgrade(1).NextUpgradeOption();
-        CheckUpgrade(tempDamage, tempDamage.Length, availableUpgrades);
-
-        IUpgradeOption[] tempRange = new TargetRangeUpgrade(1).NextUpgradeOption();
-        CheckUpgrade(tempRange, tempRange.Length, availableUpgrades);
-
-        IUpgradeOption[] tempRate = new TargetRangeUpgrade(1).NextUpgradeOption();
-        CheckUpgrade(tempRate, tempRate.Length, availableUpgrades);
-
-        foreach (var upgradeOption in availableUpgrades)
+        switch (upgradeType)
         {
-            Debug.Log(upgradeOption.GetName());
-        }
+            case UpgradeType.First:
+                // check for upgrades
+                CheckForUpgrades(availableUpgrades, 1);
+                break;
 
-        for (int i = 0;i < 20;i++)
-        {
-            availableUpgrades.Add(smallUpgrades[UnityEngine.Random.Range(0, smallUpgrades.Count)]);
-        }
+            case UpgradeType.Second:
+                CheckForUpgrades(availableUpgrades, 2);
+                break;
 
+            case UpgradeType.Large:
+                // Start with all large upgrades
+                availableUpgrades.AddRange(largeUpgrades);
+                break;
+        }
 
         // Select 3 random upgrades from the filtered list
         optionUpgrades = GetRandomUpgradeOptions(3, availableUpgrades);
@@ -115,16 +133,38 @@ public class SkillManager: MonoBehaviour
         OpenRightPanel(_turret);
     }
 
-    public void CheckUpgrade(IUpgradeOption[] _options, int _upgradeLevel, List<IUpgradeOption> _availableUpgrades)
+    // Helper methods to separate logic
+    private void CheckForUpgrades(List<IUpgradeOption> _availableUpgrades, int _level)
     {
-        IUpgradeOption[] tempArray = _options;
-        List<IUpgradeOption> actualUpgrades = new List<IUpgradeOption>();
-
-        foreach (var upgradeOption in tempArray)
+        foreach (IUpgradeOption upgrade in currentTurret.unlockedUpgradeList)
         {
-            if (SaveSystem.playerData.unlockedUpgradeNames.Contains(upgradeOption.GetName()))
+            if (upgrade.GetLevel() >= currentTurret.currentUpgradeLevel) { continue; }
+
+            IUpgradeOption[] options = upgrade.NextUpgradeOption();
+            if (options != null)
             {
-                actualUpgrades.Add(upgradeOption);
+                CheckUpgrades(options, options.Length, _availableUpgrades);
+            }
+        }
+
+        for (int i = 0; i < 20; i++)
+        {
+            _availableUpgrades.Add(smallUpgrades[UnityEngine.Random.Range(0, smallUpgrades.Count)]);
+        }
+    }
+
+
+    public void CheckUpgrades(IUpgradeOption[] _options, int _upgradeLevel, List<IUpgradeOption> _availableUpgrades)
+    {
+        List<IUpgradeOption> actualUpgrades = new List<IUpgradeOption>(); // create a new, empty list to hold the upgrades you've unlocked
+         
+        foreach (IUpgradeOption upgrade in _options) // Go through each upgrade in the big list of all upgrades
+        {
+            string upgradeName = upgrade.GetName(); // Get the name of the current upgrade we're looking at
+
+            if (SaveSystem.playerData.unlockedUpgradeNames.Contains(upgradeName) || gameManager.allUpgrades) // Check if the name of this upgrade is in our list of unlocked names
+            {
+                actualUpgrades.Add(upgrade); // If it is, then this is an upgrade you've unlocked, so add it to our new list
             }
         }
 
@@ -135,86 +175,27 @@ public class SkillManager: MonoBehaviour
                 IUpgradeOption tempUpgrade = actualUpgrades[UnityEngine.Random.Range(0, actualUpgrades.Count)];
                 _availableUpgrades.Add(tempUpgrade);
             }
-        }        
+        }
     }
 
-    public void GetSecondUpgradeOptions(Turret _turret)
+    private List<IUpgradeOption> GetRandomUpgradeOptions(int count, List<IUpgradeOption> _upgradeList)
     {
-        gameManager.InvertGameState();
-        currentTurret = _turret;
+        List<IUpgradeOption> selectedUpgrades = new List<IUpgradeOption>();
 
-        List<IUpgradeOption> availableUpgrades = new List<IUpgradeOption>();
+        // Avoid duplicating count if there aren't enough upgrades
+        int selectionCount = Mathf.Min(count, _upgradeList.Count);
 
-        foreach (IUpgradeOption upgrade in _turret.unlockedUpgradeList)
+        // Create a copy to avoid modifying the original list
+        List<IUpgradeOption> availableOptions = new List<IUpgradeOption>(_upgradeList);
+
+        for (int i = 0; i < selectionCount; i++)
         {
-            if (upgrade.GetLevel() <= 1) { continue; }
-
-            IUpgradeOption[] tempUpgrades = upgrade.NextUpgradeOption();
-            foreach (IUpgradeOption nextUpgrade in tempUpgrades)
-            {
-                if (SaveSystem.playerData.unlockedUpgradeNames.Contains(nextUpgrade.GetName()))
-                {
-                    availableUpgrades.Add(nextUpgrade);
-                }
-            }
+            int randomIndex = UnityEngine.Random.Range(0, availableOptions.Count);
+            selectedUpgrades.Add(availableOptions[randomIndex]);
+            availableOptions.RemoveAt(randomIndex); // Prevent duplicates
         }
 
-        if (availableUpgrades.Count == 0)
-        {
-            IUpgradeOption[] tempFireRate = new FireRateUpgrade(0.3f).NextUpgradeOption();
-            CheckUpgrade(tempFireRate, tempFireRate.Length, availableUpgrades);
-
-            IUpgradeOption[] tempDamage = new DamageUpgrade(1).NextUpgradeOption();
-            CheckUpgrade(tempDamage, tempDamage.Length, availableUpgrades);
-
-            IUpgradeOption[] tempRange = new TargetRangeUpgrade(1).NextUpgradeOption();
-            CheckUpgrade(tempRange, tempRange.Length, availableUpgrades);
-
-            IUpgradeOption[] tempRate = new TargetRangeUpgrade(1).NextUpgradeOption();
-            CheckUpgrade(tempRate, tempRate.Length, availableUpgrades);
-        }
-
-        // Select 3 random upgrades from the filtered list
-        optionUpgrades = GetRandomUpgradeOptions(3, availableUpgrades);
-
-        if (gameManager.autoUpgrade)
-        {
-            UpgradeOptions(0);
-            return;
-        }
-
-        OpenRightPanel(_turret);
-    }
-
-    public void GetLargeUpgradeOptions(Turret _turret)
-    {
-        gameManager.InvertGameState();
-        currentTurret = _turret;
-
-        List<IUpgradeOption> availableUpgrades = largeUpgrades;
-
-        foreach (IUpgradeOption upgrade in _turret.unlockedUpgradeList)
-        {
-            if (upgrade.GetLevel() <= 2) { continue; }
-
-            IUpgradeOption[] tempUpgrades = upgrade.NextUpgradeOption();
-            foreach (IUpgradeOption nextUpgrade in tempUpgrades)
-            {
-                availableUpgrades.Add(nextUpgrade);
-            }
-        }
-
-
-        // Select 3 random upgrades from the filtered list
-        optionUpgrades = GetRandomUpgradeOptions(3, availableUpgrades);
-
-        if (gameManager.autoUpgrade)
-        {
-            UpgradeOptions(0);
-            return;
-        }
-
-        OpenRightPanel(_turret);
+        return selectedUpgrades;
     }
 
     private void OpenRightPanel(Turret _turret)
@@ -243,22 +224,6 @@ public class SkillManager: MonoBehaviour
     {
         optionUpgrades[_num].Apply(currentTurret);
         gameManager.InvertGameState();
-    }
-
-    private List<IUpgradeOption> GetRandomUpgradeOptions(int count, List<IUpgradeOption> _upgradeList)
-    {
-        List<IUpgradeOption> selectedUpgrades = new List<IUpgradeOption>();
-        for (int i = 0; i < count; i++)
-        {
-            selectedUpgrades.Add(GetRandomUpgrade(_upgradeList));
-        }
-        return selectedUpgrades;
-    }
-
-    private IUpgradeOption GetRandomUpgrade(List<IUpgradeOption> _upgradeList)
-    {
-        int randomIndex = UnityEngine.Random.Range(0, _upgradeList.Count);
-        return _upgradeList[randomIndex];
     }
 }
 

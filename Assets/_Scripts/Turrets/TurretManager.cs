@@ -66,12 +66,15 @@ public class TurretManager : MonoBehaviour
             case 120:
             case 160:
             case 180:
+                Debug.Log("Small upgrade");
                 SmallUpgradeTurret(tempTurret);
                 break;
             case 80:
+                Debug.Log("First Upgrade");
                 FirstUpgradeTurret(tempTurret);
                 break;
             case 200:
+                Debug.Log("Second Upgrade");
                 SecondUpgradeTurret(tempTurret);
                 break;
             case 250:

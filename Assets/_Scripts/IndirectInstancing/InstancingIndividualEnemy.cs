@@ -50,7 +50,7 @@ public class InstancingIndividualEnemy
 
         mesh = dataRef.mesh;
         material = dataRef.material;
-        instanceCount = dataRef.instanceCount;
+        instanceCount = 2000;
         enemyType = dataRef.enemyType;
 
         animationIsIdle = dataRef.clipName == "Idle";

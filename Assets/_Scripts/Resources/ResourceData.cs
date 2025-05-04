@@ -1,15 +1,18 @@
 using UnityEngine;
 
 
-public class ResourceData : MonoBehaviour
+public class CapitalData : MonoBehaviour
 {
 #pragma warning disable UDR0001 // Domain Reload Analyzer
-    private static ResourceData instance;
+    private static CapitalData instance;
 #pragma warning restore UDR0001 // Domain Reload Analyzer
 
     public int totalAttanium;
     public int totalMarcum;
     public int totalImear;
+
+    public int totalPopulation;
+    public int committedPopulation;
 
     private void Awake()
     {

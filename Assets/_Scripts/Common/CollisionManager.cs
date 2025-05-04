@@ -9,6 +9,7 @@ using UnityEngine.UI;
 public class CollisionManager : MonoBehaviour
 {
     [SerializeField] private EnemyManager enemyManager;
+    [SerializeField] private EnemyMovement enemyMovement;
     [SerializeField] private BulletManager bulletManager;
     [SerializeField] private MapGridManager mapGridManager;
     [SerializeField] private GameManager gameManager;
@@ -19,8 +20,7 @@ public class CollisionManager : MonoBehaviour
     [SerializeField] private Slider genHealth;
     [SerializeField] private int explosionRadius;
     [SerializeField] private GameObject explosionPrefab;
-    [SerializeField] private Material lightningPrefabMaterial;
-    [SerializeField] private Material lightningPrefabMaterialTwo;
+    [SerializeField] private int separataionForceMultiplier;
 
     private NativeList<float3> buildingPositionList;
     private NativeList<float3> shieldPositions;
@@ -56,10 +56,9 @@ public class CollisionManager : MonoBehaviour
     {
         float deltaTime = Time.deltaTime;
 
-        MovementScheduler movementScheduler = new MovementScheduler();
-        movementScheduler.ScheduleMoveJobs(enemyDataList, bulletDataList, shieldPositions, buildingPositionList, terrainDataArray, deltaTime, mySeed);
-        
+        enemyMovement.ScheduleMoveJobs(enemyDataList, bulletDataList, shieldPositions, buildingPositionList, terrainDataArray, deltaTime, mySeed, separataionForceMultiplier);        
         bulletManager.UpdateBulletPositions(deltaTime);
+
         CheckBulletCollisions();
         RemovalAndUpdate();
         DamageBuildings();
@@ -132,12 +131,6 @@ public class CollisionManager : MonoBehaviour
             float distance = Vector3.Distance(start, end);
 
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            if (data.levelTwo) {
-                cube.GetComponent<MeshRenderer>().material = lightningPrefabMaterialTwo;
-            }
-            else {
-                cube.GetComponent<MeshRenderer>().material = lightningPrefabMaterial;
-            }
             cube.transform.position = midpoint;
             Vector3 scale = new Vector3(0.1f, 0.1f, distance);
             cube.transform.localScale = scale;

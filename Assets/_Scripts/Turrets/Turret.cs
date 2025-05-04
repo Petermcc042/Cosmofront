@@ -110,6 +110,7 @@ public class Turret : MonoBehaviour
     public int targetingRateUpgrades  = 0;
     public int targetingRangeUpgrades = 0;
     public int damageUpgrades = 0;
+    public int currentUpgradeLevel = 0;
 
     [Header("Unity Setup")]
     public Transform partToRotate;

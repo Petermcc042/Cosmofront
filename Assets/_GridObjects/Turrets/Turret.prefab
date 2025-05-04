@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 625188682797229411}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5, y: 0.46, z: 5}
+  m_LocalPosition: {x: 0, y: 0.46, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -104,7 +104,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ab6d2594d39b1744b400f12061324b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fireRate: 3
+  fireRate: 20
   killCount: 0
   bulletDamage: 1
   fleshMultiplier: 1
@@ -144,6 +144,10 @@ MonoBehaviour:
   turretLevel: 0
   upgradeType: 0
   bulletType: 0
+  fireRateUpgrades: 0
+  targetingRateUpgrades: 0
+  targetingRangeUpgrades: 0
+  damageUpgrades: 0
   partToRotate: {fileID: 6417055713613626388}
   firePoint: {fileID: 7504641739250698944}
   highlightBox: {fileID: 5278750429639919215}
@@ -227,7 +231,7 @@ Transform:
   m_GameObject: {fileID: 5278750429639919215}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5, y: 2.5, z: 5}
+  m_LocalPosition: {x: 0, y: 2.5, z: 0}
   m_LocalScale: {x: 10, y: 50, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -449,7 +453,7 @@ Transform:
   m_GameObject: {fileID: 6166621251425238170}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5, y: 0, z: 5}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 10, y: 1, z: 10}
   m_ConstrainProportionsScale: 0
   m_Children: []

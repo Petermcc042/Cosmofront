@@ -1,20 +1,4 @@
-using UnityEngine;
 using System.Collections.Generic;
-using System;
-using System.Linq;
-using UnityEngine.Rendering.PostProcessing;
-
-public interface IUpgradeOption
-{
-    void Apply(Turret turret);
-    string GetDescription();  // For UI purposes
-    int GetTextSize();
-    int GetLevel();
-    int GetProbability();
-    string GetName();
-    IUpgradeOption[] NextUpgradeOption();
-    
-}
 
 public static class UpgradeMethods
 {
@@ -35,7 +19,48 @@ public static class UpgradeMethods
     }
 }
 
-public class FireRateUpgrade : IUpgradeOption
+public interface IUpgradeOption
+{
+    void Apply(Turret turret);
+    string GetDescription();  // For UI purposes
+    int GetTextSize();
+    int GetLevel();
+    int GetProbability();
+    string GetName();
+    IUpgradeOption[] NextUpgradeOption();
+    
+}
+
+// New base class that all upgrades can inherit from
+public abstract class BaseUpgrade : IUpgradeOption
+{
+    // Common implementation that all upgrades should use
+    public void Apply(Turret turret)
+    {
+        // Common operations
+        turret.highlightBox.SetActive(false);
+        turret.unlockedUpgradeList.Add(this);
+        turret.currentUpgradeLevel = GetLevel();
+
+        // Call specialized implementation
+        ApplyUpgradeEffects(turret);
+    }
+
+    // Method that derived classes must implement for specific upgrade effects
+    protected abstract void ApplyUpgradeEffects(Turret turret);
+
+    // Implement the rest of the interface (can be overridden by derived classes)
+    public abstract string GetDescription();
+    public abstract int GetTextSize();
+    public abstract int GetLevel();
+    public abstract int GetProbability();
+    public abstract string GetName();
+    public abstract IUpgradeOption[] NextUpgradeOption();
+}
+
+
+
+public class FireRateUpgrade : BaseUpgrade
 {
     public float fireRateIncrease;
 
@@ -44,41 +69,34 @@ public class FireRateUpgrade : IUpgradeOption
         fireRateIncrease = increase;
     }
 
-    public void Apply(Turret turret)
+    protected override void ApplyUpgradeEffects(Turret turret)
     {
-        turret.highlightBox.SetActive(false);
         turret.fireRate += fireRateIncrease;
-        turret.unlockedUpgradeList.Add(this);
         turret.fireRateUpgrades += 1;
     }
 
-    public int GetTextSize() { return 20; }
-    public int GetProbability() { return 20; }
-
-    public string GetName() { return "Fire Rate"; }
-
-    public string GetDescription()
+    public override int GetTextSize() { return 20; }
+    public override int GetProbability() { return 20; }
+    public override string GetName() { return "Fire Rate"; }
+    public override string GetDescription()
     {
         return $"Increases fire rate by {fireRateIncrease}";
     }
-
-    public int GetLevel() { return 1; }
-
-    public IUpgradeOption[] NextUpgradeOption()
+    public override int GetLevel() { return 1; }
+    public override IUpgradeOption[] NextUpgradeOption()
     {
-
         IUpgradeOption[] tempArray =
         {
             new RapidFireUpgrade(),
             new BurstFireUpgrade(),
             new DualBarrelUpgrade()
         };
-
         return tempArray;
     }
 }
 
-public class TargetingRateUpgrade : IUpgradeOption
+
+public class TargetingRateUpgrade : BaseUpgrade
 {
     public float targetRate;
 
@@ -87,41 +105,34 @@ public class TargetingRateUpgrade : IUpgradeOption
         targetRate = increase;
     }
 
-    public void Apply(Turret turret)
+    protected override void ApplyUpgradeEffects(Turret turret)
     {
-        turret.highlightBox.SetActive(false);
         turret.targetingRate -= targetRate;
-        turret.unlockedUpgradeList.Add(this);
         turret.targetingRateUpgrades += 1;
     }
 
-    public int GetTextSize() { return 20; }
-
-    public string GetName() { return "Targeting Rate"; }
-    public string GetDescription()
+    public override int GetTextSize() { return 20; }
+    public override int GetProbability() { return 20; }
+    public override string GetName() { return "Targeting Rate"; }
+    public override string GetDescription()
     {
         return $"Increases targeting rate by {targetRate}";
     }
-
-    public int GetLevel() { return 1; }
-
-    public int GetProbability() { return 20; }
-
-    public IUpgradeOption[] NextUpgradeOption()
+    public override int GetLevel() { return 1; }
+    public override IUpgradeOption[] NextUpgradeOption()
     {
-
         IUpgradeOption[] tempArray =
         {
             new DualBarrelUpgrade(),
             new AI_Targeting(),
             new LightningRoundsUpgrade()
         };
-
         return tempArray;
     }
 }
 
-public class TargetRangeUpgrade : IUpgradeOption
+
+public class TargetRangeUpgrade : BaseUpgrade
 {
     public float targetRange;
 
@@ -130,28 +141,26 @@ public class TargetRangeUpgrade : IUpgradeOption
         targetRange = increase;
     }
 
-    public void Apply(Turret turret)
+    protected override void ApplyUpgradeEffects(Turret turret)
     {
-        turret.highlightBox.SetActive(false);
         turret.range += targetRange;
-        turret.unlockedUpgradeList.Add(this);
         turret.targetingRangeUpgrades += 1;
     }
 
-    public int GetTextSize() { return 18; }
+    public override int GetTextSize() { return 18; }
 
-    public string GetName() { return "Targeting Range"; }
+    public override string GetName() { return "Targeting Range"; }
 
-    public string GetDescription()
+    public override string GetDescription()
     {
         return $"Increases the targeting range of the turret by {targetRange}";
     }
 
-    public int GetLevel() { return 1; }
+    public override int GetLevel() { return 1; }
 
-    public int GetProbability() { return 20; }
+    public override int GetProbability() { return 20; }
 
-    public IUpgradeOption[] NextUpgradeOption()
+    public override IUpgradeOption[] NextUpgradeOption()
     {
 
         IUpgradeOption[] tempArray =
@@ -167,7 +176,7 @@ public class TargetRangeUpgrade : IUpgradeOption
 }
 
 
-public class DamageUpgrade : IUpgradeOption
+public class DamageUpgrade : BaseUpgrade
 {
     public int damageIncrease;
 
@@ -176,7 +185,7 @@ public class DamageUpgrade : IUpgradeOption
         damageIncrease = increase;
     }
 
-    public void Apply(Turret turret)
+    protected override void ApplyUpgradeEffects(Turret turret)
     {
         turret.highlightBox.SetActive(false);
         turret.bulletDamage += damageIncrease;
@@ -184,20 +193,20 @@ public class DamageUpgrade : IUpgradeOption
         turret.damageUpgrades += 1;
     }
 
-    public int GetTextSize() { return 20; }
+    public override int GetTextSize() { return 20; }
 
-    public string GetName() { return "Damage"; }
+    public override string GetName() { return "Damage"; }
 
-    public string GetDescription()
+    public override string GetDescription()
     {
         return $"Increases damage by {damageIncrease}";
     }
 
-    public int GetLevel() { return 1; }
+    public override int GetLevel() { return 1; }
 
-    public int GetProbability() { return 20; }
+    public override int GetProbability() { return 20; }
 
-    public IUpgradeOption[] NextUpgradeOption()
+    public override IUpgradeOption[] NextUpgradeOption()
     {
 
         IUpgradeOption[] tempArray =

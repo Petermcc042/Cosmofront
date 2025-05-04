@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using Unity.Collections;
-using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -10,7 +8,6 @@ public static class PrecomputedData
 {
     public static void Clear()
     {
-        creationNeeded = true;
         length = 0;
         cellSize = 1;
         originPosition = Vector3.zero;
@@ -18,7 +15,6 @@ public static class PrecomputedData
     }
 
 #pragma warning disable UDR0001 // Domain Reload Analyzer
-    public static bool creationNeeded;
     public static int length;
     public static float cellSize;
     private static Vector3 originPosition;
@@ -37,10 +33,9 @@ public static class PrecomputedData
     public static List<float3> terrainCoords;
 #pragma warning restore UDR0001 // Domain Reload Analyzer
 
-    //[RuntimeInitializeOnLoadMethod]
+    
     public static void Init(int _length) 
     {
-        creationNeeded = true;
         length = _length;
         cellSize = 1;
         originPosition = Vector3.zero;
@@ -66,10 +61,6 @@ public static class PrecomputedData
         CreateGrid();
         SaveVerticesToCSV(vertexDouble, "verticesDebug.csv");
         WriteDataToCSVPrior("precomputed_grid_prior.csv");
-        RunFlowFieldJobs(99,99,true);
-
-        WriteDataToCSV("precomputed_grid.csv");
-        creationNeeded = false;
     }
 
     private static void CreateTerrain()
@@ -79,6 +70,7 @@ public static class PrecomputedData
         GenerateVertices();
         LowerVerticesAtCentre();
         LowerVerticesAtEdges();
+        terrainCoords = ReturnBlockedCells();
     }
 
     public static void CreateGrid() {
@@ -240,6 +232,25 @@ public static class PrecomputedData
         }
     }
 
+    private static List<float3> ReturnBlockedCells()
+    {
+        List<float3> regionVertices = new();
+
+        for (int x = 0; x < length; x++)
+        {
+            for (int z = 0; z < length; z++)
+            {
+                if (vertexDouble[x, z].y > 0 || vertexDouble[x + 1, z].y > 0 ||
+                    vertexDouble[x, z + 1].y > 0 || vertexDouble[x + 1, z + 1].y > 0)
+                {
+                    regionVertices.Add(new float3(x, 0, z));
+                }
+            }
+        }
+
+        return regionVertices;
+    }
+
     private static void LowerVerticesAtCentre()
     {
         int radius = 8;
@@ -279,80 +290,24 @@ public static class PrecomputedData
         }
     }
 
-
-    public static void RunFlowFieldJobs(int _endX, int _endZ, bool _runFullFlow) {
-        
-        var updateCostJob = new UpdateNodesMovementCost
-        {
-            GridArray = gridArray,
-            endX = _endX,
-            endZ = _endZ,
-            runFullGrid = _runFullFlow
-        };
-        JobHandle handle1 = updateCostJob.Schedule(gridArray.Length, 64);
-        handle1.Complete();
-
-
-        NativeQueue<GridNode> nodeQueue = new NativeQueue<GridNode>(Allocator.Persistent);
-
-        UpdateNodesIntegration updateIntegrationJob = new UpdateNodesIntegration
-        {
-            GridArray = gridArray,
-            NodeQueue = nodeQueue,
-            endX = _endX,
-            endZ = _endZ,
-            gridWidth = length,
-            runFullGrid = _runFullFlow
-        };
-        //JobHandle handle2 = updateIntegrationJob.Schedule();
-        //handle2.Complete();
-        updateIntegrationJob.Execute();
-
-        nodeQueue.Dispose();
-
-        WeightBuildingNodes flowJob3 = new WeightBuildingNodes
-        {
-            GridArray = gridArray,
-            endX = _endX,
-            endZ = _endZ,
-            gridWidth = length
-        };
-
-        JobHandle handle3 = flowJob3.Schedule();
-        handle3.Complete();
-
-
-        UpdateGoToIndex flowJob4 = new UpdateGoToIndex
-        {
-            GridArray = gridArray,
-            endX = _endX,
-            endZ = _endZ,
-            runFullGrid = _runFullFlow,
-            gridWidth = length
-        };
-
-        JobHandle flowHandle4 = flowJob4.Schedule();
-        flowHandle4.Complete();
-    }
-
     public static void WriteDataToCSV(string filePath)
     {
         using (StreamWriter writer = new StreamWriter(filePath))
         {
             // Write the header
-            writer.WriteLine("index,goToIndex,integrationCost,position,goToPosition");
+            writer.WriteLine("index,goToIndex,integrationCost,position,goToPosition,movementCost");
 
             // Write each flowNode's data
             for (int i = 0; i < gridArray.Length; i++)
             {
                 if (gridArray[i].goToIndex < 0)
                 {
-                    string line = $"{gridArray[i].index},{gridArray[i].goToIndex},{gridArray[i].integrationCost},{gridArray[i].x}:{gridArray[i].z},0";
+                    string line = $"{gridArray[i].index},{gridArray[i].goToIndex},{gridArray[i].integrationCost},{gridArray[i].x}:{gridArray[i].z},0,{gridArray[i].movementCost}";
                     writer.WriteLine(line);
                 }
                 else
                 {
-                    string line = $"{gridArray[i].index},{gridArray[i].goToIndex},{gridArray[i].integrationCost},{gridArray[i].x}:{gridArray[i].z},{gridArray[gridArray[i].goToIndex].x}:{gridArray[gridArray[i].goToIndex].z}";
+                    string line = $"{gridArray[i].index},{gridArray[i].goToIndex},{gridArray[i].integrationCost},{gridArray[i].x}:{gridArray[i].z},{gridArray[gridArray[i].goToIndex].x}:{gridArray[gridArray[i].goToIndex].z},{gridArray[i].movementCost}";
                     writer.WriteLine(line);
                 }
 

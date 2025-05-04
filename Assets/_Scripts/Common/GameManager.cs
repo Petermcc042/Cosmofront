@@ -5,10 +5,12 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
-{
+{   
+
     [Header("Dev Controls")]
     [SerializeField] private bool costsRemoved;
     [SerializeField] public bool autoUpgrade;
+    [SerializeField] public bool allUpgrades;
     [SerializeField] public bool invincible;
     [SerializeField] public bool buildMap;
     [SerializeField] public bool renderGameObjects;
@@ -18,7 +20,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private BuildingListSO buildingsList;
 
     [Header("Manager References")]
-    [SerializeField] private MapGridManager gridManager;
+    [SerializeField] private PathfindingManager pathfinding;
+    [SerializeField] private MapGridManager mapGridManager;
     [SerializeField] private SkillManager skillManager;
     [SerializeField] private EnemyManager enemyManager;
     [SerializeField] private PhaseManager phaseManager;
@@ -26,19 +29,21 @@ public class GameManager : MonoBehaviour
     [SerializeField] private CollisionManager collisionManager;
     [SerializeField] private TurretManager turretManager;
     [SerializeField] private Generator generator;
+    [SerializeField] private GridCoordInstancing gridCoordsInstancing;
+    [SerializeField] private TerrainCoordsInstancing terrainCoordsInstancing;
+    [SerializeField] private FlowFieldVisualiser flowFieldVisualiser;
 
 
     [Header("Building Aid")]
+    [SerializeField] private LayerMask groundLayer;
     [SerializeField] private GameObject buildingUI;
     [SerializeField] private GameObject extendedArea;
     [SerializeField] private GameObject buildableArea;
+    [SerializeField] private GameObject gridSquarePrefab;
+    [SerializeField] private GameObject gridSquaresParent;
 
-
-    [SerializeField] private GameObject tempObjectShowing;
-    private Vector3 tempBuildingOffset;
-
-    public LayerMask layerMask;
-    [SerializeField] LayerMask buildingLayerMask;
+    [SerializeField] private LayerMask enemyLayerMask;
+    [SerializeField] private LayerMask buildingLayerMask;
 
     private PlacedObjectSO currentSO;
 
@@ -93,6 +98,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI imearPerSecText;
 
 
+
     private void Awake()
     {
 
@@ -102,7 +108,7 @@ public class GameManager : MonoBehaviour
             PrecomputedData.Clear();
             PrecomputedData.Init(200);
             PrecomputedData.InitGrid();
-
+            pathfinding.RunFlowFieldJobs(99, 99, true);
             SaveSystem.LoadGame();
         }
         
@@ -113,6 +119,8 @@ public class GameManager : MonoBehaviour
 
         
         generator.UpdateShieldHealth(SaveSystem.playerData.shieldHealthIncrease);
+        
+
     }
 
     void Start()
@@ -121,9 +129,10 @@ public class GameManager : MonoBehaviour
         music.loop = true;
         music.clip = musicClip;
         music.Play();
-        
+
         // Begin all other script processes
-        MapGridManager.Instance.InitGrid(gameSettings, buildingsList);
+        
+        mapGridManager.InitGrid(gameSettings, buildingsList);
         enemyManager.InitEnemyManager(gameSettings);
         phaseManager.InitPhaseManager(gameSettings);
 
@@ -139,8 +148,7 @@ public class GameManager : MonoBehaviour
     private void Update()
     {
         HandleInput();
-        UpdateBuildingUI();
-        UpdateRotation();
+        UpdateBuildingOutline();
         ShowDebugInfo();
 
         if (!gameRunning) { return; }
@@ -150,16 +158,28 @@ public class GameManager : MonoBehaviour
 
         turretManager.CallUpdateAllTurrets();
         turretManager.CallUpdate();
-        
+
         collisionManager.CallUpdate();
         enemyManager.CallUpdate();
+
     }
+
 
     private void HandleInput()
     {
         if (Input.GetKeyDown(KeyCode.P)) { InvertGameState(); }
 
-        if (Input.GetKeyDown(KeyCode.R)) { EndGame("You Ended It"); }
+        if (Input.GetKeyDown(KeyCode.Alpha1)) 
+        {
+            //gridCoordsInstancing.ShowGridNodes();
+            //terrainCoordsInstancing.ShowGridNodes();
+            //flowFieldVisualiser.ShowGridNodes();
+            enemyManager.CheckPaths();
+        }
+
+        if (Input.GetKeyDown(KeyCode.L)) { EndGame("You Ended It"); }
+
+        if (Input.GetKeyDown(KeyCode.R)) { UpdateRotation(); }
 
         if (Input.GetKeyDown(KeyCode.I)) { debugInfoUI.SetActive(!debugInfoUI.activeSelf); }
 
@@ -187,7 +207,7 @@ public class GameManager : MonoBehaviour
         imearPerSecText.text = "Imear Per Second: " + resourceManager.imearPerSec.ToString();
     }
 
-    private void UpdateBuildingUI()
+    private void UpdateBuildingOutline()
     {
         if (!buildingUI.activeSelf)
         {
@@ -195,33 +215,25 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        gridSquaresParent.SetActive(true);
+
         PrecomputedData.GetXZ(GetMouseWorldPosition(), out int x, out int z);
-        Vector3 gridPos = new Vector3(x, 0, z);
+        gridSquaresParent.transform.position = new Vector3(x, 0, z);
 
-        if (MapGridManager.Instance.InBuildableArea(gridPos))
+        if (currentSO.nameString == "Habitat Light")
         {
-            tempObjectShowing.SetActive(true);
-            tempObjectShowing.transform.position = new Vector3(x, 0, z) + tempBuildingOffset;
-
-            if (currentSO.nameString == "Habitat Light")
-            {
-                PlaceHabitatLight(x, z);
-            }
-            else
-            {
-                HandleGeneralBuildingPlacement(x, z);
-            }
+            PlaceHabitatLight(x, z);
         }
         else
         {
-            tempObjectShowing.SetActive(false);
+            HandleGeneralBuildingPlacement(x, z);
         }
     }
 
     private void HandleBuildingUIInactive()
     {
         extendedArea.SetActive(false);
-        tempObjectShowing.SetActive(false);
+        gridSquaresParent.SetActive(false);
 
         if (Input.GetMouseButtonDown(0) && !IsOverUI())
         {
@@ -248,24 +260,19 @@ public class GameManager : MonoBehaviour
 
     private void UpdateRotation()
     {
-        if (!Input.GetKeyDown(KeyCode.R)) return;
-
         var mapGridManager = MapGridManager.Instance;
 
         mapGridManager.RotateBuilding();
-        tempObjectShowing.SetActive(true);
+/*        tempObjectShowing.SetActive(true);*/
 
         PrecomputedData.GetXZ(GetMouseWorldPosition(), out int x, out int z);
         PlacedObjectSO.Dir direction = mapGridManager.GetPlacedBuildingDirection();
 
-        tempObjectShowing.transform.rotation = Quaternion.Euler(
+/*        tempObjectShowing.transform.rotation = Quaternion.Euler(
             tempObjectShowing.transform.rotation.eulerAngles.x,
             currentSO.GetRotationAngle(direction),
             tempObjectShowing.transform.rotation.eulerAngles.z
-        );
-
-        Vector2Int tempOffset = currentSO.GetRotationOffset(direction);
-        tempBuildingOffset = new Vector3(tempOffset.x, 0, tempOffset.y);
+        );*/
     }
 
     private void PauseGame()
@@ -292,7 +299,7 @@ public class GameManager : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))
             {
-                Collider[] colliders = Physics.OverlapSphere(new Vector3(_x, 0, _z), 9, layerMask);
+                Collider[] colliders = Physics.OverlapSphere(new Vector3(_x, 0, _z), 9, enemyLayerMask);
 
                 // check current building resource cost against how much we have
                 if (colliders.Length < 1 && ResourceManager.Instance.GetAttanium() >= currentSO.buildingCost.x)
@@ -319,17 +326,10 @@ public class GameManager : MonoBehaviour
 
     public void ToggleBuilding()
     {
-        rightPanelUI.SetActive(false);
-
-        // toggle for building UI on screen
         buildingUI.SetActive(!buildingUI.activeSelf);
-        buildableArea.SetActive(!buildableArea.activeSelf);
-    }
-
-    public void CloseRightPanel()
-    {
-        rightPanelUI.SetActive(false);
-        Time.timeScale = 1;
+        //buildableArea.SetActive(!buildableArea.activeSelf);
+        gridCoordsInstancing.showNodes = !gridCoordsInstancing.showNodes;
+        flowFieldVisualiser.showNodes = !flowFieldVisualiser.showNodes;
     }
 
     private void CheckBuildingClick()
@@ -381,11 +381,9 @@ public class GameManager : MonoBehaviour
         if (hasRun) return;
         hasRun = true;
 
-        ResourceData resourceData = GameObject.Find("GlobalResources").GetComponent<ResourceData>();
-        resourceData.CommitSessionResources(
-            resourceManager.attaniumTotal,
-            resourceManager.marcumTotal,
-            resourceManager.imearTotal);
+        SaveSystem.playerData.attaniumTotal += resourceManager.attaniumTotal;
+        SaveSystem.playerData.marcumTotal += resourceManager.marcumTotal;
+        SaveSystem.playerData.imearTotal += resourceManager.imearTotal;
 
         endMenuUI.SetActive(true);
         endTextUI.text = _endText;
@@ -396,11 +394,11 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene("2_Capital");
     }
 
-    public static Vector3 GetMouseWorldPosition()
+    public Vector3 GetMouseWorldPosition()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-        if (Physics.Raycast(ray, out RaycastHit raycastHit, 999f))
+        if (Physics.Raycast(ray, out RaycastHit raycastHit, 999f, groundLayer))
         {
             return raycastHit.point;
         }
@@ -510,14 +508,35 @@ public class GameManager : MonoBehaviour
 
     private void NewBuildingSelected()
     {
-        tempObjectShowing.transform.rotation = Quaternion.identity;
-        tempBuildingOffset = Vector3.zero;
-        tempObjectShowing.transform.localScale = new Vector3(currentSO.width, 1, currentSO.length);
+        for (int i = gridSquaresParent.transform.childCount - 1; i >= 0; i--)
+        {
+            Destroy(gridSquaresParent.transform.GetChild(i).gameObject);
+        }
+
+        gridSquaresParent.transform.position= Vector3.zero;
+        gridSquaresParent.transform.rotation = Quaternion.identity;
+
+        for (int x = 0; x < currentSO.width; x++)
+        {
+            for (int z = 0; z < currentSO.length; z++) // Using 'z' as is common for grid depth in Unity's XZ plane
+            {
+                Vector3 position = new Vector3(x, 0f, z);
+
+                // Add the parent's position to place the grid relative to the parent
+                Vector3 worldPosition = position;
+
+                // Instantiate the prefab at the calculated position with default rotation
+                GameObject gridSquareInstance = Instantiate(gridSquarePrefab, worldPosition, Quaternion.identity, gridSquaresParent.transform);
+
+                // Optional: Name the instantiated object for easier debugging in the hierarchy
+                gridSquareInstance.name = $"GridSquare_{x}_{z}";
+            }
+        }
 
         activeBuildingText.text = currentSO.visibleName;
-        attActiveCostText.text = currentSO.buildingCost.x.ToString();
-        marcumActiveCostText.text = currentSO.buildingCost.y.ToString();
-        imearActiveCostText.text = currentSO.buildingCost.z.ToString();
+            attActiveCostText.text = currentSO.buildingCost.x.ToString();
+            marcumActiveCostText.text = currentSO.buildingCost.y.ToString();
+            imearActiveCostText.text = currentSO.buildingCost.z.ToString();
     }
 
     public void InvertGameState()

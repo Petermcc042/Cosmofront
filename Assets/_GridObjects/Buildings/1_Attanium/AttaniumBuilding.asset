@@ -20,8 +20,8 @@ MonoBehaviour:
     type: 3}
   finalPrefab: {fileID: 2350325779195560145, guid: db0d8f4c54eba47428c260c776e494ce,
     type: 3}
-  width: 8
-  length: 4
+  width: 4
+  length: 2
   isWalkable: 1
   isBuildable: 0
   buildingCost: {x: 10, y: 0, z: 0}

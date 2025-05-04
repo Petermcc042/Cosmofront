@@ -28,7 +28,7 @@ MonoBehaviour:
   enemyHealthList: 0100000002000000020000000200000002000000
   enemyArmourList: 0100000001000000010000000100000001000000
   spawnIntervalList:
-  - 0.1
+  - 0.01
   - 0.01
   - 0.01
   - 0.01

@@ -9,8 +9,6 @@ public class PlacedObject : MonoBehaviour
     public PlacedObjectSO.Dir dir;
     [SerializeField] private GameObject damageVisual;
 
-    private SkillManager skillManager;
-
     public string visibleName;
     public int upgradeLevel = 0;
     public int upgradePath = 0;
@@ -47,7 +45,6 @@ public class PlacedObject : MonoBehaviour
     {
         return placedObjectSO;
     }
-
 
     public List<Vector2Int> GetGridPositionList()
     {

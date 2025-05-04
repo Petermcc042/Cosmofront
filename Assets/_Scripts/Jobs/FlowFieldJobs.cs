@@ -13,6 +13,7 @@ public struct GridNode
     public int z;
     public int cost; // Movement cost (terrain difficulty)
     public int integrationCost; // Cumulative cost to reach the target
+    public int movementCost; // Cumulative cost to reach the target
     public int goToIndex; // Index of the parent node for path reconstruction
     public bool isWalkable; // is for enemy pathfinding
     public bool isPathfindingArea; // is for reducing the number of squares updated in pathfinding runs
@@ -49,7 +50,6 @@ public struct UpdateNodesMovementCost : IJobParallelFor
     }
 }
 
-
 [BurstCompile]
 public struct UpdateNodesIntegration : IJob
 {
@@ -58,55 +58,72 @@ public struct UpdateNodesIntegration : IJob
     [ReadOnly] public int endX, endZ;
     [ReadOnly] public int gridWidth;
     [ReadOnly] public bool runFullGrid;
+    //[ReadOnly] public int outerMinX, outerMaxX, outerMinZ, outerMaxZ;
+
+    // Precalculated neighbor offsets
+    private static readonly int[] DX = { -1, 0, 1, -1, 1, -1, 0, 1 };
+    private static readonly int[] DZ = { -1, -1, -1, 0, 0, 1, 1, 1 };
+    private static readonly int[] MOVE_COSTS = { 14, 10, 14, 10, 10, 14, 10, 14 };
 
     public void Execute()
     {
-        // Start from the target
+        // Initialize target node
         int targetIndex = GetIndex(endX, endZ);
         GridNode targetCell = GridArray[targetIndex];
         targetCell.integrationCost = 0;
         GridArray[targetIndex] = targetCell;
 
+        // Create visited array to avoid re-processing nodes
+        NativeArray<bool> visited = new NativeArray<bool>(GridArray.Length, Allocator.Temp);
 
-        // Breadth-first search (BFS) to calculate integration cost
+        // Breadth-first search
         NodeQueue.Enqueue(targetCell);
-        int count = 0;
+        visited[targetIndex] = true;
 
         while (NodeQueue.Count > 0)
         {
             GridNode currentCell = NodeQueue.Dequeue();
-            count++;
-            if (currentCell.x < 30 || currentCell.x >= 180 || currentCell.z < 30 || currentCell.z >= 180) { continue; }
 
-            for (int offsetX = -1; offsetX <= 1; offsetX++)
+            for (int i = 0; i < 8; i++)
             {
-                for (int offsetZ = -1; offsetZ <= 1; offsetZ++)
+                int neighborX = currentCell.x + DX[i];
+                int neighborZ = currentCell.z + DZ[i];
+
+                // Skip if outside grid bounds
+                if (neighborX < 0 || neighborX >= gridWidth || neighborZ < 0 || neighborZ >= gridWidth)
                 {
-                    if (offsetX == 0 && offsetZ == 0) continue; // Skip the current node
+                    continue;
+                }
 
-                    int neighborX = currentCell.x + offsetX;
-                    int neighborZ = currentCell.z + offsetZ;
+                int neighborIndex = GetIndex(neighborX, neighborZ);
+                GridNode neighbor = GridArray[neighborIndex];
 
-                    // Bounds check
-                    if (neighborX >= 0 && neighborX < gridWidth && neighborZ >= 0 && neighborZ < gridWidth)
+                // Skip unwalkable or out-of-area nodes
+                if (!neighbor.isWalkable || (!runFullGrid && !neighbor.isPathfindingArea))
+                {
+                    continue;
+                }
+
+                // Calculate new cost (including diagonal penalty)
+                int moveCost = (MOVE_COSTS[i] * neighbor.cost) / 10;
+                int newCost = currentCell.integrationCost + moveCost;
+
+                if (newCost < neighbor.integrationCost)
+                {
+                    neighbor.integrationCost = newCost;
+                    GridArray[neighborIndex] = neighbor;
+
+                    // Only enqueue if not already visited (prevents duplicates)
+                    if (!visited[neighborIndex])
                     {
-                        //UnityEngine.Debug.Log("running ahhhhh");
-                        GridNode neighbour = GridArray[GetIndex(neighborX, neighborZ)];
-                        if (!neighbour.isWalkable) continue; // Skip impassable cells
-                        if (!runFullGrid && !neighbour.isPathfindingArea) { continue; } // Skip impassable cells
-
-                        // if zero + the direct movement cost < max int value set the integration cost to this new value
-                        int newCost = currentCell.integrationCost + neighbour.cost;
-                        if (newCost < neighbour.integrationCost)
-                        {
-                            neighbour.integrationCost = newCost;
-                            GridArray[neighbour.index] = neighbour;
-                            NodeQueue.Enqueue(neighbour);
-                        }
+                        NodeQueue.Enqueue(neighbor);
+                        visited[neighborIndex] = true;
                     }
                 }
             }
         }
+
+        visited.Dispose();
     }
 
     private int GetIndex(int x, int z)
@@ -114,9 +131,6 @@ public struct UpdateNodesIntegration : IJob
         return z + x * gridWidth;
     }
 }
-
-
-
 
 [BurstCompile]
 public struct WeightBuildingNodes : IJob
@@ -141,7 +155,7 @@ public struct WeightBuildingNodes : IJob
                 // Expand outward in rings, updating only the perimeter
                 for (int ring = 1; ring <= 10; ring++)
                 {
-                    int costReduction = 50000 - (ring * 100);
+                    int costReduction = 100000 - (ring * 100);
 
                     // Top and Bottom Rows
                     for (int dx = -ring; dx <= ring; dx++)
@@ -194,7 +208,7 @@ public struct UpdateGoToIndex : IJob
 
     public void Execute()
     {
-        for(int index = 0; index < GridArray.Length; index++)
+        for (int index = 0; index < GridArray.Length; index++)
         {
             GridNode tempNode = GridArray[index];
 

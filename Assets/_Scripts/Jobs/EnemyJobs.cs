@@ -1,131 +1,144 @@
-using System;
-using System.Net;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine;
+using static PlacedObjectSO;
 
 [BurstCompile]
-public struct UpdateEnemyTargetPos : IJobParallelFor
+public struct FindEnemyTargetPos : IJobParallelFor
 {
     public NativeArray<EnemyData> EnemyData;
-    [ReadOnly] public NativeArray<EnemyData> EnemyDataOffset;
+    public NativeArray<int> gridCostUpdate;
     [ReadOnly] public NativeArray<GridNode> FlowGridArray;
-    [ReadOnly] public NativeArray<float3> TerrainDataArray;
+    [ReadOnly] public NativeArray<float3> BuildingPositions;
+    [ReadOnly] public NativeArray<float3> ShieldPositions;
+    [ReadOnly] public float DeltaTime;
 
-    // A seed that you can set from your main thread
-    public uint Seed;
-    private const float TERRAIN_DETECTION_RADIUS = 2f;
-    private const float TERRAIN_FORCE_MULTIPLIER = 2.5f;
-    private const float MIN_TERRAIN_DISTANCE = 1f;
+    private static readonly int[] NeighborOffsetsX = { -1,  0,  1, -1, 1, -1, 0, 1 };
+    private static readonly int[] NeighborOffsetsZ = { -1, -1, -1,  0, 0,  1, 1, 1 };
 
     public void Execute(int index)
     {
-        uint seed = Seed < 1 ? 1 : Seed;
         EnemyData enemy = EnemyData[index];
-        //if (!enemy.TargetNeeded) { return; }
+        
+        // Check if enemy is close enough to current waypoint to find a new one
+        if (math.distance(enemy.Position, enemy.TargetPos) < 0.05f || enemy.TargetPos.Equals(float3.zero))
+        {
+            int gridX = (int)math.round(enemy.Position.x);
+            int gridZ = (int)math.round(enemy.Position.z);
 
-        float3 currentPos = enemy.Position;
-        int currentIndex = GetGridIndex(currentPos);
+            // Find neighbor with lowest integration cost
+            int bestNeighborIndex = -1;
+            float lowestCost = float.MaxValue;
+            float3 neighbourPos = Vector3.zero;
 
-        float3 flowDir = CalculateFlowDirection(currentPos, currentIndex);
+            // Check all neighbors
+            for (int i = 0; i < 8; i++)
+            {
+                int neighbourX = gridX + NeighborOffsetsX[i];
+                int neighbourZ = gridZ + NeighborOffsetsZ[i];
 
-        float3 separationForce = CalculateEnemySeparation(enemy);
+                // Get the index in the grid array
+                int neighborIndex = neighbourZ + neighbourX * 200;
 
-        //float3 terrainSeparationForce = CalculateTerrainSeparation(enemy.Position);
+                // Make sure the neighbor index is valid
+                if (neighborIndex >= 0 && neighborIndex < FlowGridArray.Length)
+                {
+                    float neighborCost = FlowGridArray[neighborIndex].integrationCost + FlowGridArray[neighborIndex].movementCost * 10;
 
-        float3 wanderForce = CalculateWanderForce(seed, index);
+                    // Find the neighbor with the lowest cost
+                    if (neighborCost < lowestCost)
+                    {
+                        lowestCost = neighborCost;
+                        bestNeighborIndex = neighborIndex;
+                        neighbourPos = new float3(neighbourX, 0f, neighbourZ);
+                    }
+                }
+            }
 
-        float3 desiredDirection = flowDir + (separationForce * 0.4f) + (wanderForce * 0.3f);// + (terrainSeparationForce);
+            enemy.TargetPos = FlowGridArray[bestNeighborIndex].position;
 
-        enemy.TargetPos = desiredDirection;
+            if (neighbourPos.x > 20 && neighbourPos.x < 180 && neighbourPos.z > 20 && neighbourPos.z < 180)
+            {
+                gridCostUpdate[index] = bestNeighborIndex;
+            }
+        }
+
+        // Check if enemy is hitting something
+        bool isAtShield = false;
+        bool isAttacking = false;
+
+        // Check shield first so they damage it not a building poking out
+        for (int j = 0; j < ShieldPositions.Length; j++)
+        {
+            if (math.distance(enemy.Position, ShieldPositions[j]) < 0.6f)
+            {
+                isAtShield = true;
+                isAttacking = true;
+                break;
+            }
+        }
+
+        // If we aren't at the shield check if there are other buildings obstructing
+        if (!isAtShield)
+        {
+            for (int j = 0; j < BuildingPositions.Length; j++)
+            {
+                if (math.distance(enemy.Position, BuildingPositions[j]) < 0.5f)
+                {
+                    enemy.AttackPos = BuildingPositions[j];
+                    isAttacking = true;
+                    break;
+                }
+                else
+                {
+                    enemy.AttackPos = float3.zero;
+                }
+            }
+        }
+
+        enemy.IsAtShield = isAtShield;
+        enemy.IsAttacking = isAttacking;
+
+        float3 directionVector = enemy.TargetPos - enemy.Position;
+        float3 dir = math.normalize(directionVector);
+
+        enemy.Rotation = Quaternion.LookRotation(dir);
+        if (!isAttacking)
+        {
+            enemy.Position += (DeltaTime * enemy.Speed * dir);
+        }
+
         EnemyData[index] = enemy;
-    }
-
-    private float3 CalculateFlowDirection(float3 currentPos, int currentIndex)
-    {
-        if (currentIndex < 0 || currentIndex >= FlowGridArray.Length)
-        {
-            return currentPos + GetStepTowardsCenter(currentPos);
-        }
-
-        int adjustedIndex = (FlowGridArray[currentIndex].goToIndex < 0)
-            ? GetGridIndex(currentPos + GetStepTowardsCenter(currentPos))
-            : FlowGridArray[currentIndex].goToIndex;
-
-        int nextIndex = FlowGridArray[adjustedIndex].goToIndex;
-
-        return (nextIndex < 0)
-            ? currentPos + GetStepTowardsCenter(currentPos)
-            : FlowGridArray[nextIndex].position;
-    }
-
-    private float3 CalculateEnemySeparation(EnemyData enemy)
-    {
-        float3 separationForce = float3.zero;
-        for (int i = 0; i < EnemyDataOffset.Length; i++)
-        {
-            if (math.distance(EnemyDataOffset[i].Position, enemy.Position) > 2f) { continue; }
-
-            float3 away = enemy.Position - EnemyDataOffset[i].Position;
-            float magnitude = math.length(away);
-            if (magnitude > 0)
-            {
-                separationForce += math.normalize(away) / magnitude;
-            }
-        }
-        return separationForce;
-    }
-
-    private float3 CalculateTerrainSeparation(float3 position)
-    {
-        float3 separationForce = float3.zero;
-        for (int i = 0; i < TerrainDataArray.Length; i++)
-        {
-            float distance = math.distance(position, TerrainDataArray[i]);
-            if (distance > TERRAIN_DETECTION_RADIUS) { continue; }
-
-            float3 away = position - TerrainDataArray[i];
-            float magnitude = math.length(away);
-            if (magnitude > 0)
-            {
-                // Exponential force increase as distance decreases
-                float forceMagnitude = 1f / (magnitude * magnitude);
-                separationForce += math.normalize(away) * forceMagnitude;
-            }
-        }
-        return separationForce;
-    }
-
-    private float3 CalculateWanderForce(uint seed, int index)
-    {
-        Unity.Mathematics.Random random = new Unity.Mathematics.Random(seed + (uint)index);
-        return new float3(random.NextFloat(-0.5f, 0.5f), 0, random.NextFloat(-0.5f, 0.5f));
-    }
-
-    // Converts a world position to a grid index.
-    private int GetGridIndex(float3 pos)
-    {
-        return (int)math.floor(pos.z) + (int)math.floor(pos.x) * 200;
-    }
-
-    // Returns a simple step towards the center of the map.
-    private float3 GetStepTowardsCenter(float3 pos)
-    {
-        float3 center = new float3(100, 0, 100);
-        float3 direction = math.normalize(center - pos);
-        // This gives an integer-like step (e.g., (-1, 0, 1)) based on the direction
-        return new float3(math.sign(direction.x), 0, math.sign(direction.z));
     }
 }
 
 
 [BurstCompile]
-public struct UpdateEnemyPosition : IJobParallelFor
+public struct UpdateNodeCost : IJob
+{
+    public NativeArray<GridNode> FlowGridArray;
+    [ReadOnly] public NativeArray<int> GridCostUpdate;
+
+    public void Execute()
+    {
+        for (int index = 0; index < GridCostUpdate.Length; index++)
+        {
+            GridNode tempNode = FlowGridArray[GridCostUpdate[index]];
+            tempNode.movementCost += 1;
+            FlowGridArray[GridCostUpdate[index]] = tempNode;
+        }
+    }
+}
+
+[BurstCompile]
+public struct UpdateEnemyTargetPos : IJobParallelFor
 {
     public NativeArray<EnemyData> EnemyData;
-
+    //[ReadOnly] public NativeArray<EnemyData> EnemyDataOffset;
+    [ReadOnly] public NativeArray<GridNode> FlowGridArray;
     [ReadOnly] public NativeArray<float3> BuildingPositions;
     [ReadOnly] public NativeArray<float3> ShieldPositions;
     [ReadOnly] public float DeltaTime;
@@ -134,13 +147,34 @@ public struct UpdateEnemyPosition : IJobParallelFor
     {
         EnemyData enemy = EnemyData[index];
 
+
+        // set enemies new position
+        float3 currentPos = enemy.Position;
+        int currentIndex = GetGridIndex(currentPos);
+
+        if (math.distance(enemy.Position, enemy.TargetPos) < 0.05f)
+        {
+            if (currentIndex < 0) { return; }
+            int nextIndex = FlowGridArray[currentIndex].goToIndex;
+            int nextnextIndex = FlowGridArray[nextIndex].goToIndex;
+            enemy.TargetPos = FlowGridArray[nextnextIndex].position;
+        }
+        else
+        {
+            if (currentIndex < 0) { return; }
+            int nextIndex = FlowGridArray[currentIndex].goToIndex;
+            enemy.TargetPos = FlowGridArray[nextIndex].position;
+        }
+
+
+        // check if enemy is hitting something
         bool isAtShield = false;
         bool isAttacking = false;
 
         // check shield first so they damage it not a building poking out
         for (int j = 0; j < ShieldPositions.Length; j++)
         {
-            if (math.distance(enemy.Position, ShieldPositions[j]) <= 0.2f)
+            if (math.distance(enemy.Position, ShieldPositions[j]) < 0.6f)
             {
                 isAtShield = true;
                 isAttacking = true;
@@ -153,7 +187,7 @@ public struct UpdateEnemyPosition : IJobParallelFor
         {
             for (int j = 0; j < BuildingPositions.Length; j++)
             {
-                if (math.distance(enemy.Position, BuildingPositions[j]) <= 0.2f)
+                if (math.distance(enemy.Position, BuildingPositions[j]) < 0.5f)
                 {
                     enemy.AttackPos = BuildingPositions[j];
                     isAttacking = true;
@@ -161,7 +195,7 @@ public struct UpdateEnemyPosition : IJobParallelFor
                 }
                 else
                 {
-                    enemy.AttackPos = default;
+                    enemy.AttackPos = float3.zero;
                 }
             }
         }
@@ -170,25 +204,29 @@ public struct UpdateEnemyPosition : IJobParallelFor
         enemy.IsAtShield = isAtShield;
         enemy.IsAttacking = isAttacking;
 
-        if (!enemy.IsDead && !enemy.IsAttacking)
+        float3 directionVector = enemy.TargetPos - enemy.Position;
+
+        if (math.lengthsq(directionVector) > 0.001f)
         {
-            if (math.distance(enemy.Position, enemy.TargetPos) > 0.1f)
-            {
-                float3 dir = math.normalize(enemy.TargetPos - enemy.Position);
+            float3 dir = math.normalize(directionVector);
 
+            enemy.Rotation = Quaternion.LookRotation(dir);
+
+            if (!isAttacking)
+            {
                 enemy.Position += (DeltaTime * enemy.Speed * dir);
-
-                enemy.Rotation = Quaternion.LookRotation(dir);
-
-                enemy.TargetNeeded = false;
-            }
-            else
-            {
-                enemy.TargetNeeded = true;
             }
         }
 
+        enemy.Rotation = Quaternion.LookRotation(directionVector);
+
+
         EnemyData[index] = enemy;
+    }
+
+    private int GetGridIndex(float3 pos)
+    {
+        return (int)(math.abs(math.floor(pos.z)) + math.abs(math.floor(pos.x)) * 200);
     }
 }
 
@@ -219,16 +257,20 @@ public struct EnemyCollisionData : IJob
             }
             else
             {
-                tempEnemy.Health -= colData.BulletDamage;
+                tempEnemy.Health -= colData.BulletDamage;                
             }
 
+            if (tempEnemy.Health > 0)
+            {
+                tempEnemy.hitCount += 1;
+            }
 
             if (tempEnemy.Health <= 0)
             {
                 tempEnemy.IsDead = true;
                 TurretUpgradeData tempUpgrade = new()
                 {
-                    XPAmount = 10,
+                    XPAmount = 2,
                     TurretID = colData.TurretID
                 };
 

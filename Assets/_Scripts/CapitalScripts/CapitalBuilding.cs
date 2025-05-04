@@ -25,13 +25,6 @@ public class CapitalBuilding : MonoBehaviour
     // Small threshold to prevent endless tiny lerps
     private const float STOP_DISTANCE_THRESHOLD = 0.01f;
 
-    private ResourceData resourceData;
-
-    private void Awake()
-    {
-        resourceData = GameObject.Find("GlobalResources").GetComponent<ResourceData>();
-    }
-
     void LateUpdate()
     {
         // Only run the lerp logic if isMoving is true
@@ -75,7 +68,7 @@ public class CapitalBuilding : MonoBehaviour
         } 
         else
         {
-            upgradeMenuUI.SetActive(true);   
+            upgradeMenuUI.SetActive(true);
         }
     }
 
@@ -93,7 +86,7 @@ public class CapitalBuilding : MonoBehaviour
         pmImearCostUI.text = buildingSO.purchaseCost.z.ToString();
 
         //Debug.Log($"current att cost {currentUpgradeNode.upgradeCost.x} vs resources {resourceData.totalAttanium}");
-        if (buildingSO.purchaseCost.x > resourceData.totalAttanium)
+        if (buildingSO.purchaseCost.x > SaveSystem.playerData.attaniumTotal)
         {
             Debug.Log("called");
             pmAttCostUI.color = Color.red;
@@ -102,14 +95,14 @@ public class CapitalBuilding : MonoBehaviour
         }
 
         //Debug.Log($"current marc cost {currentUpgradeNode.upgradeCost.y} vs resources {resourceData.totalMarcum}");
-        if (buildingSO.purchaseCost.y > resourceData.totalMarcum)
+        if (buildingSO.purchaseCost.y > SaveSystem.playerData.marcumTotal)
         {
             pmMarcCostUI.color = Color.red;
             purchaseMenuButtonUI.interactable = false;
             purchaseMenuButtonUI.GetComponentInChildren<TextMeshProUGUI>().text = "Blocked";
         }
 
-        if (buildingSO.purchaseCost.z > resourceData.totalImear)
+        if (buildingSO.purchaseCost.z > SaveSystem.playerData.imearTotal)
         {
             pmImearCostUI.color = Color.red;
             purchaseMenuButtonUI.interactable = false;
@@ -133,9 +126,9 @@ public class CapitalBuilding : MonoBehaviour
         upgradeMenuUI.SetActive(true);
         purchaseMenuUI.SetActive(false);
 
-        resourceData.totalAttanium -= (int)buildingSO.purchaseCost.x;
-        resourceData.totalMarcum -= (int)buildingSO.purchaseCost.y;
-        resourceData.totalImear -= (int)buildingSO.purchaseCost.z;
+        SaveSystem.playerData.attaniumTotal -= (int)buildingSO.purchaseCost.x;
+        SaveSystem.playerData.marcumTotal -= (int)buildingSO.purchaseCost.y;
+        SaveSystem.playerData.imearTotal -= (int)buildingSO.purchaseCost.z;
 
         if (!SaveSystem.playerData.unlockedBuildingNames.Contains(buildingSO.buildingName))
         {

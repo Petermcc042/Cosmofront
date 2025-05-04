@@ -4,7 +4,7 @@ using Unity.Mathematics;
 using Unity.Burst;
 using UnityEngine;
 
-public class MovementScheduler
+public class EnemyMovement: MonoBehaviour
 {
     public void ScheduleMoveJobs(
         NativeList<EnemyData> enemyDataList,
@@ -13,10 +13,12 @@ public class MovementScheduler
         NativeList<float3> obstructPathList,
         NativeArray<float3> terrainDataArray,
         float deltaTime,
-        uint seed)
+        uint seed,
+        int separationMultiplier)
     {
         // Create temporary array for enemy offset data
         NativeArray<EnemyData> enemyDataOffset = new(enemyDataList.Length, Allocator.TempJob);
+        NativeArray<int> gridCostUpdateArray = new(enemyDataList.Length, Allocator.TempJob);
 
         try
         {
@@ -27,30 +29,29 @@ public class MovementScheduler
             }
 
 
-            var updateEnemyTargetJob = new UpdateEnemyTargetPos
+            var updateEnemyTargetJob = new FindEnemyTargetPos
             {
                 EnemyData = enemyDataList.AsArray(),
-                TerrainDataArray = terrainDataArray,
-                EnemyDataOffset = enemyDataOffset,
                 FlowGridArray = PrecomputedData.gridArray,
-                Seed = seed
+                ShieldPositions = shieldPositions.AsArray(),
+                BuildingPositions = obstructPathList.AsArray(),
+                gridCostUpdate = gridCostUpdateArray,
+                DeltaTime = deltaTime 
             };
             JobHandle targetPosHandle = updateEnemyTargetJob.Schedule(enemyDataList.Length, 64);
             targetPosHandle.Complete();
 
-            var moveEnemyJob = new UpdateEnemyPosition
+            var updateNodeCostJob = new UpdateNodeCost
             {
-                EnemyData = enemyDataList.AsArray(),
-                ShieldPositions = shieldPositions.AsArray(),
-                BuildingPositions = obstructPathList.AsArray(),
-                DeltaTime = deltaTime
+                GridCostUpdate = gridCostUpdateArray,
+                FlowGridArray = PrecomputedData.gridArray,
             };
-
-            JobHandle jobHandle = moveEnemyJob.Schedule(enemyDataList.Length, 64);
-            jobHandle.Complete();
+            JobHandle updateNodeCostHandle = updateNodeCostJob.Schedule();
+            updateNodeCostHandle.Complete();
         }
         finally
         {
+            gridCostUpdateArray.Dispose();
             // Clean up temporary array
             if (enemyDataOffset.IsCreated)
             {

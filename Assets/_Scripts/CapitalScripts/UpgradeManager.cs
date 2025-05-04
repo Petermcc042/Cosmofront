@@ -5,9 +5,6 @@ using UnityEngine.UI;
 
 public class UpgradeManager : MonoBehaviour
 {
-    [SerializeField] ResourceData resourceData;
-    [SerializeField] private GameObject upgradesParent;
-
     [Header("Single Upgrade Fields")]
     [SerializeField] private GameObject singleUpgradeUI;
     [SerializeField] private TextMeshProUGUI singleUpgradeTitle;
@@ -24,7 +21,6 @@ public class UpgradeManager : MonoBehaviour
 
     private void Awake()
     {
-        resourceData = GameObject.Find("GlobalResources").GetComponent<ResourceData>();
         var allTransforms = Resources.FindObjectsOfTypeAll<Transform>();
         foreach (var t in allTransforms)
         {
@@ -78,7 +74,7 @@ public class UpgradeManager : MonoBehaviour
         singleUpgradeImearCost.text = currentUpgradeNode.upgradeCost.z.ToString();
 
         //Debug.Log($"current att cost {currentUpgradeNode.upgradeCost.x} vs resources {resourceData.totalAttanium}");
-        if (currentUpgradeNode.upgradeCost.x > resourceData.totalAttanium)
+        if (currentUpgradeNode.upgradeCost.x > SaveSystem.playerData.attaniumTotal)
         {
             Debug.Log("called");
             singleUpgradeAttCost.color = Color.red;
@@ -86,13 +82,13 @@ public class UpgradeManager : MonoBehaviour
         }
 
         //Debug.Log($"current marc cost {currentUpgradeNode.upgradeCost.y} vs resources {resourceData.totalMarcum}");
-        if (currentUpgradeNode.upgradeCost.y > resourceData.totalMarcum)
+        if (currentUpgradeNode.upgradeCost.y > SaveSystem.playerData.marcumTotal)
         {
             singleUpgradeMarcCost.color = Color.red;
             singleUpgradePurchaseButton.interactable = false;
         }
 
-        if (currentUpgradeNode.upgradeCost.z > resourceData.totalImear)
+        if (currentUpgradeNode.upgradeCost.z > SaveSystem.playerData.imearTotal)
         {
             singleUpgradeImearCost.color = Color.red;
             singleUpgradePurchaseButton.interactable = false;
@@ -104,9 +100,9 @@ public class UpgradeManager : MonoBehaviour
     {
         currentUpgradeNode.isPurchased = true;
 
-        resourceData.totalAttanium -= (int)currentUpgradeNode.upgradeCost.x;
-        resourceData.totalMarcum -= (int)currentUpgradeNode.upgradeCost.y;
-        resourceData.totalImear -= (int)currentUpgradeNode.upgradeCost.z;
+        SaveSystem.playerData.attaniumTotal -= (int)currentUpgradeNode.upgradeCost.x;
+        SaveSystem.playerData.marcumTotal -= (int)currentUpgradeNode.upgradeCost.y;
+        SaveSystem.playerData.imearTotal -= (int)currentUpgradeNode.upgradeCost.z;
 
         if (!SaveSystem.playerData.unlockedUpgradeNames.Contains(currentUpgradeNode.upgradeName))
         {

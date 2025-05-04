@@ -9,10 +9,11 @@ public class MapGridManager : MonoBehaviour
     public static MapGridManager Instance { get; private set; }
 
     [Header("GameObject References")]
-    [SerializeField] private GameObject skillManagerGO;
+    [SerializeField] private PathfindingManager pathfinding;
     [SerializeField] private EnemyManager enemyManager;
     [SerializeField] private BuildableAreaMesh buildableAreaMesh;
     [SerializeField] private TerrainGen terrainGen;
+    [SerializeField] private FlowFieldVisualiser flowFieldVisualiser;
 
     [Header("Base Buildings SO")]
     [SerializeField] private GameObject generator;
@@ -267,7 +268,7 @@ public class MapGridManager : MonoBehaviour
         Vector3 placedObjectWorldPosition = PrecomputedData.GetWorldPosition(_x, _z) +
             new Vector3(rotationOffset.x, 0, rotationOffset.y) * PrecomputedData.cellSize;
 
-        // Instantiate our gameobject and store the transform
+
         PlacedObject placedObject = PlacedObject.Create(placedObjectWorldPosition, new Vector2Int(_x, _z), dir, _placedObjectSO);
 
         // update our grid on these coordinates so that we can't build there anymore
@@ -279,8 +280,12 @@ public class MapGridManager : MonoBehaviour
             PrecomputedData.SetPlacedObject(pos.x, pos.y, placedObject);
         }
 
+
         BuildingTraversal(_x, _z);
-        PrecomputedData.RunFlowFieldJobs(99, 99, false);
+        pathfinding.RunFlowFieldJobs(99, 99, false);
+
+        flowFieldVisualiser.ShowGridNodes();
+
 
         if (_placedObjectSO.nameString == "Habitat Light")
         {
@@ -288,7 +293,7 @@ public class MapGridManager : MonoBehaviour
         }
     }
 
-    private void BuildingTraversal(int _x, int _z)
+    private void BuildingTraversal(int _x, int _z) // this runs bfs to see what cells need updated for enemy pathfinding
     {
         // Start measuring time
         System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
@@ -408,7 +413,7 @@ public class MapGridManager : MonoBehaviour
             }
         }
 
-        PrecomputedData.RunFlowFieldJobs(99,99,false);
+        pathfinding.RunFlowFieldJobs(99,99,false);
     }
 
     public PlacedObjectSO.Dir GetPlacedBuildingDirection()

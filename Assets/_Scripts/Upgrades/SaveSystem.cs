@@ -14,6 +14,12 @@ public class SaveData
     public List<string> inventoryItems = new List<string>();
     public List<string> unlockedUpgradeNames = new List<string>();
     public List<string> unlockedBuildingNames = new List<string>();
+
+    public int attaniumTotal;
+    public int marcumTotal;
+    public int imearTotal;
+
+    public int populationTotal;
 }
 
 public static class SaveSystem
@@ -58,8 +64,15 @@ public static class SaveSystem
             playerPosition = new Vector3(1, 2, 3),
             inventoryItems = new List<string> { "Sword", "Shield" },
             unlockedUpgradeNames = new List<string> { "Damage", "Targeting range", "Targeting Rate", "Fire Rate" },
-            unlockedBuildingNames = new List<string> { "Command Centre" }
+            unlockedBuildingNames = new List<string> { "Command Centre" },
+            attaniumTotal = 50,
+            marcumTotal = 50,
+            imearTotal = 50,
+            populationTotal = 50
         };
+
         playerData = saveData;
+
+        SaveGame();
     }
 }

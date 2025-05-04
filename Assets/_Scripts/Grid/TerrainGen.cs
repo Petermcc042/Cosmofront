@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -21,6 +22,16 @@ public class TerrainGen : MonoBehaviour
     public NativeArray<float3> blockedCoordsArray;
 
 
+    [Header("For Visualisation")]
+    public bool showCoords;
+    public Mesh mesh;
+    public Material material;
+    private int instanceCount = 100;
+
+    private List<Matrix4x4> matrixList;
+    private bool isCreated = false;
+
+
     public void InitTerrain()
     {
 /*        // Generate random offsets for the Perlin noise
@@ -31,7 +42,7 @@ public class TerrainGen : MonoBehaviour
         LowerVerticesAtCentre();
         LowerVerticesAtEdges();*/
 
-        SplitTerrainIntoQuadrants(4);
+        //SplitTerrainIntoQuadrants(4);
 
         blockedCoordsArray = new NativeArray<float3>(PrecomputedData.terrainCoords.Count, Allocator.Persistent);
 
@@ -42,6 +53,33 @@ public class TerrainGen : MonoBehaviour
         }
 
         collisionManager.CreateTerrainArray();
+
+        if (showCoords) { ShowTerrainNodes(); }
+    }
+
+    public void ShowTerrainNodes()
+    {
+        instanceCount = blockedCoordsArray.Length;
+
+        matrixList = new List<Matrix4x4>(instanceCount); // Preallocate
+
+        // Assign initial positions
+        for (int i = 0; i < instanceCount; i++)
+        {
+            Quaternion rotation = Quaternion.identity;
+            Vector3 scale = new Vector3(1f, 1f * UnityEngine.Random.Range(1,5), 1f);
+
+            matrixList.Add(Matrix4x4.TRS(blockedCoordsArray[i], rotation, scale)); // Prepopulate list
+        }
+
+        material.enableInstancing = true;
+        isCreated = true;
+    }
+
+    private void Update()
+    {
+        if (!isCreated) { return; }
+        Graphics.DrawMeshInstanced(mesh, 0, material, matrixList);
     }
 
     void SplitTerrainIntoQuadrants(int iterations)

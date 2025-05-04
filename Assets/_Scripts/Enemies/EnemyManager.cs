@@ -5,6 +5,7 @@ using System.Linq;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public struct EnemyData
 {
@@ -24,6 +25,7 @@ public struct EnemyData
     public float3 AttackPos;
     public uint enemyType;
     public float AnimationFrame;
+    public int hitCount;
 }
 
 
@@ -174,20 +176,6 @@ public class EnemyManager : MonoBehaviour
         enemyWeightSum = enemyWeightList.Sum();
     }
 
-    public void RecalcPaths() 
-    {
-        // Start measuring time
-        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-        stopwatch.Start();
-
-        // The code we want to time:
-        PrecomputedData.RunFlowFieldJobs(99, 99, false);
-
-        // Stop measuring time
-        stopwatch.Stop();
-        //Debug.Log($"Flow field recalculation took: {stopwatch.ElapsedMilliseconds} ms");
-    }
-
     private void SetSpawnPositions(int numSpawnPositions)
     {
         for (int i = 0; i < numSpawnPositions; i++)
@@ -202,28 +190,28 @@ public class EnemyManager : MonoBehaviour
     private Vector3 GetSpawnPosition(int index, int totalSpawns)
     {
         int edge = index % 4; // 4 edges: top, right, bottom, left
-        float positionOnEdge = (index / (float)totalSpawns) * gridWidth; // Spread along edges
+        float positionOnEdge = (index / (float)totalSpawns) * (gridWidth - 4); // Adjust for 2-tile inset on both sides
 
         int gridPosX = 0;
         int gridPosZ = 0;
 
         switch (edge)
         {
-            case 0: // Top edge
-                gridPosX = Mathf.FloorToInt(positionOnEdge);
-                gridPosZ = gridLength - 1;
+            case 0: // Top edge (moving 2 tiles inward)
+                gridPosX = 2 + Mathf.FloorToInt(positionOnEdge);
+                gridPosZ = gridLength - 3;
                 break;
             case 1: // Right edge
-                gridPosX = gridWidth - 1;
-                gridPosZ = Mathf.FloorToInt(positionOnEdge);
+                gridPosX = gridWidth - 3;
+                gridPosZ = 2 + Mathf.FloorToInt(positionOnEdge);
                 break;
             case 2: // Bottom edge
-                gridPosX = Mathf.FloorToInt(positionOnEdge);
-                gridPosZ = 0;
+                gridPosX = 2 + Mathf.FloorToInt(positionOnEdge);
+                gridPosZ = 2;
                 break;
             case 3: // Left edge
-                gridPosX = 0;
-                gridPosZ = Mathf.FloorToInt(positionOnEdge);
+                gridPosX = 2;
+                gridPosZ = 2 + Mathf.FloorToInt(positionOnEdge);
                 break;
         }
 
@@ -307,35 +295,91 @@ public class EnemyManager : MonoBehaviour
         return enemyList; 
     }
 
+    #region Debug
 
+    private static readonly int[] NeighborOffsetsX = { -1, 0, 1, -1, 1, -1, 0, 1 };
+    private static readonly int[] NeighborOffsetsZ = { -1, -1, -1, 0, 0, 1, 1, 1 };
 
+    public void CheckPaths()
+    {
+        List<Vector3> pathPositions = new List<Vector3>();
+        Vector3 currentPos = spawnOriginVectorList[30];
 
-     /// <summary>
-     /// Old Debug Code to place an item where each enemy target position should be
-     /// </summary>
-     private void CheckPaths()
-     {
-        Debug.Log("Checking paths");
+        // Find neighbor with lowest integration cost
+        int bestNeighborIndex = -1;
+        float lowestCost = float.MaxValue;
 
+        for (int j =0; j < 150; j++)
+        {
+            int gridX = (int)math.floor(currentPos.x);
+            int gridZ = (int)math.floor(currentPos.z);
+            // Check all neighbors
+            for (int i = 0; i < 8; i++)
+            {
+                int neighborX = gridX + NeighborOffsetsX[i];
+                int neighborZ = gridZ + NeighborOffsetsZ[i];
 
-        // this is taking the first spawn position and getting the spawn position
-        int currentIndexPostition = Mathf.FloorToInt(spawnOriginVectorList[0].z) + Mathf.FloorToInt(spawnOriginVectorList[0].x) * 200;
-        Debug.Log(spawnOriginVectorList[0] + " : " + PrecomputedData.gridArray[currentIndexPostition].position);
-        Instantiate(targetPosGO, PrecomputedData.gridArray[currentIndexPostition].position, Quaternion.identity, gameObject.transform);
+                // Get the index in the grid array
+                int neighborIndex = neighborZ + neighborX * 200;
 
+                // Make sure the neighbor index is valid
+                if (neighborIndex >= 0 && neighborIndex < PrecomputedData.gridArray.Length)
+                {
+                    float neighborCost = PrecomputedData.gridArray[neighborIndex].integrationCost;
 
-        Debug.Log("go to index: " + PrecomputedData.gridArray[currentIndexPostition].goToIndex);
-        Vector3 currentPos = PrecomputedData.gridArray[currentIndexPostition].position;
-        Vector3 towardsCenter = (centre.position - currentPos).normalized;
-        int newIndexPostition = Mathf.FloorToInt(currentPos.z + Mathf.Sign(towardsCenter.z)) +
-                            Mathf.FloorToInt(currentPos.x + Mathf.Sign(towardsCenter.x)) * 200;
-        Debug.Log("current position: " + currentPos + " - centre position: " + centre.position);
-        Debug.Log("current index: " + currentIndexPostition + " - new index: " + newIndexPostition);
-        Debug.Log("current index: " + PrecomputedData.gridArray[currentIndexPostition].position + " - new index: " + PrecomputedData.gridArray[newIndexPostition].position);
-        Debug.Log("current index: " + PrecomputedData.gridArray[2000].position + " - new index: " + PrecomputedData.gridArray[4000].position);
-        Instantiate(targetPosGO, PrecomputedData.gridArray[newIndexPostition].position, Quaternion.identity, gameObject.transform);
+                    // Find the neighbor with the lowest cost
+                    if (neighborCost < lowestCost)
+                    {
+                        lowestCost = neighborCost;
+                        bestNeighborIndex = neighborIndex;
+                    }
+                }
+            }
+
+            if (bestNeighborIndex != -1)
+            {
+                pathPositions.Add(PrecomputedData.gridArray[bestNeighborIndex].position);
+            }
+
+            currentPos = PrecomputedData.gridArray[bestNeighborIndex].position;
+            pathPositions.Add(currentPos);
+        }
+
+        instanceCount = pathPositions.Count;
+
+        matrixList = new List<Matrix4x4>(instanceCount); // Preallocate
+
+        // Assign initial positions
+        for (int i = 0; i < instanceCount; i++)
+        {
+            float3 position = pathPositions[i];
+
+            Quaternion rotation = Quaternion.identity;
+            Vector3 scale = Vector3.one;
+
+            matrixList.Add(Matrix4x4.TRS(position, rotation, scale)); // Prepopulate list
+        }
+
+        material.enableInstancing = true;
+        isCreated = true;
     }
+
+    public Mesh mesh;
+    public Material material;
+    private int instanceCount = 100;
+
+    private List<Matrix4x4> matrixList;
+    private bool isCreated = false;
+
+    private void Update()
+    {
+        if (!isCreated) { return; }
+        Graphics.DrawMeshInstanced(mesh, 0, material, matrixList);
+    }
+
+    #endregion
 }
+
 
 
 

@@ -80,7 +80,6 @@ public class AnimationManager : MonoBehaviour
     [SerializeField] private List<BakedDataReference> animationList = new List<BakedDataReference>();
     [SerializeField] private List<InstancingIndividualEnemy> instanceScripts = new List<InstancingIndividualEnemy>();
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         foreach (var animation in animationList)
@@ -90,12 +89,19 @@ public class AnimationManager : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
         foreach (var instance in instanceScripts)
         {
             instance.CallUpdate();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        foreach (var instance in instanceScripts)
+        {
+            instance.CallOnDestroy();
         }
     }
 }
