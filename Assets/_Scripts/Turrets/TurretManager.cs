@@ -5,7 +5,6 @@ using UnityEngine;
 public struct TurretUpgrade
 {
     public Turret TurretRef;
-    public UpgradeType UpgradeTypeRef;
     public int Position;
 }
 
@@ -36,6 +35,7 @@ public class TurretManager : MonoBehaviour
     {
         if (turretUpgradeIDs.Count == 0) return;
 
+        // find one turret id if the list is not empty
         int upgradeID = turretUpgradeIDs[0];
         Turret tempTurret = null;
 
@@ -66,19 +66,20 @@ public class TurretManager : MonoBehaviour
             case 120:
             case 160:
             case 180:
-                Debug.Log("Small upgrade");
-                SmallUpgradeTurret(tempTurret);
+                Debug.Log("First upgrad level = " + tempTurret.currentUpgradeLevel);
+                TryGetUpgrade(tempTurret, SkillManager.UpgradeType.First);
                 break;
             case 80:
-                Debug.Log("First Upgrade");
-                FirstUpgradeTurret(tempTurret);
+                Debug.Log("Second Upgrade level = " + tempTurret.currentUpgradeLevel);
+                TryGetUpgrade(tempTurret, SkillManager.UpgradeType.Second);
                 break;
             case 200:
-                Debug.Log("Second Upgrade");
-                SecondUpgradeTurret(tempTurret);
+                Debug.Log("Third Upgrad level = " + tempTurret.currentUpgradeLevel);
+                TryGetUpgrade(tempTurret, SkillManager.UpgradeType.Third);
                 break;
             case 250:
-                LargeUpgradeTurret(tempTurret);
+                Debug.Log("Fourth Upgrad level = " + tempTurret.currentUpgradeLevel);
+                TryGetUpgrade(tempTurret, SkillManager.UpgradeType.Fourth);
                 break;
         }
 
@@ -102,32 +103,12 @@ public class TurretManager : MonoBehaviour
         }
     }
 
-    private void SmallUpgradeTurret(Turret turret)
+    private void TryGetUpgrade(Turret _turret, SkillManager.UpgradeType _level)
     {
-        turret.highlightBox.SetActive(true);
-        turret.turretLevel++;
-        skillManager.GetSmallUpgradeOptions(turret);
-    }
-
-    private void FirstUpgradeTurret(Turret _turret)
-    {
+        if (_turret == null) { Debug.Log("turret is null!!!!"); };
         _turret.highlightBox.SetActive(true);
         _turret.turretLevel++;
-        skillManager.GetFirstUpgradeOptions(_turret);
-    }
-
-    private void SecondUpgradeTurret(Turret _turret)
-    {
-        _turret.highlightBox.SetActive(true);
-        _turret.turretLevel++;
-        skillManager.GetSecondUpgradeOptions(_turret);
-    }
-
-    private void LargeUpgradeTurret(Turret turret)
-    {
-        turret.highlightBox.SetActive(true);
-        turret.turretLevel++;
-        skillManager.GetLargeUpgradeOptions(turret);   
+        skillManager.GetUpgradeOptions(_turret, _level);
     }
 
     public void AddTurret(Turret turret)

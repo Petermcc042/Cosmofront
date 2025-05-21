@@ -5,12 +5,11 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class BuidingManager : MonoBehaviour
+public class BuildingManager : MonoBehaviour
 {
     [Header("World UI")]
     [SerializeField] LayerMask buildingLayerMask;
-    [SerializeField] List<CapitalBuilding> capitalBuildings;
-    [SerializeField] List<GameObject> menuList;
+    [SerializeField] CapitalBuilding[] buildingArray;
     [SerializeField] TextMeshProUGUI upgradeDescription;
     [SerializeField] GameObject descriptionObject;
     [SerializeField] LayerMask upgradeLayer;
@@ -18,39 +17,23 @@ public class BuidingManager : MonoBehaviour
     [SerializeField] GameObject turretSingleUpgradeMenu;
 
     [Header("Purchase Menu")]
-    [SerializeField] CapitalBuilding previousCapitalBuilding;
+    [SerializeField] GameObject tempMenuObject;
 
     // private int GenHealthChange = 10;
     private int turretDamageChange = 5;
     private int shieldHealthIncrease = 5;
 
-    // Update is called once per frame
-    void Update()
+    private void Awake()
     {
-        if (Input.GetMouseButtonDown(0))// && !IsOverUI())
+        buildingArray = this.GetComponentsInChildren<CapitalBuilding>();
+        foreach (CapitalBuilding c in buildingArray)
         {
-            CheckBuildingClick();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Escape)) { CloseMenu(); }
-
-        if (descriptionObject.activeSelf)
-        {
-            CheckDescription();
+            if (c.purchaseMenuUI == null) { c.purchaseMenuUI = tempMenuObject; }
+            if (c.upgradeMenuUI == null) { c.upgradeMenuUI = tempMenuObject; }
         }
     }
 
-    private void CheckDescription()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-        if (Physics.Raycast(ray, out RaycastHit raycastHit, 999f, upgradeLayer))
-        {
-            Debug.Log("hit");
-        }
-    }
-
-    private void CheckBuildingClick()
+    public void CheckBuildingClick()
     {
         if (IsOverUI()) { return; }
 
@@ -61,17 +44,17 @@ public class BuidingManager : MonoBehaviour
             CapitalBuilding building = raycastHit.collider.GetComponent<CapitalBuilding>();
             if (building != null)
             {
-                CloseMenu();
-                if (previousCapitalBuilding != null) { previousCapitalBuilding.StopMovement(); }
-                previousCapitalBuilding = building; 
+                CloseMenus();
                 building.OpenMenu();
             }
         }
         else
         {
-            CloseMenu();
+            CloseMenus();
         }
     }
+
+   
 
     private static bool IsOverUI()
     {
@@ -85,13 +68,13 @@ public class BuidingManager : MonoBehaviour
     #region Unity UI
     
 
-    public void CloseMenu()
+    public void CloseMenus()
     {
         if (!turretSingleUpgradeMenu.activeSelf)
         {
-            for (int i = 0; i < menuList.Count; i++)
+            for (int i = 0; i < buildingArray.Length; i++)
             {
-                menuList[i].SetActive(false);
+                buildingArray[i].CloseMenu();
             }
         }
         else
@@ -112,9 +95,6 @@ public class BuidingManager : MonoBehaviour
                 case PlayerUpgradesEnum.ShieldHealth:
                     SaveSystem.playerData.shieldHealthIncrease += shieldHealthIncrease * direction;
                     break;
-                case PlayerUpgradesEnum.TurretDamage:
-                    SaveSystem.playerData.turretDamageIncrease += turretDamageChange * direction;
-                    break;
             }
         }
         else
@@ -134,9 +114,6 @@ public class BuidingManager : MonoBehaviour
             {
                 case PlayerUpgradesEnum.ShieldHealth:
                     SaveSystem.playerData.shieldHealthIncrease += shieldHealthIncrease * direction;
-                    break;
-                case PlayerUpgradesEnum.TurretDamage:
-                    SaveSystem.playerData.turretDamageIncrease += turretDamageChange * direction;
                     break;
             }
         }

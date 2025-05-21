@@ -30,9 +30,6 @@ public class PlayerUpgrades : MonoBehaviour
                 case PlayerUpgradesEnum.GeneratorHealth:
                     SaveSystem.playerData.generatorHealthIncrease += GenHealthChange * direction;
                     break;
-                case PlayerUpgradesEnum.TurretDamage:
-                    SaveSystem.playerData.turretDamageIncrease += turretDamageChange * direction;
-                    break;
             }
         }
         else
@@ -52,9 +49,6 @@ public class PlayerUpgrades : MonoBehaviour
             {
                 case PlayerUpgradesEnum.GeneratorHealth:
                     SaveSystem.playerData.generatorHealthIncrease += GenHealthChange * direction;
-                    break;
-                case PlayerUpgradesEnum.TurretDamage:
-                    SaveSystem.playerData.turretDamageIncrease += turretDamageChange * direction;
                     break;
             }
         }

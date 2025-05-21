@@ -30,14 +30,9 @@ public enum BulletType
     OrbitalStrike, MeteorShower, Overclocked, FirestormPayload, Firestorm, TimewarpPayload, Timewarp
 }
 
-public enum UpgradeType { Small, Medium, Large }
-
 public class Turret : MonoBehaviour
 {
-    private SkillManager skillManager;
-    private GameManager gameManager;
     private EnemyManager enemyManager;
-    private CollisionManager collisionManager;
     private TurretManager turretManager;
 
     [Header("Damage Attributes")]
@@ -104,7 +99,6 @@ public class Turret : MonoBehaviour
     public int turretXP;
     public int xpToAdd;
     public int turretLevel;
-    public UpgradeType upgradeType;
     public BulletType bulletType;
     public int fireRateUpgrades = 0;
     public int targetingRateUpgrades  = 0;
@@ -126,10 +120,7 @@ public class Turret : MonoBehaviour
 
     private void Awake()
     {
-        skillManager = GameObject.Find("SkillManager").GetComponent<SkillManager>();
         enemyManager = GameObject.Find("EnemyManager").GetComponent<EnemyManager>();
-        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
-        collisionManager = GameObject.Find("CollisionManager").GetComponent<CollisionManager>();
         turretManager = GameObject.Find("TurretManager").GetComponent<TurretManager>();
 
 

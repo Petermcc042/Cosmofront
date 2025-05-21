@@ -9,12 +9,8 @@ public class CameraMovement : MonoBehaviour
     public float maxHeight = 50f; // Maximum camera height
     public float maxZoomStep = 2f; // Maximum zoom change per frame
 
-    void Update()
-    {
-        MoveCam();
-    }
 
-    private void MoveCam()
+    public void MoveCam()
     {
         // Get keyboard input for camera movement
         float horizontalInput = Input.GetAxis("Horizontal");

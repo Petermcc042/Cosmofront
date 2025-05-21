@@ -96,8 +96,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI attaniumPerSecText;
     [SerializeField] private TextMeshProUGUI marcumPerSecText;
     [SerializeField] private TextMeshProUGUI imearPerSecText;
+    [SerializeField] private TextMeshProUGUI committedPopulationText;
 
-
+    [SerializeField] private CameraMovement cameraMovement;
 
     private void Awake()
     {
@@ -108,10 +109,12 @@ public class GameManager : MonoBehaviour
             PrecomputedData.Clear();
             PrecomputedData.Init(200);
             PrecomputedData.InitGrid();
-            pathfinding.RunFlowFieldJobs(99, 99, true);
             SaveSystem.LoadGame();
         }
-        
+
+        pathfinding.RunFlowFieldJobs(99, 99, true);
+        gridCoordsInstancing.ShowGridNodes();
+
         gameRunning = false;
         totalTime = gameSettings.totalTime;
 
@@ -148,6 +151,7 @@ public class GameManager : MonoBehaviour
     private void Update()
     {
         HandleInput();
+        cameraMovement.MoveCam();
         UpdateBuildingOutline();
         ShowDebugInfo();
 
@@ -205,6 +209,7 @@ public class GameManager : MonoBehaviour
         attaniumPerSecText.text = "Attanium Per Second: " + resourceManager.attPerSec.ToString();
         marcumPerSecText.text = "Marcum Per Second: " + resourceManager.marcPerSec.ToString();
         imearPerSecText.text = "Imear Per Second: " + resourceManager.imearPerSec.ToString();
+        committedPopulationText.text = "Committed Population Left: " + SaveSystem.playerData.committedPopulation;
     }
 
     private void UpdateBuildingOutline()
@@ -245,7 +250,7 @@ public class GameManager : MonoBehaviour
     {
         extendedArea.SetActive(false);
 
-        if (!IsOverUI() && Input.GetMouseButtonDown(0) && CheckCost(currentSO.buildingCost))
+        if (!IsOverUI() && Input.GetMouseButtonDown(0) && CheckCost(currentSO.buildingCost, currentSO.peopleOperating))
         {
             MapGridManager.Instance.PlaceBuilding(GetMouseWorldPosition(), currentSO);
         }
@@ -311,11 +316,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private bool CheckCost(Vector3 _costVector)
+    private bool CheckCost(Vector3 _costVector, int _peopleOperating)
     {
         if (costsRemoved) { return true; }
 
-        if (ResourceManager.Instance.GetAttanium() >= _costVector.x && ResourceManager.Instance.GetMalcan() >= _costVector.y && ResourceManager.Instance.GetImear() >= _costVector.z)
+        if (ResourceManager.Instance.GetAttanium() >= _costVector.x 
+            && ResourceManager.Instance.GetMalcan() >= _costVector.y 
+            && ResourceManager.Instance.GetImear() >= _costVector.z 
+            && _peopleOperating <= SaveSystem.playerData.committedPopulation.Count)
         {
             ResourceManager.Instance.SubtractResources((int)_costVector.x, (int)_costVector.y, (int)_costVector.z);
             return true;
@@ -329,7 +337,7 @@ public class GameManager : MonoBehaviour
         buildingUI.SetActive(!buildingUI.activeSelf);
         //buildableArea.SetActive(!buildableArea.activeSelf);
         gridCoordsInstancing.showNodes = !gridCoordsInstancing.showNodes;
-        flowFieldVisualiser.showNodes = !flowFieldVisualiser.showNodes;
+        //flowFieldVisualiser.showNodes = !flowFieldVisualiser.showNodes;
     }
 
     private void CheckBuildingClick()

@@ -75,6 +75,8 @@ public struct BulletCollision : IJobParallelFor
                     continue; // Skip enemies already hit
                 }
 
+                if (bullet.ToRemove) { break; }
+
                 bullet.hitEnemies.Add(EnemyData[i].EnemyID);
                 EnqueueCollision(index, bullet, i);
 

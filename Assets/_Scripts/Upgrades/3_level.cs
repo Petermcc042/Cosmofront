@@ -275,58 +275,77 @@ public class RailgunUpgrade : IUpgradeOption
     }
 }
 
-public class SonicPenetratorUpgrade : IUpgradeOption
+public class SonicPenetratorUpgrade : BaseUpgrade
 {
-    public int damageIncrease = 3;
-
-    public void Apply(Turret turret)
+    protected override void ApplyUpgradeEffects(Turret turret)
     {
-        turret.highlightBox.SetActive(false);
         turret.bulletType = BulletType.Circler;
-        turret.unlockedUpgradeList.Add(this);
     }
 
-    public int GetTextSize() { return 17; }
+    public override int GetTextSize() { return 17; }
 
-    public string GetName() { return "Sonic Penetrator"; }
+    public override string GetName() { return "Sonic Penetrator"; }
 
-    public string GetDescription()
+    public override string GetDescription()
     {
         return $"Piercing shots emit shockwaves";
     }
 
-    public int GetLevel() { return 2; }
-    public int GetProbability() { return 2; }
+    public override int GetLevel() { return 3; }
+    public override int GetProbability() { return 2; }
 
-    public IUpgradeOption[] NextUpgradeOption()
+    public override IUpgradeOption[] NextUpgradeOption()
+    {
+        return null;
+    }
+}
+
+public class PiercingSlowUpgrade : BaseUpgrade
+{
+    protected override void ApplyUpgradeEffects(Turret turret)
+    {
+        turret.passThrough = 3;
+    }
+
+    public override int GetTextSize() { return 17; }
+
+    public override string GetName() { return "Piercing Slow"; }
+
+    public override string GetDescription()
+    {
+        return $"Slow bullets pierce more enemies";
+    }
+
+    public override int GetLevel() { return 3; }
+    public override int GetProbability() { return 2; }
+
+    public override IUpgradeOption[] NextUpgradeOption()
     {
         return null;
     }
 }
 
 
-public class DiamondTipUpgrade : IUpgradeOption
+public class DiamondTipUpgrade : BaseUpgrade
 {
-    public void Apply(Turret turret)
+    protected override void ApplyUpgradeEffects(Turret turret)
     {
-        turret.highlightBox.SetActive(false);
         turret.passThrough = 3;
-        turret.unlockedUpgradeList.Add(this);
     }
 
-    public int GetTextSize() { return 17; }
+    public override int GetTextSize() { return 17; }
 
-    public string GetName() { return "Diamond Tip"; }
+    public override string GetName() { return "Diamond Tip"; }
 
-    public string GetDescription()
+    public override string GetDescription()
     {
         return $"Hardened bullets can pass through 3 enemies";
     }
 
-    public int GetLevel() { return 2; }
-    public int GetProbability() { return 2; }
+    public override int GetLevel() { return 3; }
+    public override int GetProbability() { return 2; }
 
-    public IUpgradeOption[] NextUpgradeOption() { return null; }
+    public override IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 public class CryoRoundsUpgrade : IUpgradeOption
@@ -377,29 +396,27 @@ public class StickyRoundsUpgrade : IUpgradeOption
     public IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
-public class ClusterBombUpgrade : IUpgradeOption
+public class ClusterBombUpgrade : BaseUpgrade
 {
-    public void Apply(Turret turret)
+    protected override void ApplyUpgradeEffects(Turret turret)
     {
-        turret.highlightBox.SetActive(false);
         turret.bulletType = BulletType.Explosive;
         turret.passThrough = 0;
-        turret.unlockedUpgradeList.Add(this);
     }
 
-    public int GetTextSize() { return 17; }
+    public override int GetTextSize() { return 17; }
 
-    public string GetName() { return "Cluster Bomb"; }
+    public override string GetName() { return "Cluster Bomb"; }
 
-    public string GetDescription()
+    public override string GetDescription()
     {
         return $"The initial impact causes a cluster of smaller explosions";
     }
 
-    public int GetLevel() { return 2; }
-    public int GetProbability() { return 2; }
+    public override int GetLevel() { return 3; }
+    public override int GetProbability() { return 2; }
 
-    public IUpgradeOption[] NextUpgradeOption() { return null; }
+    public override IUpgradeOption[] NextUpgradeOption() { return null; }
 }
 
 public class ShockwaveUpgrade : IUpgradeOption

@@ -240,28 +240,26 @@ public class SpreadRoundsUpgrade : IUpgradeOption
 }
 
 
-public class PiercingRoundsUpgrade : IUpgradeOption
+public class PiercingRoundsUpgrade : BaseUpgrade
 {
-    public void Apply(Turret turret)
+    protected override void ApplyUpgradeEffects(Turret turret)
     {
-        turret.highlightBox.SetActive(false);
         turret.passThrough = 1;
-        turret.unlockedUpgradeList.Add(this);
     }
 
-    public int GetTextSize() { return 17; }
+    public override int GetTextSize() { return 17; }
 
-    public string GetName() { return "Piercing Rounds"; }
+    public override string GetName() { return "Piercing Rounds"; }
 
-    public string GetDescription()
+    public override string GetDescription()
     {
         return $"Hardened bullets can pass through 1 enemies";
     }
 
-    public int GetLevel() { return 2; }
-    public int GetProbability() { return 2; }
+    public override int GetLevel() { return 2; }
+    public override int GetProbability() { return 2; }
 
-    public IUpgradeOption[] NextUpgradeOption()
+    public override IUpgradeOption[] NextUpgradeOption()
     {
 
         IUpgradeOption[] tempArray =
@@ -274,35 +272,33 @@ public class PiercingRoundsUpgrade : IUpgradeOption
 }
 
 
-public class SlowRoundsUpgrade : IUpgradeOption
+public class SlowRoundsUpgrade : BaseUpgrade
 {
-    public void Apply(Turret turret)
+    protected override void ApplyUpgradeEffects(Turret turret)
     {
-        turret.highlightBox.SetActive(false);
         turret.bulletType = BulletType.Slow;
-        turret.unlockedUpgradeList.Add(this);
     }
 
 
-    public int GetTextSize() { return 17; }
+    public override int GetTextSize() { return 17; }
 
-    public string GetName() { return "Slow Rounds"; }
+    public override string GetName() { return "Slow Rounds"; }
 
-    public string GetDescription()
+    public override string GetDescription()
     {
         return $"A bullet that slows and damages enemies";
     }
 
-    public int GetLevel() { return 2; }
-    public int GetProbability() { return 2; }
+    public override int GetLevel() { return 2; }
+    public override int GetProbability() { return 2; }
 
-    public IUpgradeOption[] NextUpgradeOption()
+    public override IUpgradeOption[] NextUpgradeOption()
     {
 
         IUpgradeOption[] tempArray =
         {
             new SonicPenetratorUpgrade(),
-            new PiercingRoundsUpgrade()
+            new PiercingSlowUpgrade()
         };
 
         return tempArray;
@@ -310,31 +306,27 @@ public class SlowRoundsUpgrade : IUpgradeOption
 }
 
 
-public class ExplosiveRoundsUpgrade : IUpgradeOption
+public class ExplosiveRoundsUpgrade : BaseUpgrade
 {
-    public int level = 2;
-
-    public void Apply(Turret turret)
+    protected override void ApplyUpgradeEffects(Turret turret)
     {
-        turret.highlightBox.SetActive(false);
         turret.bulletType = BulletType.Explosive;
-        turret.unlockedUpgradeList.Add(this);
     }
 
-    public int GetTextSize() { return 17; }
+    public override int GetTextSize() { return 17; }
 
-    public string GetName() { return "Explosive Rounds"; }
+    public override string GetName() { return "Explosive Rounds"; }
 
 
-    public string GetDescription()
+    public override string GetDescription()
     {
         return $"Turns the rounds explosive dealing damage to nearby enemies";
     }
 
-    public int GetLevel() { return 2; }
-    public int GetProbability() { return 2; }
+    public override int GetLevel() { return 2; }
+    public override int GetProbability() { return 2; }
 
-    public IUpgradeOption[] NextUpgradeOption()
+    public override IUpgradeOption[] NextUpgradeOption()
     {
 
         IUpgradeOption[] tempArray =

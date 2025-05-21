@@ -736,10 +736,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1550887702}
+  - component: {fileID: 1550887706}
   - component: {fileID: 1550887705}
   - component: {fileID: 1550887704}
   - component: {fileID: 1550887703}
-  - component: {fileID: 1550887706}
   m_Layer: 8
   m_Name: IceMap
   m_TagString: Untagged

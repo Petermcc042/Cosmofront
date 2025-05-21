@@ -5,6 +5,20 @@ using UnityEngine;
 [CreateAssetMenu()]
 public class PlacedObjectSO : ScriptableObject
 {
+    public string nameString;
+    public string parentNameString;
+    public Transform startPrefab;
+    public Transform upgradePrefab;
+    public Transform finalPrefab;
+    public int width;
+    public int length;
+    public bool isWalkable;
+    public bool isBuildable;
+    public Vector3 buildingCost = new(0, 0, 0);
+    public int buidingHealth;
+    public int peopleOperating = 0;
+
+
     public static Dir GetNextDir(Dir dir)
     {
         switch (dir)
@@ -28,18 +42,6 @@ public class PlacedObjectSO : ScriptableObject
         Up,
         Right,
     }
-
-    public string nameString;
-    public string parentNameString;
-    public Transform startPrefab;
-    public Transform upgradePrefab;
-    public Transform finalPrefab;
-    public int width;
-    public int length;
-    public bool isWalkable;
-    public bool isBuildable;
-    public Vector3 buildingCost = new(0,0,0);
-    public int buidingHealth;
 
 
     public int GetRotationAngle(Dir dir)

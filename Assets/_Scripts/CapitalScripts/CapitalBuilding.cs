@@ -6,14 +6,15 @@ using UnityEngine.UI;
 public class CapitalBuilding : MonoBehaviour
 {
     [SerializeField] CapitalBuildingSO buildingSO;
-    [SerializeField] private GameObject purchaseMenuUI;
+    [SerializeField] public GameObject upgradeMenuUI;
+    [SerializeField] public GameObject purchaseMenuUI;
     [SerializeField] private Button purchaseMenuButtonUI;
     [SerializeField] private TextMeshProUGUI purchaseMenuTitleUI;
     [SerializeField] private TextMeshProUGUI purchaseMenuDescriptionUI;
     [SerializeField] private TextMeshProUGUI pmAttCostUI;
     [SerializeField] private TextMeshProUGUI pmMarcCostUI;
     [SerializeField] private TextMeshProUGUI pmImearCostUI;
-    [SerializeField] private GameObject upgradeMenuUI;
+    
 
     [Header("Camera Lerping")]
     [SerializeField] private Transform cameraTransform;
@@ -51,16 +52,12 @@ public class CapitalBuilding : MonoBehaviour
         }
     }
 
-    public void StopMovement()
-    {
-        isMoving = false;
-    }
-
 
     public void OpenMenu()
     {
         if (!SaveSystem.playerData.unlockedBuildingNames.Contains(buildingSO.buildingName))
         {
+            Debug.Log(buildingSO.buildingName);
             targetDestination = buildingSO.cameraPosition;
             isMoving = true;
 
@@ -81,6 +78,10 @@ public class CapitalBuilding : MonoBehaviour
         purchaseMenuTitleUI.text = buildingSO.buildingName;
         purchaseMenuDescriptionUI.text = buildingSO.buildingDescription;
 
+        pmAttCostUI.color = Color.white;
+        pmMarcCostUI.color = Color.white;
+        pmImearCostUI.color = Color.white;
+
         pmAttCostUI.text = buildingSO.purchaseCost.x.ToString();
         pmMarcCostUI.text = buildingSO.purchaseCost.y.ToString();
         pmImearCostUI.text = buildingSO.purchaseCost.z.ToString();
@@ -88,7 +89,6 @@ public class CapitalBuilding : MonoBehaviour
         //Debug.Log($"current att cost {currentUpgradeNode.upgradeCost.x} vs resources {resourceData.totalAttanium}");
         if (buildingSO.purchaseCost.x > SaveSystem.playerData.attaniumTotal)
         {
-            Debug.Log("called");
             pmAttCostUI.color = Color.red;
             purchaseMenuButtonUI.interactable = false;
             purchaseMenuButtonUI.GetComponentInChildren<TextMeshProUGUI>().text = "Blocked";
@@ -112,13 +112,9 @@ public class CapitalBuilding : MonoBehaviour
 
     public void CloseMenu()
     {
+        isMoving = false;
         purchaseMenuUI.SetActive(false);
         upgradeMenuUI.SetActive(false);
-    }
-
-    public void OpenWorldView()
-    {
-        SceneManager.LoadScene("3_WorldView");
     }
 
     public void PurchaseBuilding()

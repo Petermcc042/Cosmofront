@@ -26,9 +26,9 @@ public class GPUInstancingExample : MonoBehaviour
         for (int i = 0; i < instanceCount; i++)
         {
             positions[i] = new float3(
-                UnityEngine.Random.Range(-5f, 5f),
-                UnityEngine.Random.Range(-5f, 5f),
-                UnityEngine.Random.Range(-5f, 5f));
+                UnityEngine.Random.Range(-100f, 100f),
+                0f,
+                UnityEngine.Random.Range(-100f, 100f));
 
             Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
             Vector3 scale = Vector3.one * UnityEngine.Random.Range(0.5f, 1.5f);

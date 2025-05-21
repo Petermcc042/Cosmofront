@@ -16,7 +16,7 @@ public struct BulletData
     public bool ToRemove;
     public int PassThrough;
     public BulletType Type;
-    public FixedList128Bytes<int> hitEnemies; 
+    public FixedList128Bytes<int> hitEnemies;
     // Fixed-length lists (specify element count)
     // FixedList<T, N>        // Where N is the capacity
 }

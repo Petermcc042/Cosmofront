@@ -26,7 +26,7 @@ public class GridCoordInstancing : MonoBehaviour
         {
             GridNode tempNode = PrecomputedData.gridArray[i];
 
-            if (tempNode.isPathfindingArea && !tempNode.isBaseArea) 
+/*            if (tempNode.isPathfindingArea && !tempNode.isBaseArea) 
             {
                 float3 position = new float3(tempNode.position);
 
@@ -35,11 +35,11 @@ public class GridCoordInstancing : MonoBehaviour
                 Vector3 scale = Vector3.one * 0.2f;
 
                 pathfindingMatrixList.Add(Matrix4x4.TRS(position, rotation, scale)); 
-            }
+            }*/
 
-            if (PrecomputedData.gridArray[i].isBaseArea)
+            if (tempNode.isBaseArea)
             {
-                float3 position = new float3(PrecomputedData.gridArray[i].position);
+                float3 position = new float3(tempNode.position);
 
                 Quaternion rotation = Quaternion.identity;
 
@@ -57,7 +57,7 @@ public class GridCoordInstancing : MonoBehaviour
     private void Update()
     {
         if (!isCreated || !showNodes) { return; }
-        Graphics.DrawMeshInstanced(mesh, 0, pathfindingMaterial, pathfindingMatrixList);
+        //Graphics.DrawMeshInstanced(mesh, 0, pathfindingMaterial, pathfindingMatrixList);
         Graphics.DrawMeshInstanced(mesh, 0, baseMaterial, baseMatrixList);
     }
 }

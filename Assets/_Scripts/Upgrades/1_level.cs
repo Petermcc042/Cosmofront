@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Mathematics;
 
 public static class UpgradeMethods
 {
@@ -40,7 +41,7 @@ public abstract class BaseUpgrade : IUpgradeOption
         // Common operations
         turret.highlightBox.SetActive(false);
         turret.unlockedUpgradeList.Add(this);
-        turret.currentUpgradeLevel = GetLevel();
+        turret.currentUpgradeLevel = math.max(turret.currentUpgradeLevel, GetLevel());
 
         // Call specialized implementation
         ApplyUpgradeEffects(turret);
@@ -187,9 +188,7 @@ public class DamageUpgrade : BaseUpgrade
 
     protected override void ApplyUpgradeEffects(Turret turret)
     {
-        turret.highlightBox.SetActive(false);
         turret.bulletDamage += damageIncrease;
-        turret.unlockedUpgradeList.Add(this);
         turret.damageUpgrades += 1;
     }
 

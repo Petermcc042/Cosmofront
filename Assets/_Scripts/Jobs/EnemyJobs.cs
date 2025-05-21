@@ -270,7 +270,7 @@ public struct EnemyCollisionData : IJob
                 tempEnemy.IsDead = true;
                 TurretUpgradeData tempUpgrade = new()
                 {
-                    XPAmount = 2,
+                    XPAmount = 1,
                     TurretID = colData.TurretID
                 };
 

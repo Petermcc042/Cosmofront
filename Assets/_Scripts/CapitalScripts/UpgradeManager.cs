@@ -14,6 +14,7 @@ public class UpgradeManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI singleUpgradeMarcCost;
     [SerializeField] private TextMeshProUGUI singleUpgradeImearCost;
     [SerializeField] private Button singleUpgradePurchaseButton;
+    [SerializeField] private bool freeUpgrades;
 
     private UpgradeNode currentUpgradeNode;
 
@@ -65,6 +66,10 @@ public class UpgradeManager : MonoBehaviour
         singleUpgradeUI.SetActive(true);
         singleUpgradePurchaseButton.interactable = true;
 
+        singleUpgradeAttCost.color = Color.white;
+        singleUpgradeMarcCost.color = Color.white;
+        singleUpgradeImearCost.color = Color.white;
+
         singleUpgradeTitle.text = currentUpgradeNode.upgradeName;
         singleUpgradeDescription.text = currentUpgradeNode.upgradeDescription;
         singleUpgradeImage.sprite = currentUpgradeNode.upgradeImage;
@@ -76,7 +81,6 @@ public class UpgradeManager : MonoBehaviour
         //Debug.Log($"current att cost {currentUpgradeNode.upgradeCost.x} vs resources {resourceData.totalAttanium}");
         if (currentUpgradeNode.upgradeCost.x > SaveSystem.playerData.attaniumTotal)
         {
-            Debug.Log("called");
             singleUpgradeAttCost.color = Color.red;
             singleUpgradePurchaseButton.interactable = false;
         }
@@ -93,6 +97,11 @@ public class UpgradeManager : MonoBehaviour
             singleUpgradeImearCost.color = Color.red;
             singleUpgradePurchaseButton.interactable = false;
         }
+
+        if (freeUpgrades)
+        {
+            singleUpgradePurchaseButton.interactable = true;
+        }
     }
 
 
@@ -108,6 +117,14 @@ public class UpgradeManager : MonoBehaviour
         {
             SaveSystem.playerData.unlockedUpgradeNames.Add(currentUpgradeNode.upgradeName);
             SaveSystem.SaveGame();
+        }
+
+        foreach (GameObject node in currentUpgradeNode.connectsTo)
+        {
+            UpgradeNode tempNode = node.GetComponent<UpgradeNode>();
+            tempNode.isLocked = false;
+            Button button = node.GetComponentInChildren<Button>();
+            button.interactable = true;
         }
 
         foreach (UpgradeNode upgradeNode in allNodes)

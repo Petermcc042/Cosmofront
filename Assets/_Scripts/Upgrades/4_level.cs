@@ -27,7 +27,7 @@ public class SuperMonkeyUpgrade : IUpgradeOption
         return $"Greatly increases fire rate, with a small damage boost";
     }
 
-    public int GetLevel() { return 3; }
+    public int GetLevel() { return 4; }
     public int GetProbability() { return 2; }
 
     public IUpgradeOption[] NextUpgradeOption() { return null; }

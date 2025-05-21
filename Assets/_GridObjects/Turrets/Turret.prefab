@@ -104,7 +104,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ab6d2594d39b1744b400f12061324b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fireRate: 20
+  fireRate: 1
   killCount: 0
   bulletDamage: 1
   fleshMultiplier: 1
@@ -148,6 +148,7 @@ MonoBehaviour:
   targetingRateUpgrades: 0
   targetingRangeUpgrades: 0
   damageUpgrades: 0
+  currentUpgradeLevel: 0
   partToRotate: {fileID: 6417055713613626388}
   firePoint: {fileID: 7504641739250698944}
   highlightBox: {fileID: 5278750429639919215}

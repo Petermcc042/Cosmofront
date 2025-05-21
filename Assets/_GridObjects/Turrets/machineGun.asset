@@ -26,4 +26,5 @@ MonoBehaviour:
   isBuildable: 0
   buildingCost: {x: 20, y: 0, z: 0}
   buidingHealth: 0
+  peopleOperating: 10
   visibleName: Machine Gun

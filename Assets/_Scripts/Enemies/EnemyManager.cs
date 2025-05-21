@@ -183,6 +183,7 @@ public class EnemyManager : MonoBehaviour
             Vector3 spawnPos = GetSpawnPosition(i, numSpawnPositions);
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.transform.position = spawnPos;
+            cube.transform.parent = this.gameObject.transform;
             spawnOriginVectorList.Add(spawnPos);
         }
     }
